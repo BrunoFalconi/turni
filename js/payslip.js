@@ -87,6 +87,123 @@ function findNameFromText(text){
   return '';
 }
 
+
+function numericItems(row){
+  return row.items
+    .map(item=>({item,value:moneyNumber(item.text)}))
+    .filter(entry=>entry.value!=null);
+}
+
+function valueInColumn(row,columnX,nextColumnX=Infinity){
+  const candidates=numericItems(row)
+    .filter(({item,value})=>
+      item.x>=columnX-45 &&
+      item.x<nextColumnX-12 &&
+      Math.abs(value)<100000
+    )
+    .sort((a,b)=>a.item.x-b.item.x);
+
+  return candidates.length?candidates.at(-1).value:null;
+}
+
+function findRowByCode(rows,code,{contains='',excludes=''}={}){
+  return rows.find(row=>{
+    const text=row.text;
+    return text.includes(code) &&
+      (!contains||new RegExp(contains,'i').test(text)) &&
+      (!excludes||!new RegExp(excludes,'i').test(text));
+  })||null;
+}
+
+function columnValuesFromPdf(pdfData){
+  const result={
+    cometaEmployee:null,
+    cometaEmployer:null,
+    cometaDeductible:null,
+    irpefWithheld:null,
+    localTaxes:null
+  };
+
+  let localTaxes=0;
+  let foundLocalTax=false;
+
+  for(const page of pdfData.pages){
+    const header=page.rows.find(row=>
+      /TRATTENUTE/i.test(row.text) && /COMPETENZE/i.test(row.text)
+    );
+    if(!header)continue;
+
+    const trattenuteItem=header.items.find(item=>/TRATTENUTE/i.test(item.text));
+    const competenzeItem=header.items.find(item=>/COMPETENZE/i.test(item.text));
+    if(!trattenuteItem||!competenzeItem)continue;
+
+    const trattenuteX=trattenuteItem.x;
+    const competenzeX=competenzeItem.x;
+
+    const cometaEmployeeRow=findRowByCode(page.rows,'Z20010',{
+      contains:'COMETA',
+      excludes:'C\\s*\\/?\\s*DITTA'
+    });
+    if(cometaEmployeeRow){
+      const value=valueInColumn(cometaEmployeeRow,trattenuteX,competenzeX);
+      if(value!=null)result.cometaEmployee=value;
+    }
+
+    const cometaEmployerRow=findRowByCode(page.rows,'Z20010',{
+      contains:'COMETA.*C\\s*\\/?\\s*DITTA'
+    });
+    if(cometaEmployerRow){
+      const value=valueInColumn(cometaEmployerRow,competenzeX,Infinity);
+      if(value!=null)result.cometaEmployer=Math.abs(value);
+    }
+
+    const deductibleRow=findRowByCode(page.rows,'F01998');
+    if(deductibleRow){
+      const values=numericItems(deductibleRow)
+        .map(x=>x.value)
+        .filter(v=>v>=0&&v<10000);
+      if(values.length)result.cometaDeductible=values.at(-1);
+    }
+
+    const irpefRow=findRowByCode(page.rows,'F03020');
+    if(irpefRow){
+      const value=valueInColumn(irpefRow,trattenuteX,competenzeX);
+      if(value!=null)result.irpefWithheld=value;
+    }
+
+    for(const code of ['F09110','F09130','F09140']){
+      const row=findRowByCode(page.rows,code);
+      if(!row)continue;
+      const value=valueInColumn(row,trattenuteX,competenzeX);
+      if(value!=null){
+        localTaxes+=Math.abs(value);
+        foundLocalTax=true;
+      }
+    }
+  }
+
+  result.localTaxes=foundLocalTax?localTaxes:null;
+  return result;
+}
+
+function parsePayslipData(pdfData){
+  const detected=parsePayslipText(pdfData.text);
+  const columns=columnValuesFromPdf(pdfData);
+
+  if(columns.cometaEmployee!=null)detected.cometaEmployee=columns.cometaEmployee;
+  if(columns.cometaEmployer!=null)detected.cometaEmployer=columns.cometaEmployer;
+  if(columns.cometaDeductible!=null)detected.cometaDeductible=columns.cometaDeductible;
+  if(columns.localTaxes!=null)detected.localTaxes=columns.localTaxes;
+
+  const taxable=findAmountNear(pdfData.text,['Imponibile\\s+IRPEF']);
+  if(taxable&&columns.irpefWithheld!=null){
+    const rate=columns.irpefWithheld/taxable*100;
+    if(rate>=0&&rate<=60)detected.taxPct=rate;
+  }
+
+  return detected;
+}
+
 function parsePayslipText(text){
   const compact=text.replace(/\u00a0/g,' ').replace(/[ \t]+/g,' ');
 
@@ -144,32 +261,50 @@ function parsePayslipText(text){
   };
 }
 
-async function extractPdfText(file){
+async function extractPdfData(file){
   if(!window.pdfjsLib)throw new Error('Libreria PDF non disponibile');
   const bytes=new Uint8Array(await file.arrayBuffer());
   const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
   const pages=[];
+  const pageTexts=[];
 
   for(let pageNo=1;pageNo<=pdf.numPages;pageNo++){
     const page=await pdf.getPage(pageNo);
     const content=await page.getTextContent();
-    const items=content.items
-      .map(item=>({text:item.str,x:item.transform[4],y:item.transform[5]}))
-      .sort((a,b)=>Math.abs(b.y-a.y)>2?b.y-a.y:a.x-b.x);
+    const sorted=content.items
+      .filter(item=>String(item.str||'').trim())
+      .map(item=>({
+        text:String(item.str).trim(),
+        x:item.transform[4],
+        y:item.transform[5],
+        width:item.width||0
+      }))
+      .sort((a,b)=>Math.abs(b.y-a.y)>2.5?b.y-a.y:a.x-b.x);
 
-    let lastY=null,line=[],lines=[];
-    for(const item of items){
-      if(lastY!=null&&Math.abs(item.y-lastY)>2){
-        lines.push(line.join(' '));
-        line=[];
+    const rows=[];
+    let current=null;
+
+    for(const item of sorted){
+      if(!current||Math.abs(item.y-current.y)>2.5){
+        current={y:item.y,items:[],text:''};
+        rows.push(current);
       }
-      line.push(item.text);
-      lastY=item.y;
+      current.items.push(item);
     }
-    if(line.length)lines.push(line.join(' '));
-    pages.push(lines.join('\n'));
+
+    for(const row of rows){
+      row.items.sort((a,b)=>a.x-b.x);
+      row.text=row.items.map(item=>item.text).join(' ').replace(/\s+/g,' ').trim();
+    }
+
+    pages.push({pageNo,rows});
+    pageTexts.push(rows.map(row=>row.text).join('\n'));
   }
-  return pages.join('\n\n');
+
+  return{
+    text:pageTexts.join('\n\n'),
+    pages
+  };
 }
 
 function fillPayslipDialog(data,fileName){
@@ -206,10 +341,10 @@ document.getElementById('payslipInput').addEventListener('change',async event=>{
 
   try{
     document.getElementById('payslipStatus').textContent='Analisi della busta paga in corso…';
-    const text=await extractPdfText(file);
-    const detected=parsePayslipText(text);
+    const pdfData=await extractPdfData(file);
+    const detected=parsePayslipData(pdfData);
 
-    if(text.replace(/\s/g,'').length<50){
+    if(pdfData.text.replace(/\s/g,'').length<50){
       document.getElementById('payslipStatus').textContent=
         'PDF senza testo rilevabile: inserisci i valori manualmente.';
     }

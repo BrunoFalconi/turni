@@ -151,6 +151,9 @@ function payroll(y,m){
   const cometaEmployee=Number(state.settings.cometaEmployee)||0;
   const cometaEmployer=Number(state.settings.cometaEmployer)||0;
   const cometaDeductible=Number(state.settings.cometaDeductible)||0;
+  /* IRPEF calcolata sul lordo finale:
+     lordo fisso + maggiorazioni + altre competenze,
+     meno contributi previdenziali e Cometa deducibile. */
   const taxable=Math.max(0,gross-social-cometaDeductible);
   const tax=taxable*(Number(state.settings.taxPct)||0)/100;
   const localTaxes=Number(state.settings.localTaxes)||0;

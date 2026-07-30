@@ -90,3 +90,12 @@ Ora legge l'ultimo importo della riga:
 - lavoratore: `28,94 €`;
 - azienda: `48,23 €`;
 - deducibile: `77,17 €`.
+
+
+## Versione 2.7 — Lettura per colonne Zucchetti
+
+- COMETA lavoratore: colonna `TRATTENUTE`;
+- COMETA azienda: colonna `COMPETENZE`;
+- IRPEF trattenuta: colonna `TRATTENUTE`;
+- addizionali regionale/comunale/acconto: colonna `TRATTENUTE`;
+- IRPEF stimata applicata al lordo finale, comprese le maggiorazioni.
