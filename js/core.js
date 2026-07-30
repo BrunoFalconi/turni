@@ -16,7 +16,10 @@ const TYPES={
 const DEFAULT_STATE={
   shifts:{},
   settings:{
+    profileName:'',
     excelName:'',
+    payslipFileName:'',
+    payslipImportedAt:'',
     gross:2538.46,
     divisor:173,
     nightPct:50,
@@ -283,6 +286,12 @@ function render(){
   document.getElementById('totNight').textContent=fmtMin(night);
   document.getElementById('totRest').textContent=rests;
   document.getElementById('status').textContent=`Salvato sul dispositivo · ${Object.keys(state.shifts).length} giorni`;
+  const payslipStatus=document.getElementById('payslipStatus');
+  if(payslipStatus){
+    payslipStatus.textContent=state.settings.payslipFileName
+      ? `Profilo ${state.settings.profileName||'personale'} · ${state.settings.payslipFileName}`
+      : 'Nessuna busta paga associata.';
+  }
 
   if(typeof renderStats==='function')renderStats(y,m);
   if(typeof renderDashboard==='function')renderDashboard();
@@ -355,11 +364,13 @@ document.getElementById('addBtn').onclick=()=>{
   openShift(key);
 };
 document.getElementById('settings').onclick=()=>{
-  for(const id of ['excelName','gross','divisor','nightPct','holidayPct','holidayNightPct','deductionPct'])document.getElementById(id).value=state.settings[id];
+  for(const id of ['profileName','excelName','gross','divisor','nightPct','holidayPct','holidayNightPct','deductionPct'])document.getElementById(id).value=state.settings[id];
   document.getElementById('settingsDialog').showModal();
 };
 document.getElementById('saveSettings').onclick=()=>{
-  for(const id of ['excelName','gross','divisor','nightPct','holidayPct','holidayNightPct','deductionPct'])state.settings[id]=id==='excelName'?document.getElementById(id).value:(Number(document.getElementById(id).value)||0);
+  for(const id of ['profileName','excelName','gross','divisor','nightPct','holidayPct','holidayNightPct','deductionPct']){
+    state.settings[id]=(id==='profileName'||id==='excelName')?document.getElementById(id).value:(Number(document.getElementById(id).value)||0);
+  }
   saveState();render();document.getElementById('settingsDialog').close();
 };
 document.getElementById('closeSettings').onclick=()=>document.getElementById('settingsDialog').close();

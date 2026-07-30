@@ -58,3 +58,14 @@ I turni continuano a usare la chiave `turni-app-stabile-v1`.
 - Ore del mese e netto usano la stessa fonte dati della sezione Statistiche.
 - Aggiunto grafico degli ultimi sei mesi con ore lavorate e netto stimato.
 - La chiave dati resta `turni-app-stabile-v1`.
+
+
+## Versione 2.4 — Offline e profilo personale da busta paga
+
+- Funzionamento offline dopo il primo accesso online.
+- Tutti i dati restano sul dispositivo.
+- Ogni collega può caricare la propria busta paga PDF.
+- Il PDF viene analizzato localmente e non viene inviato a server esterni.
+- I valori riconosciuti vengono sempre mostrati e possono essere corretti.
+- I PDF scansionati come immagini possono richiedere inserimento manuale.
+- Il profilo personale modifica lordo, aliquote e trattenute usate dal simulatore.

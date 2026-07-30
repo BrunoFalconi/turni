@@ -131,6 +131,7 @@
 
 <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" hidden>
 <input id="backupInput" type="file" accept=".json" hidden>
+<input id="payslipInput" type="file" accept=".pdf,application/pdf" hidden>
 
 <dialog id="shiftDialog">
   <h3 id="shiftTitle">Turno</h3>
@@ -151,6 +152,7 @@
 <dialog id="settingsDialog">
   <h3>Impostazioni</h3>
   <div class="fields">
+    <div class="wide"><label>Profilo / nome</label><input id="profileName" placeholder="es. Alessandro"></div>
     <div class="wide"><label>Nome nel foglio Excel</label><input id="excelName" placeholder="es. Lo Prete"></div>
     <div><label>Lordo mensile</label><input id="gross" type="number" step="0.01"></div>
     <div><label>Divisore mensile</label><input id="divisor" type="number" step="1"></div>
@@ -160,6 +162,10 @@
     <div><label>Trattenute stimate %</label><input id="deductionPct" type="number" step="0.01"></div>
   </div>
   <p class="notice">I dati vengono salvati con una sola chiave nel browser e restano dopo il refresh. Ogni dispositivo conserva la propria copia.</p>
+  <div class="payslip-actions">
+    <button class="btn" id="uploadPayslip">Carica busta paga PDF</button>
+    <div class="payslip-status" id="payslipStatus">Nessuna busta paga associata.</div>
+  </div>
   <div class="backup">
     <button class="btn alt" id="exportBackup">Esporta backup</button>
     <button class="btn alt" id="importBackup">Importa backup</button>
@@ -199,11 +205,36 @@
   </div>
 </dialog>
 
+
+<dialog id="payslipDialog">
+  <h3>Controlla i dati della busta paga</h3>
+  <p class="notice" id="payslipMessage">Il PDF viene letto soltanto sul dispositivo e non viene caricato online.</p>
+  <div class="fields">
+    <div class="wide"><label>Nome profilo</label><input id="psProfileName"></div>
+    <div><label>Lordo mensile fisso €</label><input id="psGross" type="number" step="0.01"></div>
+    <div><label>Divisore mensile</label><input id="psDivisor" type="number" step="1"></div>
+    <div><label>Notte %</label><input id="psNightPct" type="number" step="0.01"></div>
+    <div><label>Festivo %</label><input id="psHolidayPct" type="number" step="0.01"></div>
+    <div><label>Festivo notturno %</label><input id="psHolidayNightPct" type="number" step="0.01"></div>
+    <div><label>Contributi previdenziali %</label><input id="psSocialPct" type="number" step="0.01"></div>
+    <div><label>IRPEF stimata %</label><input id="psTaxPct" type="number" step="0.01"></div>
+    <div><label>Addizionali mensili €</label><input id="psLocalTaxes" type="number" step="0.01"></div>
+    <div><label>Fondo pensione €</label><input id="psCometaAmount" type="number" step="0.01"></div>
+  </div>
+  <p class="notice">I valori riconosciuti automaticamente possono essere corretti prima del salvataggio. I PDF scansionati come immagini potrebbero richiedere l'inserimento manuale.</p>
+  <div class="dialog-actions">
+    <button class="btn" id="savePayslipProfile">Usa questi dati</button>
+    <button class="btn alt" id="closePayslipDialog">Annulla</button>
+  </div>
+</dialog>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="./js/core.js"></script>
 <script src="./js/excel.js"></script>
 <script src="./js/backup.js"></script>
 <script src="./js/stats.js"></script>
+<script src="./js/payslip.js"></script>
 <script src="./js/app.js"></script>
 </body>
 </html>

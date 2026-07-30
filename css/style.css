@@ -101,3 +101,9 @@
     .hours-bar{background:var(--p)}.net-bar{background:var(--n);opacity:.85}
     .history-label{text-align:center;font-size:11px;color:var(--muted);text-transform:uppercase}
     .history-value{text-align:center;font-size:10px;color:var(--muted)}
+
+
+    .payslip-actions{margin-top:14px;padding:12px;background:var(--surface2);border-radius:13px}
+    .payslip-actions .btn{width:100%}
+    .payslip-status{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
+    .offline-ready{color:var(--p)}
