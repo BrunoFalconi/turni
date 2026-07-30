@@ -69,3 +69,24 @@ I turni continuano a usare la chiave `turni-app-stabile-v1`.
 - I valori riconosciuti vengono sempre mostrati e possono essere corretti.
 - I PDF scansionati come immagini possono richiedere inserimento manuale.
 - Il profilo personale modifica lordo, aliquote e trattenute usate dal simulatore.
+
+
+## Versione 2.5 — Correzione Fondo Cometa
+
+Il Fondo Cometa è separato in tre valori:
+
+- quota lavoratore: riduce il netto;
+- quota azienda: non riduce il netto;
+- totale deducibile: riduce l'imponibile IRPEF.
+
+La vecchia voce unica `cometaAmount` viene migrata automaticamente nella quota lavoratore.
+
+
+## Versione 2.6 — Base Cometa corretta
+
+Il parser non usa più `2.411,43 €` come trattenuta. Quel valore è la base imponibile su cui viene calcolato il contributo.
+
+Ora legge l'ultimo importo della riga:
+- lavoratore: `28,94 €`;
+- azienda: `48,23 €`;
+- deducibile: `77,17 €`.

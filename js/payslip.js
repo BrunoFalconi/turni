@@ -46,6 +46,33 @@ function findPercentageNear(text,labels){
   return null;
 }
 
+
+function findCometaLineAmount(text,{employer=false}={}){
+  const lines=String(text||'').split(/\r?\n/);
+
+  for(const rawLine of lines){
+    const line=rawLine.replace(/\s+/g,' ').trim();
+    if(!/contributo\s+base\s+cometa/i.test(line))continue;
+
+    const isEmployer=/c\s*\/?\s*ditta|azienda/i.test(line);
+    if(employer!==isEmployer)continue;
+
+    /* Esempio:
+       Contributo base COMETA 2.411,43 1,20000 % 28,94
+       Il primo importo è la base imponibile, l'ultimo è la trattenuta reale. */
+    const amounts=[...line.matchAll(/(?:^|\s|\()([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{2,5})|[0-9]+(?:,[0-9]{2,5}))(?=\s|\)|$)/g)]
+      .map(m=>moneyNumber(m[1]))
+      .filter(n=>n!=null);
+
+    if(amounts.length){
+      const amount=amounts.at(-1);
+      if(amount>=0 && amount<1000)return amount;
+    }
+  }
+
+  return null;
+}
+
 function findNameFromText(text){
   const patterns=[
     /COGNOME\s*E?\s*NOME[\s:;-]*([A-ZÀ-Ü' ]{5,60})/i,
@@ -86,7 +113,13 @@ function parsePayslipText(text){
   const municipalAdvance=findAmountNear(compact,['Acconto\\s+addiz\\.\\s+comunale','Acconto\\s+addizionale\\s+comunale']);
   const localTaxes=[regional,municipal,municipalAdvance].filter(v=>v!=null).reduce((a,b)=>a+b,0)||null;
 
-  const pension=findAmountNear(compact,['Contributo\\s+base\\s+COMETA(?![\\s\\S]{0,30}C\\/Ditta)','COMETA']);
+  const cometaEmployee=findCometaLineAmount(compact,{employer:false});
+  const cometaEmployer=findCometaLineAmount(compact,{employer:true});
+  const cometaDeductible=findAmountNear(compact,[
+    'Ctr\\.prev\\.compl\\.deducib\\.',
+    'Contributo\\s+previdenziale\\s+complementare\\s+deducibile',
+    'Totale\\s+COMETA\\s+deducibile'
+  ]);
 
   const percentages=[...compact.matchAll(/Magg(?:iorazione)?\.?[\s\S]{0,45}?([0-9]{2}(?:[,.][0-9]+)?)\s*%/gi)]
     .map(m=>percentNumber(m[1]))
@@ -104,7 +137,10 @@ function parsePayslipText(text){
     socialPct:social,
     taxPct:computedTax&&computedTax<=60?computedTax:null,
     localTaxes,
-    cometaAmount:pension
+    cometaEmployee,
+    cometaEmployer,
+    cometaDeductible:cometaDeductible ??
+      ((cometaEmployee||0)+(cometaEmployer||0) || null)
   };
 }
 
@@ -148,7 +184,9 @@ function fillPayslipDialog(data,fileName){
     psSocialPct:data.socialPct??current.socialPct,
     psTaxPct:data.taxPct??current.taxPct,
     psLocalTaxes:data.localTaxes??current.localTaxes,
-    psCometaAmount:data.cometaAmount??current.cometaAmount
+    psCometaEmployee:data.cometaEmployee??current.cometaEmployee,
+    psCometaEmployer:data.cometaEmployer??current.cometaEmployer,
+    psCometaDeductible:data.cometaDeductible??current.cometaDeductible
   };
   Object.entries(values).forEach(([id,value])=>document.getElementById(id).value=value??0);
   document.getElementById('payslipMessage').textContent=
@@ -196,7 +234,9 @@ document.getElementById('savePayslipProfile').onclick=()=>{
     socialPct:'psSocialPct',
     taxPct:'psTaxPct',
     localTaxes:'psLocalTaxes',
-    cometaAmount:'psCometaAmount'
+    cometaEmployee:'psCometaEmployee',
+    cometaEmployer:'psCometaEmployer',
+    cometaDeductible:'psCometaDeductible'
   };
 
   for(const [key,id] of Object.entries(map)){

@@ -29,7 +29,9 @@ const DEFAULT_STATE={
     socialPct:9.59,
     taxPct:21.14,
     localTaxes:76.73,
-    cometaAmount:28.94,
+    cometaEmployee:28.94,
+    cometaEmployer:48.23,
+    cometaDeductible:77.17,
     otherDeductions:0,
     otherEarnings:0,
     nightStart:'22:00',
@@ -53,7 +55,23 @@ function norm(s){return String(s??'').trim().toLowerCase().normalize('NFD').repl
 
 function normalizeState(raw){
   const s=raw&&typeof raw==='object'?raw:{};
-  return {shifts:s.shifts&&typeof s.shifts==='object'?s.shifts:{},settings:{...DEFAULT_STATE.settings,...(s.settings||{})}};
+  const saved={...(s.settings||{})};
+
+  /* Migrazione dalle vecchie versioni che avevano un solo campo Cometa. */
+  if(saved.cometaEmployee==null && saved.cometaAmount!=null){
+    saved.cometaEmployee=Number(saved.cometaAmount)||0;
+  }
+  if(saved.cometaEmployer==null)saved.cometaEmployer=0;
+  if(saved.cometaDeductible==null){
+    saved.cometaDeductible=
+      (Number(saved.cometaEmployee)||0)+(Number(saved.cometaEmployer)||0);
+  }
+  delete saved.cometaAmount;
+
+  return {
+    shifts:s.shifts&&typeof s.shifts==='object'?s.shifts:{},
+    settings:{...DEFAULT_STATE.settings,...saved}
+  };
 }
 function loadState(){
   try{
@@ -130,12 +148,14 @@ function payroll(y,m){
   const gross=Number(state.settings.gross)+extras+otherEarnings;
 
   const social=gross*(Number(state.settings.socialPct)||0)/100;
-  const taxable=Math.max(0,gross-social-(Number(state.settings.cometaAmount)||0));
+  const cometaEmployee=Number(state.settings.cometaEmployee)||0;
+  const cometaEmployer=Number(state.settings.cometaEmployer)||0;
+  const cometaDeductible=Number(state.settings.cometaDeductible)||0;
+  const taxable=Math.max(0,gross-social-cometaDeductible);
   const tax=taxable*(Number(state.settings.taxPct)||0)/100;
   const localTaxes=Number(state.settings.localTaxes)||0;
-  const cometa=Number(state.settings.cometaAmount)||0;
   const otherDeductions=Number(state.settings.otherDeductions)||0;
-  const deductions=social+tax+localTaxes+cometa+otherDeductions;
+  const deductions=social+tax+localTaxes+cometaEmployee+otherDeductions;
 
   return{
     mins,
@@ -147,7 +167,9 @@ function payroll(y,m){
     taxable,
     tax,
     localTaxes,
-    cometa,
+    cometaEmployee,
+    cometaEmployer,
+    cometaDeductible,
     otherDeductions,
     deductions,
     net:gross-deductions
@@ -223,13 +245,13 @@ function renderDashboard(){
 }
 
 function openPayrollDialog(){
-  const ids=['socialPct','taxPct','localTaxes','cometaAmount','otherDeductions','otherEarnings'];
+  const ids=['socialPct','taxPct','localTaxes','cometaEmployee','cometaEmployer','cometaDeductible','otherDeductions','otherEarnings'];
   ids.forEach(id=>document.getElementById(id).value=state.settings[id]??0);
   document.getElementById('payrollDialog').showModal();
 }
 
 document.getElementById('savePayrollSettings').onclick=()=>{
-  const ids=['socialPct','taxPct','localTaxes','cometaAmount','otherDeductions','otherEarnings'];
+  const ids=['socialPct','taxPct','localTaxes','cometaEmployee','cometaEmployer','cometaDeductible','otherDeductions','otherEarnings'];
   ids.forEach(id=>state.settings[id]=Number(document.getElementById(id).value)||0);
   saveState();
   render();
@@ -252,7 +274,9 @@ document.getElementById('copyPayroll').onclick=async()=>{
     `Contributi: ${euro(p.social)}`,
     `IRPEF stimata: ${euro(p.tax)}`,
     `Addizionali: ${euro(p.localTaxes)}`,
-    `Fondo Cometa: ${euro(p.cometa)}`,
+    `Cometa lavoratore: ${euro(p.cometaEmployee)}`,
+    `Cometa azienda: ${euro(p.cometaEmployer)}`,
+    `Cometa deducibile: ${euro(p.cometaDeductible)}`,
     `Netto stimato: ${euro(p.net)}`
   ].join('\n');
 
@@ -310,7 +334,9 @@ function render(){
     <div class="payrow deduction"><span>Contributi · ${state.settings.socialPct}%</span><span>− ${euro(p.social)}</span></div>
     <div class="payrow deduction"><span>IRPEF stimata · ${state.settings.taxPct}%</span><span>− ${euro(p.tax)}</span></div>
     <div class="payrow deduction"><span>Addizionali</span><span>− ${euro(p.localTaxes)}</span></div>
-    <div class="payrow deduction"><span>Fondo Cometa</span><span>− ${euro(p.cometa)}</span></div>
+    <div class="payrow deduction"><span>Cometa lavoratore</span><span>− ${euro(p.cometaEmployee)}</span></div>
+    <div class="payrow"><span>Cometa azienda</span><span>${euro(p.cometaEmployer)}</span></div>
+    <div class="payrow"><span>Totale Cometa deducibile</span><span>${euro(p.cometaDeductible)}</span></div>
     ${p.otherDeductions?`<div class="payrow deduction"><span>Altre trattenute</span><span>− ${euro(p.otherDeductions)}</span></div>`:''}
 
     <div class="payrow net-final"><span>Netto stimato</span><span>${euro(p.net)}</span></div>
