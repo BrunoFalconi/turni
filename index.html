@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0e1420">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Turni</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <style>
+    :root{
+      color-scheme:dark;
+      --bg:#0e1420;--surface:#182031;--surface2:#1f2940;--line:#38445f;
+      --text:#e9edf6;--muted:#9daac6;--m:#f2b33d;--p:#3fb6a8;--n:#7f6cf2;
+      --x:#ff7a6b;--f:#4fa8e8;--mal:#6e86a8;--deas:#e07aa8
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+    button,input,select{font:inherit}button{border:0;cursor:pointer}
+    #app{max-width:620px;margin:auto;padding:18px 16px 110px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+    .month{font-size:28px;font-weight:800}.month span{color:var(--muted);font-weight:600}
+    .nav,.icon{width:40px;height:40px;border-radius:50%;background:var(--surface);color:var(--text)}
+    .card{background:var(--surface);border-radius:18px;padding:16px;margin-bottom:14px}
+    .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .lab{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+    .val{font-size:24px;font-weight:750;margin-top:4px}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .btn{padding:13px 14px;border-radius:12px;background:var(--text);color:var(--bg);font-weight:700}
+    .btn.alt{background:var(--surface2);color:var(--text)}.btn.danger{color:var(--x)}
+    .week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:8px 0}
+    .week div{text-align:center;font-size:11px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+    .day{min-height:78px;border-radius:12px;background:var(--surface);color:var(--text);padding:6px;position:relative}
+    .day.empty{background:transparent;pointer-events:none}.num{font-size:13px}.tag{font-size:10px;font-weight:800;margin-top:8px}
+    .hours{font-size:11px;color:var(--muted);margin-top:4px}.today .num{background:var(--text);color:var(--bg);padding:1px 4px;border-radius:5px}
+    .payrow{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #ffffff12}
+    .payrow:last-child{border-bottom:0}.payrow strong{font-size:18px}
+    .fab{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);border-radius:999px;padding:15px 24px;background:var(--text);color:var(--bg);font-weight:800}
+    dialog{border:0;border-radius:20px;background:var(--surface);color:var(--text);width:min(560px,94vw);padding:18px;max-height:92vh;overflow:auto}
+    dialog::backdrop{background:#0009}
+    .types{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0}
+    .type{padding:10px;border-radius:10px;background:var(--surface2);color:var(--text)}
+    .type.on{outline:2px solid var(--text)}
+    .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px}
+    input,select{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px}
+    .wide{grid-column:1/-1}.dialog-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}.dialog-actions .btn{flex:1;min-width:110px}
+    .notice{font-size:13px;color:var(--muted);line-height:1.45}
+    .list{margin-top:16px}.row{display:flex;align-items:center;gap:10px;padding:11px 12px;background:var(--surface);border-radius:11px;margin-bottom:6px;width:100%;color:var(--text);text-align:left}
+    .row .grow{flex:1}.small{font-size:12px;color:var(--muted)}.status{font-size:12px;color:var(--muted);margin-top:8px}
+    .dot{width:9px;height:9px;border-radius:3px;flex:none}
+    .backup{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    @media(max-width:390px){.val{font-size:20px}.day{min-height:70px;padding:5px}.tag{font-size:9px}}
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <button class="nav" id="prev" aria-label="Mese precedente">‹</button>
+    <div class="month" id="month"></div>
+    <div style="display:flex;gap:6px">
+      <button class="icon" id="settings" aria-label="Impostazioni">⚙</button>
+      <button class="nav" id="next" aria-label="Mese successivo">›</button>
+    </div>
+  </div>
+
+  <section class="card">
+    <div class="summary-grid">
+      <div><div class="lab">Ore lavorate</div><div class="val" id="totHours">0h</div></div>
+      <div><div class="lab">Notturne</div><div class="val" id="totNight">0h</div></div>
+      <div><div class="lab">Riposi</div><div class="val" id="totRest">0</div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="actions">
+      <button class="btn" id="importBtn">Importa Excel</button>
+      <button class="btn alt" id="clearMonthBtn">Cancella mese</button>
+    </div>
+    <div class="status" id="status">Archivio locale pronto.</div>
+  </section>
+
+  <div class="week"><div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div></div>
+  <div class="grid" id="calendar"></div>
+
+  <section class="card" style="margin-top:14px">
+    <div class="lab">Stima stipendio</div>
+    <div id="pay"></div>
+  </section>
+
+  <div class="list" id="list"></div>
+  <button class="fab" id="addBtn">Aggiungi turno</button>
+</div>
+
+<input id="fileInput" type="file" accept=".xlsx,.xls,.csv" hidden>
+<input id="backupInput" type="file" accept=".json" hidden>
+
+<dialog id="shiftDialog">
+  <h3 id="shiftTitle">Turno</h3>
+  <div class="types" id="types"></div>
+  <div class="fields">
+    <div><label>Inizio</label><input type="time" id="start"></div>
+    <div><label>Fine</label><input type="time" id="end"></div>
+    <div><label>Pausa (min)</label><input type="number" id="break" min="0" step="5"></div>
+    <div class="wide"><label>Nota</label><input id="note" type="text"></div>
+  </div>
+  <div class="dialog-actions">
+    <button class="btn" id="saveShift">Salva</button>
+    <button class="btn alt danger" id="deleteShift">Elimina</button>
+    <button class="btn alt" id="closeShift">Chiudi</button>
+  </div>
+</dialog>
+
+<dialog id="settingsDialog">
+  <h3>Impostazioni</h3>
+  <div class="fields">
+    <div class="wide"><label>Nome nel foglio Excel</label><input id="excelName" placeholder="es. Lo Prete"></div>
+    <div><label>Lordo mensile</label><input id="gross" type="number" step="0.01"></div>
+    <div><label>Divisore mensile</label><input id="divisor" type="number" step="1"></div>
+    <div><label>Notte %</label><input id="nightPct" type="number"></div>
+    <div><label>Festivo %</label><input id="holidayPct" type="number"></div>
+    <div><label>Festivo notturno %</label><input id="holidayNightPct" type="number"></div>
+    <div><label>Trattenute stimate %</label><input id="deductionPct" type="number" step="0.01"></div>
+  </div>
+  <p class="notice">I dati vengono salvati con una sola chiave nel browser e restano dopo il refresh. Ogni dispositivo conserva la propria copia.</p>
+  <div class="backup">
+    <button class="btn alt" id="exportBackup">Esporta backup</button>
+    <button class="btn alt" id="importBackup">Importa backup</button>
+  </div>
+  <div class="dialog-actions">
+    <button class="btn" id="saveSettings">Salva</button>
+    <button class="btn alt" id="closeSettings">Chiudi</button>
+    <button class="btn alt danger" id="wipeAll">Cancella tutto</button>
+  </div>
+</dialog>
+
+<dialog id="previewDialog">
+  <h3>Anteprima importazione</h3>
+  <div id="previewText" class="notice"></div>
+  <div id="previewList" style="max-height:45vh;overflow:auto;margin-top:10px"></div>
+  <div class="dialog-actions">
+    <button class="btn" id="confirmImport">Importa e sostituisci</button>
+    <button class="btn alt" id="cancelImport">Annulla</button>
+  </div>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+'use strict';
+
+const STORAGE_KEY='turni-app-stabile-v1';
+const MONTHS=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const DAYS=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+const WEEKDAY_CODE=['D','L','M','M','G','V','S'];
+const TYPES={
+  mattina:{label:'Mattina',start:'08:00',end:'16:00',color:'var(--m)',work:true},
+  pomeriggio:{label:'Pomeriggio',start:'16:00',end:'00:00',color:'var(--p)',work:true},
+  notte:{label:'Notte',start:'00:00',end:'08:00',color:'var(--n)',work:true},
+  deas:{label:'DEAS',start:'09:00',end:'18:00',color:'var(--deas)',work:true,brk:60},
+  riposo:{label:'Riposo',start:'',end:'',color:'var(--muted)',work:false},
+  ferie:{label:'Ferie',start:'',end:'',color:'var(--f)',work:false},
+  malattia:{label:'Malattia',start:'',end:'',color:'var(--mal)',work:false}
+};
+const DEFAULT_STATE={
+  shifts:{},
+  settings:{
+    excelName:'',
+    gross:2538.46,
+    divisor:173,
+    nightPct:50,
+    holidayPct:50,
+    holidayNightPct:55,
+    deductionPct:31.34,
+    nightStart:'22:00',
+    nightEnd:'06:00'
+  }
+};
+
+let state=loadState();
+let view=new Date(); view.setDate(1);
+let editingKey=null;
+let draft=null;
+let pending=[];
+
+function clone(v){return JSON.parse(JSON.stringify(v))}
+function pad(n){return String(n).padStart(2,'0')}
+function ymd(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+function toMin(t){const [h,m]=String(t||'00:00').split(':').map(Number);return h*60+m}
+function fmtMin(min){const h=Math.floor(min/60),m=min%60;return m?`${h}h ${pad(m)}`:`${h}h`}
+function euro(n){return new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(n)||0)}
+function norm(s){return String(s??'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+
+function normalizeState(raw){
+  const s=raw&&typeof raw==='object'?raw:{};
+  return {shifts:s.shifts&&typeof s.shifts==='object'?s.shifts:{},settings:{...DEFAULT_STATE.settings,...(s.settings||{})}};
+}
+function loadState(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    return raw?normalizeState(JSON.parse(raw)):clone(DEFAULT_STATE);
+  }catch(e){
+    console.error('Errore caricamento',e);
+    return clone(DEFAULT_STATE);
+  }
+}
+function saveState(){
+  try{
+    const payload=JSON.stringify(state);
+    localStorage.setItem(STORAGE_KEY,payload);
+    const ok=localStorage.getItem(STORAGE_KEY)===payload;
+    document.getElementById('status').textContent=ok?`Salvato sul dispositivo · ${Object.keys(state.shifts).length} giorni`:'Salvataggio non riuscito.';
+    return ok;
+  }catch(e){
+    console.error('Errore salvataggio',e);
+    document.getElementById('status').textContent='Il browser ha bloccato il salvataggio.';
+    return false;
+  }
+}
+
+function span(s){let a=toMin(s.start),b=toMin(s.end);if(b<=a)b+=1440;return{a,b,gross:b-a}}
+function worked(s){if(!TYPES[s.type]?.work)return 0;return Math.max(0,span(s).gross-(Number(s.break)||0))}
+function nightMinutes(s){
+  if(!TYPES[s.type]?.work)return 0;
+  const {a,b}=span(s),n1=toMin(state.settings.nightStart),n2=toMin(state.settings.nightEnd);
+  let tot=0;
+  for(let d=-1;d<=1;d++){const x=n1+d*1440,y=(n2>n1?n2:n2+1440)+d*1440;tot+=Math.max(0,Math.min(b,y)-Math.max(a,x))}
+  return Math.min(tot,b-a);
+}
+function easterSunday(y){
+  const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31)-1,day=(h+l-7*m+114)%31+1;
+  return new Date(y,mo,day);
+}
+function isHoliday(d){
+  if(d.getDay()===0)return true;
+  const md=pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  if(['01-01','01-06','04-25','05-01','06-02','08-15','11-01','12-08','12-25','12-26'].includes(md))return true;
+  const e=easterSunday(d.getFullYear()),em=new Date(e);em.setDate(e.getDate()+1);
+  return ymd(d)===ymd(em);
+}
+function minuteBuckets(key,s){
+  const out={night:0,holiday:0,holidayNight:0};
+  if(!TYPES[s.type]?.work)return out;
+  const {a,b}=span(s),end=Math.max(a,b-(Number(s.break)||0));
+  const n1=toMin(state.settings.nightStart),n2=toMin(state.settings.nightEnd);
+  const isNight=min=>{const local=((min%1440)+1440)%1440;return n2>n1?(local>=n1&&local<n2):(local>=n1||local<n2)};
+  for(let min=a;min<end;min++){
+    const off=Math.floor(min/1440),d=new Date(key+'T00:00:00');d.setDate(d.getDate()+off);
+    const h=isHoliday(d),n=isNight(min);
+    if(h&&n)out.holidayNight++;else if(h)out.holiday++;else if(n)out.night++;
+  }
+  return out;
+}
+function payroll(y,m){
+  const mins={night:0,holiday:0,holidayNight:0},days=new Date(y,m+1,0).getDate();
+  for(let d=1;d<=days;d++){
+    const key=`${y}-${pad(m+1)}-${pad(d)}`,s=state.shifts[key];if(!s)continue;
+    const b=minuteBuckets(key,s);Object.keys(mins).forEach(k=>mins[k]+=b[k]);
+  }
+  const hourly=Number(state.settings.gross)/(Number(state.settings.divisor)||173);
+  const amounts={
+    night:mins.night/60*hourly*Number(state.settings.nightPct)/100,
+    holiday:mins.holiday/60*hourly*Number(state.settings.holidayPct)/100,
+    holidayNight:mins.holidayNight/60*hourly*Number(state.settings.holidayNightPct)/100
+  };
+  const extras=amounts.night+amounts.holiday+amounts.holidayNight,gross=Number(state.settings.gross)+extras,deductions=gross*Number(state.settings.deductionPct)/100;
+  return{mins,amounts,gross,deductions,net:gross-deductions};
+}
+
+function render(){
+  const y=view.getFullYear(),m=view.getMonth();
+  document.getElementById('month').innerHTML=`${MONTHS[m]} <span>${y}</span>`;
+  const cal=document.getElementById('calendar');cal.innerHTML='';
+  const first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate(),today=ymd(new Date());
+  for(let i=0;i<offset;i++){const e=document.createElement('div');e.className='day empty';cal.appendChild(e)}
+  let total=0,night=0,rests=0;const list=[];
+  for(let d=1;d<=days;d++){
+    const key=`${y}-${pad(m+1)}-${pad(d)}`,s=state.shifts[key],b=document.createElement('button');
+    b.className='day'+(key===today?' today':'');b.innerHTML=`<div class="num">${d}</div>`;
+    if(s){
+      const t=TYPES[s.type]||TYPES.riposo;
+      if(t.work){total+=worked(s);night+=nightMinutes(s);b.innerHTML+=`<div class="tag" style="color:${t.color}">${t.label}</div><div class="hours">${fmtMin(worked(s))}</div>`}
+      else{rests++;b.innerHTML+=`<div class="tag" style="color:${t.color}">${t.label}</div>`}
+      list.push([key,s]);
+    }
+    b.onclick=()=>openShift(key);cal.appendChild(b);
+  }
+  document.getElementById('totHours').textContent=fmtMin(total);
+  document.getElementById('totNight').textContent=fmtMin(night);
+  document.getElementById('totRest').textContent=rests;
+  document.getElementById('status').textContent=`Salvato sul dispositivo · ${Object.keys(state.shifts).length} giorni`;
+
+  const p=payroll(y,m);
+  document.getElementById('pay').innerHTML=`
+    <div class="payrow"><span>Lordo fisso</span><span>${euro(state.settings.gross)}</span></div>
+    <div class="payrow"><span>Notturne ${fmtMin(p.mins.night)} · ${state.settings.nightPct}%</span><span>+ ${euro(p.amounts.night)}</span></div>
+    <div class="payrow"><span>Festivi ${fmtMin(p.mins.holiday)} · ${state.settings.holidayPct}%</span><span>+ ${euro(p.amounts.holiday)}</span></div>
+    <div class="payrow"><span>Festivi notturni ${fmtMin(p.mins.holidayNight)} · ${state.settings.holidayNightPct}%</span><span>+ ${euro(p.amounts.holidayNight)}</span></div>
+    <div class="payrow"><strong>Netto stimato</strong><strong>${euro(p.net)}</strong></div>`;
+
+  const listBox=document.getElementById('list');listBox.innerHTML='';
+  for(const [key,s] of list){
+    const d=new Date(key+'T00:00:00'),t=TYPES[s.type]||TYPES.riposo,row=document.createElement('button');
+    row.className='row';row.innerHTML=`<span class="dot" style="background:${t.color}"></span><span>${DAYS[d.getDay()]} ${d.getDate()}</span><span class="grow">${t.label}<div class="small">${t.work?`${s.start}–${s.end}`:''}</div></span><span>${t.work?fmtMin(worked(s)):'—'}</span>`;
+    row.onclick=()=>openShift(key);listBox.appendChild(row);
+  }
+}
+
+function openShift(key){
+  editingKey=key;
+  const old=state.shifts[key];
+  draft=old?clone(old):{type:'mattina',start:TYPES.mattina.start,end:TYPES.mattina.end,break:0,note:''};
+  const d=new Date(key+'T00:00:00');
+  document.getElementById('shiftTitle').textContent=`${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+  renderTypes();syncShiftFields();
+  document.getElementById('deleteShift').style.display=old?'':'none';
+  document.getElementById('shiftDialog').showModal();
+}
+function renderTypes(){
+  const box=document.getElementById('types');box.innerHTML='';
+  for(const [id,t] of Object.entries(TYPES)){
+    const b=document.createElement('button');b.className='type'+(draft.type===id?' on':'');b.textContent=t.label;
+    b.onclick=()=>{draft.type=id;draft.start=t.start;draft.end=t.end;draft.break=t.brk||0;renderTypes();syncShiftFields()};box.appendChild(b);
+  }
+}
+function syncShiftFields(){
+  document.getElementById('start').value=draft.start||'';
+  document.getElementById('end').value=draft.end||'';
+  document.getElementById('break').value=draft.break||0;
+  document.getElementById('note').value=draft.note||'';
+}
+['start','end','break','note'].forEach(id=>document.getElementById(id).addEventListener('input',e=>{
+  draft[id==='break'?'break':id]=id==='break'?Number(e.target.value)||0:e.target.value;
+}));
+document.getElementById('saveShift').onclick=()=>{state.shifts[editingKey]=clone(draft);saveState();render();document.getElementById('shiftDialog').close()};
+document.getElementById('deleteShift').onclick=()=>{delete state.shifts[editingKey];saveState();render();document.getElementById('shiftDialog').close()};
+document.getElementById('closeShift').onclick=()=>document.getElementById('shiftDialog').close();
+
+document.getElementById('prev').onclick=()=>{view.setMonth(view.getMonth()-1);render()};
+document.getElementById('next').onclick=()=>{view.setMonth(view.getMonth()+1);render()};
+document.getElementById('addBtn').onclick=()=>{
+  const now=new Date(),key=(now.getFullYear()===view.getFullYear()&&now.getMonth()===view.getMonth())?ymd(now):ymd(new Date(view.getFullYear(),view.getMonth(),1));
+  openShift(key);
+};
+document.getElementById('settings').onclick=()=>{
+  for(const id of ['excelName','gross','divisor','nightPct','holidayPct','holidayNightPct','deductionPct'])document.getElementById(id).value=state.settings[id];
+  document.getElementById('settingsDialog').showModal();
+};
+document.getElementById('saveSettings').onclick=()=>{
+  for(const id of ['excelName','gross','divisor','nightPct','holidayPct','holidayNightPct','deductionPct'])state.settings[id]=id==='excelName'?document.getElementById(id).value:(Number(document.getElementById(id).value)||0);
+  saveState();render();document.getElementById('settingsDialog').close();
+};
+document.getElementById('closeSettings').onclick=()=>document.getElementById('settingsDialog').close();
+document.getElementById('wipeAll').onclick=()=>{if(confirm('Cancellare tutti i dati?')){state=clone(DEFAULT_STATE);saveState();render();document.getElementById('settingsDialog').close()}};
+document.getElementById('clearMonthBtn').onclick=()=>{
+  const y=view.getFullYear(),m=view.getMonth();if(!confirm(`Cancellare tutti i turni di ${MONTHS[m]} ${y}?`))return;
+  Object.keys(state.shifts).forEach(k=>{const d=new Date(k+'T00:00:00');if(d.getFullYear()===y&&d.getMonth()===m)delete state.shifts[k]});
+  saveState();render();
+};
+
+function toType(v){
+  const n=norm(v).replace(/\s*\([^)]*\)\s*/g,'').trim();
+  if(n.startsWith('deas')||n==='d'||n==='sw')return'deas';
+  if(n.startsWith('mal'))return'malattia';
+  if(n.startsWith('fer')||n.startsWith('perm')||n.startsWith('lutto')||n==='f')return'ferie';
+  if(n.startsWith('rip')||n.startsWith('lib')||n==='r'||n==='rc'||n==='-')return'riposo';
+  if(n.startsWith('mat')||n==='m')return'mattina';
+  if(n.startsWith('pom')||n==='p')return'pomeriggio';
+  if(n.startsWith('not')||n==='n')return'notte';
+  return null;
+}
+const MONTH_NUM={gennaio:0,febbraio:1,marzo:2,aprile:3,maggio:4,giugno:5,luglio:6,agosto:7,settembre:8,ottobre:9,novembre:10,dicembre:11};
+
+function parsePeriods(names){
+  const parsed=names.map(name=>{
+    const n=norm(name),monthName=Object.keys(MONTH_NUM).find(m=>n.includes(m)),year=String(name).match(/(?:19|20)\d{2}/);
+    return monthName?{month:MONTH_NUM[monthName],year:year?Number(year[0]):null}:null;
+  });
+  const anchors=parsed.map((p,i)=>p&&p.year!=null?{...p,i}:null).filter(Boolean);
+  return parsed.map((p,i)=>{
+    if(!p)return null;
+    if(p.year!=null)return p;
+    if(!anchors.length)return{month:p.month,year:new Date().getFullYear()};
+    const a=anchors.slice().sort((x,y)=>Math.abs(x.i-i)-Math.abs(y.i-i))[0];
+    const diff=i-a.i;
+    const absolute=a.year*12+a.month+diff;
+    return{year:Math.floor(absolute/12),month:((absolute%12)+12)%12};
+  });
+}
+function findHeader(rows){
+  for(let r=0;r<Math.min(rows.length,25);r++)for(let c=0;c<(rows[r]||[]).length;c++)if(norm(rows[r][c]).includes('nome/turno'))return{r,c};
+  /* Nel tuo file la cella A10 può essere vuota: riconosce anche riga giorni + riga giorni-settimana. */
+  for(let r=1;r<Math.min(rows.length-1,25);r++){
+    const nums=(rows[r]||[]).filter(v=>Number.isInteger(Number(v))&&Number(v)>=1&&Number(v)<=31).length;
+    const weekdays=(rows[r+1]||[]).filter(v=>WEEKDAY_CODE.includes(String(v||'').trim().toUpperCase())).length;
+    if(nums>=7&&weekdays>=7)return{r:r+1,c:0};
+  }
+  return null;
+}
+function nameMatches(cell,wanted){
+  const a=norm(cell).replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim(),b=norm(wanted).replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+  if(!a||!b)return false;
+  const aw=a.split(' ').filter(Boolean),bw=b.split(' ').filter(Boolean);
+  return a===b||a.includes(b)||b.includes(a)||bw.every(x=>aw.includes(x));
+}
+function validDay(v){const n=Number(String(v??'').trim());return Number.isInteger(n)&&n>=1&&n<=31?n:null}
+function makeShift(type){
+  const t=TYPES[type];return t.work?{type,start:t.start,end:t.end,break:t.brk||0,note:'Importato da Excel'}:{type,start:'',end:'',break:0,note:'Importato da Excel'};
+}
+function parseGridSheet(rows,period,wanted){
+  const hdr=findHeader(rows);if(!hdr||!period)return[];
+  let person=-1;
+  for(let r=hdr.r+1;r<rows.length;r++){if(nameMatches(rows[r]?.[hdr.c],wanted)){person=r;break}}
+  if(person<0)return[];
+  const out=[],row=rows[person]||[];
+  for(let c=hdr.c+1;c<row.length;c++){
+    const type=toType(row[c]);if(!type)continue;
+    const day=validDay(rows[hdr.r-1]?.[c]);if(!day)continue;
+    const d=new Date(period.year,period.month,day);
+    if(d.getMonth()!==period.month||d.getFullYear()!==period.year)continue;
+    const weekday=String(rows[hdr.r]?.[c]??'').trim().toUpperCase();
+    if(weekday&&WEEKDAY_CODE[d.getDay()]!==weekday)continue;
+    out.push({key:ymd(d),shift:makeShift(type)});
+  }
+  return out;
+}
+
+document.getElementById('importBtn').onclick=()=>{
+  if(!state.settings.excelName){document.getElementById('settings').click();return}
+  document.getElementById('fileInput').click();
+};
+document.getElementById('fileInput').addEventListener('change',async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  if(typeof XLSX==='undefined'){alert('La libreria Excel non è disponibile. Apri una volta l’app con internet.');return}
+  try{
+    const wb=XLSX.read(new Uint8Array(await f.arrayBuffer()),{type:'array',cellDates:true});
+    const periods=parsePeriods(wb.SheetNames),map=new Map();
+    wb.SheetNames.forEach((name,i)=>{
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:'',blankrows:false,raw:true});
+      parseGridSheet(rows,periods[i],state.settings.excelName).forEach(x=>map.set(x.key,x));
+    });
+    pending=[...map.values()].sort((a,b)=>a.key.localeCompare(b.key));
+    if(!pending.length){alert(`Nessun turno trovato per “${state.settings.excelName}”.`);return}
+    document.getElementById('previewText').textContent=`Trovati ${pending.length} giorni. L'importazione sostituirà soltanto i vecchi turni importati da Excel.`;
+    const box=document.getElementById('previewList');box.innerHTML='';
+    pending.slice(0,120).forEach(p=>{
+      const d=new Date(p.key+'T00:00:00'),t=TYPES[p.shift.type],r=document.createElement('div');
+      r.className='row';r.innerHTML=`<span>${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}</span><span class="grow">${t.label}</span>`;box.appendChild(r);
+    });
+    document.getElementById('previewDialog').showModal();
+  }catch(err){console.error(err);alert('File Excel non leggibile o formato non riconosciuto.')}
+});
+document.getElementById('confirmImport').onclick=()=>{
+  Object.keys(state.shifts).forEach(k=>{if(state.shifts[k]?.note==='Importato da Excel')delete state.shifts[k]});
+  pending.forEach(p=>state.shifts[p.key]=p.shift);
+  const last=pending.at(-1)?.key;if(last){const d=new Date(last+'T00:00:00');view=new Date(d.getFullYear(),d.getMonth(),1)}
+  pending=[];saveState();render();document.getElementById('previewDialog').close();
+};
+document.getElementById('cancelImport').onclick=()=>{pending=[];document.getElementById('previewDialog').close()};
+
+document.getElementById('exportBackup').onclick=()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=`turni-backup-${ymd(new Date())}.json`;a.click();URL.revokeObjectURL(a.href);
+};
+document.getElementById('importBackup').onclick=()=>document.getElementById('backupInput').click();
+document.getElementById('backupInput').addEventListener('change',async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{state=normalizeState(JSON.parse(await f.text()));saveState();render();alert('Backup ripristinato.')}catch(err){alert('Backup non valido.')}
+});
+
+window.addEventListener('storage',e=>{if(e.key===STORAGE_KEY){state=loadState();render()}});
+window.addEventListener('pagehide',saveState);
+
+render();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(console.error));
+}
+</script>
+</body>
+</html>
