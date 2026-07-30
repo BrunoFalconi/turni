@@ -282,8 +282,8 @@ input[type=time]{font-family:var(--mono)}
   <div class="set-row"><span>Lordo fisso mensile (€)</span><div class="in"><input type="number" id="s-gross" min="0" step="0.01" inputmode="decimal"></div></div>
   <div class="set-row"><span>Divisore ore mensili</span><div class="in"><input type="number" id="s-div" min="1" step="1" inputmode="numeric"></div></div>
   <div class="set-row"><span>Maggiorazione notte (%)</span><div class="in"><input type="number" id="s-nightp" min="0" step="0.1" inputmode="decimal"></div></div>
-  <div class="set-row"><span>Domenica / festivo (%)</span><div class="in"><input type="number" id="s-holp" min="0" step="0.1" inputmode="decimal"></div></div>
-  <div class="set-row"><span>Notte festiva (%)</span><div class="in"><input type="number" id="s-holnp" min="0" step="0.1" inputmode="decimal"></div></div>
+  <div class="set-row"><span>Festivo / domenica (%)</span><div class="in"><input type="number" id="s-holp" min="0" step="0.1" inputmode="decimal"></div></div>
+  <div class="set-row"><span>Festivo notturno (%)</span><div class="in"><input type="number" id="s-holnp" min="0" step="0.1" inputmode="decimal"></div></div>
   <div class="set-row"><span>Straordinario (%)</span><div class="in"><input type="number" id="s-otp" min="0" step="0.1" inputmode="decimal"></div></div>
   <div class="set-row"><span>Trattenute stimate (%)</span><div class="in"><input type="number" id="s-ded" min="0" max="70" step="0.1" inputmode="decimal"></div></div>
   <div class="set-row"><span>Nome nel foglio Excel</span><div class="in" style="width:170px"><input type="text" id="s-xname" placeholder="Es. Lo Prete Alessandro"></div></div>
@@ -379,7 +379,7 @@ const GIORNI=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
 const DEFAULTS={
   weekHours:40, dayThreshold:8, night1:'22:00', night2:'06:00', defaultBreak:0, presetsV:3,
   workDays:5, restDays:2,
-  payroll:{monthlyGross:2538.46,monthlyDivisor:173,nightPct:50,holidayPct:55,holidayNightPct:60,overtimePct:0,deductionPct:31.34,excelName:''},
+  payroll:{ratesV:2,monthlyGross:2538.46,monthlyDivisor:173,nightPct:50,holidayPct:50,holidayNightPct:55,overtimePct:0,deductionPct:31.34,excelName:''},
   presets:{mattina:['08:00','16:00'],pomeriggio:['16:00','00:00'],notte:['00:00','08:00'],deas:['09:00','18:00']}
 };
 
@@ -466,8 +466,8 @@ function renderPayroll(y,m){
   document.getElementById('pay-lines').innerHTML=`
     <div class="pay-row"><span>Lordo fisso</span><span>${eur(p.monthlyGross)}</span></div>
     <div class="pay-row muted"><span>Notturne ${h('night')} · ${p.nightPct}%</span><span>+ ${eur(r.amounts.night)}</span></div>
-    <div class="pay-row muted"><span>Domeniche/festivi ${h('holiday')} · ${p.holidayPct}%</span><span>+ ${eur(r.amounts.holiday)}</span></div>
-    <div class="pay-row muted"><span>Notturne festive ${h('holidayNight')} · ${p.holidayNightPct}%</span><span>+ ${eur(r.amounts.holidayNight)}</span></div>
+    <div class="pay-row muted"><span>Festivi/domeniche ${h('holiday')} · ${p.holidayPct}%</span><span>+ ${eur(r.amounts.holiday)}</span></div>
+    <div class="pay-row muted"><span>Festive notturne ${h('holidayNight')} · ${p.holidayNightPct}%</span><span>+ ${eur(r.amounts.holidayNight)}</span></div>
     ${p.overtimePct?`<div class="pay-row muted"><span>Straordinari ${h('overtime')} · ${p.overtimePct}%</span><span>+ ${eur(r.amounts.overtime)}</span></div>`:''}
     <div class="pay-row total"><span>Lordo stimato</span><span>${eur(r.gross)}</span></div>
     <div class="pay-row muted"><span>Trattenute stimate · ${p.deductionPct}%</span><span>− ${eur(r.deductions)}</span></div>
@@ -516,6 +516,14 @@ async function load(){
       state.shifts=d.shifts||{};
       state.settings={...DEFAULTS,...saved,payroll:{...DEFAULTS.payroll,...(saved.payroll||{})}};
       let changed=false;
+      /* aggiorna una sola volta le maggiorazioni: notte 50%, festivo 50%, festivo notturno 55% */
+      if(((saved.payroll||{}).ratesV||0)<DEFAULTS.payroll.ratesV){
+        state.settings.payroll.nightPct=50;
+        state.settings.payroll.holidayPct=50;
+        state.settings.payroll.holidayNightPct=55;
+        state.settings.payroll.ratesV=DEFAULTS.payroll.ratesV;
+        changed=true;
+      }
       /* la versione va letta dal dato salvato, non da quello già unito */
       if((saved.presetsV||0)<DEFAULTS.presetsV){
         state.settings.presets={...DEFAULTS.presets};
@@ -908,27 +916,51 @@ const MONTH_NUM={gennaio:0,febbraio:1,marzo:2,aprile:3,maggio:4,giugno:5,luglio:
 const WEEKDAY_CODE=['D','L','M','M','G','V','S'];
 
 function parseSheetPeriod(sheetName,allNames,index){
-  const n=norm(sheetName);
+  const rawName=String(sheetName||'').trim();
+  const n=norm(rawName);
   const monthName=Object.keys(MONTH_NUM).find(m=>n.includes(m));
   if(!monthName)return null;
-  const explicit=String(sheetName).match(/(?:19|20)\d{2}/);
-  if(explicit)return {month:MONTH_NUM[monthName],year:Number(explicit[0])};
 
-  /* Ricava l'anno dal foglio con anno esplicito più vicino, mantenendo
-     la distanza reale in mesi tra i due fogli. Nel file fornito i primi
-     fogli appartengono al 2025 e quelli con “(2026)” al 2026. */
+  /* Un anno tra parentesi appartiene direttamente a quel foglio:
+     "Giugno (2026)" = giugno 2026, "Luglio (2026)" = luglio 2026. */
+  const parenthesizedYear=rawName.match(/\((19|20)\d{2}\)/);
+  if(parenthesizedYear){
+    return {month:MONTH_NUM[monthName],year:Number(parenthesizedYear[1])};
+  }
+
+  /* Accetta anche nomi senza parentesi, ad esempio "Giugno 2026". */
+  const explicitYear=rawName.match(/(?:19|20)\d{2}/);
+  if(explicitYear){
+    return {month:MONTH_NUM[monthName],year:Number(explicitYear[0])};
+  }
+
+  /* Per i fogli senza anno usa il foglio con anno esplicito più vicino
+     come ancora temporale e calcola la distanza in mesi reali. */
   let best=null;
   allNames.forEach((name,i)=>{
-    const nn=norm(name);
+    const candidate=String(name||'').trim();
+    const nn=norm(candidate);
     const mn=Object.keys(MONTH_NUM).find(m=>nn.includes(m));
-    const yy=String(name).match(/(?:19|20)\d{2}/);
+    const yy=candidate.match(/(?:19|20)\d{2}/);
     if(!mn||!yy)return;
     const dist=Math.abs(i-index);
-    if(!best||dist<best.dist)best={i,month:MONTH_NUM[mn],year:Number(yy[0]),dist};
+    if(!best||dist<best.dist){
+      best={i,month:MONTH_NUM[mn],year:Number(yy[0]),dist};
+    }
   });
-  if(!best)return {month:MONTH_NUM[monthName],year:new Date().getFullYear()};
-  const d=new Date(best.year,best.month+(index-best.i),1);
-  return {month:d.getMonth(),year:d.getFullYear()};
+
+  if(!best){
+    return {month:MONTH_NUM[monthName],year:new Date().getFullYear()};
+  }
+
+  /* Usa il numero del mese, non soltanto la posizione del foglio.
+     Così maggio prima di "Giugno (2026)" diventa maggio 2026 e
+     dicembre prima di gennaio passa correttamente all'anno precedente. */
+  let year=best.year;
+  const targetMonth=MONTH_NUM[monthName];
+  if(index<best.i && targetMonth>best.month) year--;
+  if(index>best.i && targetMonth<best.month) year++;
+  return {month:targetMonth,year};
 }
 
 function findTurnisticaHeader(rows){
