@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ripristino TurniApp</title>
+  <style>
+    body{margin:0;background:#0e1420;color:#e9edf6;font-family:system-ui;padding:32px}
+    .box{max-width:560px;margin:auto;background:#182031;border-radius:18px;padding:22px}
+    h1{font-size:24px}.status{color:#9daac6;line-height:1.5}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Ripristino TurniApp</h1>
+    <div class="status" id="status">Eliminazione della vecchia cache in corso…</div>
+  </div>
+<script>
+(async()=>{
+  const status=document.getElementById('status');
+  try{
+    if('serviceWorker' in navigator){
+      const regs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(reg=>reg.unregister()));
+    }
+    if('caches' in window){
+      const names=await caches.keys();
+      await Promise.all(names.map(name=>caches.delete(name)));
+    }
+    status.textContent='Cache eliminata. Apertura dell’app…';
+    setTimeout(()=>location.replace('./index.html?fresh=20260730-1'),800);
+  }catch(error){
+    console.error(error);
+    status.textContent='Ripristino completato parzialmente. Apri ora index.html.';
+  }
+})();
+</script>
+</body>
+</html>
