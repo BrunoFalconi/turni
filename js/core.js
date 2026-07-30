@@ -23,6 +23,12 @@ const DEFAULT_STATE={
     holidayPct:50,
     holidayNightPct:55,
     deductionPct:31.34,
+    socialPct:9.59,
+    taxPct:21.14,
+    localTaxes:76.73,
+    cometaAmount:28.94,
+    otherDeductions:0,
+    otherEarnings:0,
     nightStart:'22:00',
     nightEnd:'06:00'
   }
@@ -108,14 +114,41 @@ function payroll(y,m){
     const key=`${y}-${pad(m+1)}-${pad(d)}`,s=state.shifts[key];if(!s)continue;
     const b=minuteBuckets(key,s);Object.keys(mins).forEach(k=>mins[k]+=b[k]);
   }
+
   const hourly=Number(state.settings.gross)/(Number(state.settings.divisor)||173);
   const amounts={
     night:mins.night/60*hourly*Number(state.settings.nightPct)/100,
     holiday:mins.holiday/60*hourly*Number(state.settings.holidayPct)/100,
     holidayNight:mins.holidayNight/60*hourly*Number(state.settings.holidayNightPct)/100
   };
-  const extras=amounts.night+amounts.holiday+amounts.holidayNight,gross=Number(state.settings.gross)+extras,deductions=gross*Number(state.settings.deductionPct)/100;
-  return{mins,amounts,gross,deductions,net:gross-deductions};
+
+  const extras=amounts.night+amounts.holiday+amounts.holidayNight;
+  const otherEarnings=Number(state.settings.otherEarnings)||0;
+  const gross=Number(state.settings.gross)+extras+otherEarnings;
+
+  const social=gross*(Number(state.settings.socialPct)||0)/100;
+  const taxable=Math.max(0,gross-social-(Number(state.settings.cometaAmount)||0));
+  const tax=taxable*(Number(state.settings.taxPct)||0)/100;
+  const localTaxes=Number(state.settings.localTaxes)||0;
+  const cometa=Number(state.settings.cometaAmount)||0;
+  const otherDeductions=Number(state.settings.otherDeductions)||0;
+  const deductions=social+tax+localTaxes+cometa+otherDeductions;
+
+  return{
+    mins,
+    amounts,
+    extras,
+    otherEarnings,
+    gross,
+    social,
+    taxable,
+    tax,
+    localTaxes,
+    cometa,
+    otherDeductions,
+    deductions,
+    net:gross-deductions
+  };
 }
 
 function render(){
@@ -142,14 +175,30 @@ function render(){
   document.getElementById('status').textContent=`Salvato sul dispositivo · ${Object.keys(state.shifts).length} giorni`;
 
   if(typeof renderStats==='function')renderStats(y,m);
+  if(typeof renderDashboard==='function')renderDashboard();
 
   const p=payroll(y,m);
   document.getElementById('pay').innerHTML=`
-    <div class="payrow"><span>Lordo fisso</span><span>${euro(state.settings.gross)}</span></div>
+    <div class="pay-section-title">Competenze</div>
+    <div class="payrow main"><span>Lordo fisso</span><span>${euro(state.settings.gross)}</span></div>
     <div class="payrow"><span>Notturne ${fmtMin(p.mins.night)} · ${state.settings.nightPct}%</span><span>+ ${euro(p.amounts.night)}</span></div>
     <div class="payrow"><span>Festivi ${fmtMin(p.mins.holiday)} · ${state.settings.holidayPct}%</span><span>+ ${euro(p.amounts.holiday)}</span></div>
     <div class="payrow"><span>Festivi notturni ${fmtMin(p.mins.holidayNight)} · ${state.settings.holidayNightPct}%</span><span>+ ${euro(p.amounts.holidayNight)}</span></div>
-    <div class="payrow"><strong>Netto stimato</strong><strong>${euro(p.net)}</strong></div>`;
+    ${p.otherEarnings?`<div class="payrow"><span>Altre competenze</span><span>+ ${euro(p.otherEarnings)}</span></div>`:''}
+    <div class="payrow total-gross"><span>Lordo stimato</span><span>${euro(p.gross)}</span></div>
+
+    <div class="pay-section-title">Trattenute</div>
+    <div class="payrow deduction"><span>Contributi · ${state.settings.socialPct}%</span><span>− ${euro(p.social)}</span></div>
+    <div class="payrow deduction"><span>IRPEF stimata · ${state.settings.taxPct}%</span><span>− ${euro(p.tax)}</span></div>
+    <div class="payrow deduction"><span>Addizionali</span><span>− ${euro(p.localTaxes)}</span></div>
+    <div class="payrow deduction"><span>Fondo Cometa</span><span>− ${euro(p.cometa)}</span></div>
+    ${p.otherDeductions?`<div class="payrow deduction"><span>Altre trattenute</span><span>− ${euro(p.otherDeductions)}</span></div>`:''}
+
+    <div class="payrow net-final"><span>Netto stimato</span><span>${euro(p.net)}</span></div>
+    <button class="btn alt pay-settings-btn" id="openPayrollSettings">Modifica trattenute</button>`;
+
+  const openPayrollSettings=document.getElementById('openPayrollSettings');
+  if(openPayrollSettings)openPayrollSettings.onclick=openPayrollDialog;
 
   const listBox=document.getElementById('list');listBox.innerHTML='';
   for(const [key,s] of list){

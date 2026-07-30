@@ -32,3 +32,21 @@ Aggiunge:
 - pulsante per copiare il riepilogo mensile.
 
 La chiave di salvataggio resta `turni-app-stabile-v1`, quindi i dati già presenti non vengono persi.
+
+
+## Versione 2.2 — Dashboard e simulatore busta paga
+
+Aggiunge:
+
+- riepilogo del turno di oggi;
+- prossimo turno programmato;
+- ore e netto stimato del mese in dashboard;
+- lordo totale stimato;
+- contributi previdenziali;
+- IRPEF stimata;
+- addizionali;
+- Fondo Cometa;
+- altre competenze/trattenute;
+- copia del riepilogo paga.
+
+I turni continuano a usare la chiave `turni-app-stabile-v1`.

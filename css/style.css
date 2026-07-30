@@ -68,3 +68,23 @@
       .stats-grid{grid-template-columns:1fr 1fr}
       .bar-row{grid-template-columns:78px 1fr 32px}
     }
+
+
+    .dashboard-card{background:linear-gradient(145deg,var(--surface),#1a2440)}
+    .dashboard-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    .dash-tile{background:#ffffff08;border:1px solid #ffffff0a;border-radius:14px;padding:12px}
+    .dash-tile .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+    .dash-tile .v{font-size:20px;font-weight:800;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .dash-tile .sub{font-size:11px;color:var(--muted);margin-top:3px}
+    .today-badge{padding:7px 10px;background:var(--surface2);border-radius:999px;font-size:12px;font-weight:800}
+    .pay-section-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 4px}
+    .payrow.main{font-weight:750}
+    .payrow.total-gross{font-size:17px;font-weight:800;border-top:1px solid var(--line);margin-top:4px}
+    .payrow.deduction span:last-child{color:var(--x)}
+    .payrow.net-final{font-size:20px;font-weight:900;border-top:1px solid var(--line);margin-top:4px;padding-top:12px}
+    .payroll-note{font-size:11px;color:var(--muted);line-height:1.45;margin-top:12px}
+    .pay-settings-btn{width:100%;margin-top:10px}
+    @media(max-width:390px){
+      .dashboard-grid{grid-template-columns:1fr 1fr}
+      .dash-tile .v{font-size:18px}
+    }

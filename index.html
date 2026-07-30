@@ -22,6 +22,40 @@
     </div>
   </div>
 
+
+  <section class="card dashboard-card" id="dashboardCard">
+    <div class="section-head">
+      <div>
+        <div class="lab">Oggi</div>
+        <div class="section-title" id="todayTitle">—</div>
+      </div>
+      <div class="today-badge" id="todayBadge">—</div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="dash-tile">
+        <div class="k">Turno di oggi</div>
+        <div class="v" id="todayShift">—</div>
+        <div class="sub" id="todayTime">Nessun turno</div>
+      </div>
+      <div class="dash-tile">
+        <div class="k">Prossimo turno</div>
+        <div class="v" id="nextShift">—</div>
+        <div class="sub" id="nextShiftDate">—</div>
+      </div>
+      <div class="dash-tile">
+        <div class="k">Ore mese</div>
+        <div class="v" id="dashHours">0h</div>
+        <div class="sub">ore registrate</div>
+      </div>
+      <div class="dash-tile">
+        <div class="k">Netto stimato</div>
+        <div class="v" id="dashNet">0 €</div>
+        <div class="sub">stima del mese</div>
+      </div>
+    </div>
+  </section>
+
   <section class="card">
     <div class="summary-grid">
       <div><div class="lab">Ore lavorate</div><div class="val" id="totHours">0h</div></div>
@@ -64,9 +98,16 @@
     </div>
   </section>
 
-  <section class="card" style="margin-top:14px">
-    <div class="lab">Stima stipendio</div>
+  <section class="card payroll-card" style="margin-top:14px">
+    <div class="section-head">
+      <div>
+        <div class="lab">Simulatore busta paga</div>
+        <div class="section-title">Dettaglio del mese</div>
+      </div>
+      <button class="mini-btn" id="copyPayroll">Copia</button>
+    </div>
     <div id="pay"></div>
+    <div class="payroll-note">La stima usa le percentuali configurate nelle impostazioni e non sostituisce il cedolino ufficiale.</div>
   </section>
 
   <div class="list" id="list"></div>
@@ -125,11 +166,30 @@
   </div>
 </dialog>
 
+
+<dialog id="payrollDialog">
+  <h3>Parametri busta paga</h3>
+  <div class="fields">
+    <div><label>Contributi previdenziali %</label><input id="socialPct" type="number" step="0.01"></div>
+    <div><label>IRPEF stimata %</label><input id="taxPct" type="number" step="0.01"></div>
+    <div><label>Addizionali mensili €</label><input id="localTaxes" type="number" step="0.01"></div>
+    <div><label>Fondo Cometa €</label><input id="cometaAmount" type="number" step="0.01"></div>
+    <div><label>Altre trattenute €</label><input id="otherDeductions" type="number" step="0.01"></div>
+    <div><label>Altre competenze €</label><input id="otherEarnings" type="number" step="0.01"></div>
+  </div>
+  <p class="notice">Questi valori servono per affinare il netto stimato. La retribuzione base e le percentuali delle maggiorazioni restano nelle impostazioni principali.</p>
+  <div class="dialog-actions">
+    <button class="btn" id="savePayrollSettings">Salva</button>
+    <button class="btn alt" id="closePayrollSettings">Chiudi</button>
+  </div>
+</dialog>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="./js/core.js"></script>
 <script src="./js/excel.js"></script>
 <script src="./js/backup.js"></script>
 <script src="./js/stats.js"></script>
+<script src="./js/dashboard.js"></script>
 <script src="./js/app.js"></script>
 </body>
 </html>
