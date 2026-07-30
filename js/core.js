@@ -326,7 +326,6 @@ document.getElementById('savePayrollSettings').onclick=()=>{
 document.getElementById('closePayrollSettings').onclick=()=>{
   document.getElementById('payrollDialog').close();
 };
-};
 
 document.getElementById('copyPayroll').onclick=async()=>{
   const y=view.getFullYear(),m=view.getMonth(),p=payroll(y,m);
