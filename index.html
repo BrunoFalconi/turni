@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Turni</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E1420">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Turni">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="stylesheet" href="./css/styles.css">
+
+
+</head>
+<body>
+<div id="app">
+  <div id="boot" style="background:#FF7A6B1a;border:1px solid #FF7A6B4d;border-radius:12px;padding:13px 15px;margin-bottom:16px;font-size:13px;line-height:1.5;color:#E9EDF6;font-family:system-ui,-apple-system,sans-serif">
+    <b style="color:#FF7A6B">L'app non è partita.</b><br>
+    Questa finestra non esegue il codice: succede aprendo il file dall'app File. Aprilo in Safari, oppure dall'app Claude.
+  </div>
+  <div class="month-bar">
+    <button class="nav-btn" id="prev" aria-label="Mese precedente">‹</button>
+    <div class="month-name" id="mname"></div>
+    <div style="display:flex;gap:6px">
+      <button class="icon-btn" id="settings" aria-label="Impostazioni">⚙</button>
+      <button class="nav-btn" id="next" aria-label="Mese successivo">›</button>
+    </div>
+  </div>
+
+  <div class="summary">
+    <div class="totals">
+      <div class="tot-main">
+        <div class="tot-label">Ore lavorate</div>
+        <div class="tot-value" id="tot-h">0<small>h</small></div>
+      </div>
+      <div class="tot-side tot-extra">
+        <div class="tot-label">Straord.</div>
+        <div class="tot-value" id="tot-x">0<small>h</small></div>
+      </div>
+      <div class="tot-side">
+        <div class="tot-label">Notturne</div>
+        <div class="tot-value" id="tot-n">0<small>h</small></div>
+      </div>
+    </div>
+    <div class="bar"><i id="bar-1"></i><i class="over" id="bar-2"></i></div>
+    <div class="bar-note"><span id="bar-left">—</span><span id="bar-right">—</span></div>
+    <div class="chips-legend">
+      <span><b style="background:var(--mattina)"></b>Mattina</span>
+      <span><b style="background:var(--pomeriggio)"></b>Pomeriggio</span>
+      <span><b style="background:var(--notte)"></b>Notte</span>
+      <span><b style="background:var(--deas)"></b>DEAS</span>
+      <span><b style="background:var(--ferie)"></b>Ferie / permesso</span>
+    </div>
+  </div>
+
+  <div class="payroll" id="payroll">
+    <div class="payroll-head"><div class="payroll-title">Stima busta paga</div><div class="payroll-badge">stima</div></div>
+    <div id="pay-lines"></div>
+    <div class="pay-note">La stima usa i parametri nelle impostazioni e non sostituisce il cedolino ufficiale.</div>
+  </div>
+
+  <div class="actions" style="margin:0 0 18px">
+    <button class="btn" id="quick-add">Inserisci turno</button>
+    <button class="btn ghost" id="quick-import">Importa Excel</button>
+  </div>
+
+  <div class="week-head"><div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div></div>
+  <div class="grid" id="grid"></div>
+  <div class="weeks" id="weeks"></div>
+
+  <div id="alerts" style="margin-top:22px"></div>
+
+  <div class="list-title">Turni del mese</div>
+  <div id="list"></div>
+
+  <button class="fab" id="fab">Aggiungi turno</button>
+  <div class="toast" id="toast"></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+
+<div class="sheet" id="sheet">
+  <h2 id="sheet-title"></h2>
+  <div class="types" id="types"></div>
+  <div id="work-fields">
+    <div class="fields">
+      <div class="field"><label for="f-start">Inizio</label><input type="time" id="f-start"></div>
+      <div class="field"><label for="f-end">Fine</label><input type="time" id="f-end"></div>
+      <div class="field"><label for="f-break">Pausa (min)</label><input type="number" id="f-break" min="0" step="5" inputmode="numeric"></div>
+      <div class="field"><label for="f-repeat">Ripeti per</label>
+        <select id="f-repeat">
+          <option value="1">Solo questo giorno</option>
+          <option value="2">2 giorni</option>
+          <option value="3">3 giorni</option>
+          <option value="4">4 giorni</option>
+          <option value="5">5 giorni</option>
+          <option value="6">6 giorni</option>
+          <option value="7">7 giorni</option>
+        </select>
+      </div>
+      <div class="field wide"><label for="f-note">Nota</label><input type="text" id="f-note" placeholder="Reparto, sede, collega…"></div>
+    </div>
+    <div class="calc" id="calc"></div>
+  </div>
+  <div class="actions">
+    <button class="btn" id="save">Salva</button>
+    <button class="btn ghost danger" id="del">Elimina</button>
+  </div>
+</div>
+
+<div class="sheet" id="sheet-set">
+  <h2>Impostazioni</h2>
+  <div class="set-row"><span>Ore contrattuali a settimana</span><div class="in"><input type="number" id="s-week" min="0" step="0.5" inputmode="decimal"></div></div>
+  <div class="set-row"><span>Giorni di lavoro a settimana</span><div class="in"><input type="number" id="s-wd" min="0" max="7" step="1" inputmode="numeric"></div></div>
+  <div class="set-row"><span>Riposi a settimana</span><div class="in"><input type="number" id="s-rd" min="0" max="7" step="1" inputmode="numeric"></div></div>
+  <div class="set-row"><span>Straordinario oltre (ore/giorno)</span><div class="in"><input type="number" id="s-day" min="0" step="0.5" inputmode="decimal"></div></div>
+  <div class="set-row"><span>Fascia notturna dalle</span><div class="in"><input type="time" id="s-n1"></div></div>
+  <div class="set-row"><span>alle</span><div class="in"><input type="time" id="s-n2"></div></div>
+  <div class="set-row"><span>Pausa predefinita (min)</span><div class="in"><input type="number" id="s-break" min="0" step="5" inputmode="numeric"></div></div>
+  <div class="set-row"><span>Orario mattina</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-m1"><input type="time" id="p-m2"></div></div>
+  <div class="set-row"><span>Orario pomeriggio</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-p1"><input type="time" id="p-p2"></div></div>
+  <div class="set-row"><span>Orario notte</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-n1"><input type="time" id="p-n2"></div></div>
+  <div class="set-row"><span>Orario DEAS</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-d1"><input type="time" id="p-d2"></div></div>
+  <div style="height:18px"></div>
+  <div class="calc"><b>Stima stipendio</b><br>Valori iniziali ricavati dal cedolino di giugno 2026. Puoi modificarli.</div>
+  <div class="set-row"><span>Lordo fisso mensile (€)</span><div class="in"><input type="number" id="s-gross" min="0" step="0.01" inputmode="decimal"></div></div>
+  <div class="set-row"><span>Divisore ore mensili</span><div class="in"><input type="number" id="s-div" min="1" step="1" inputmode="numeric"></div></div>
+  <div class="set-row"><span>Maggiorazione notte (%)</span><div class="in"><input type="number" id="s-nightp" min="0" step="0.1" inputmode="decimal"></div></div>
+  <div class="set-row"><span>Festivo / domenica (%)</span><div class="in"><input type="number" id="s-holp" min="0" step="0.1" inputmode="decimal"></div></div>
+  <div class="set-row"><span>Festivo notturno (%)</span><div class="in"><input type="number" id="s-holnp" min="0" step="0.1" inputmode="decimal"></div></div>
+  <div class="set-row"><span>Straordinario (%)</span><div class="in"><input type="number" id="s-otp" min="0" step="0.1" inputmode="decimal"></div></div>
+  <div class="set-row"><span>Trattenute stimate (%)</span><div class="in"><input type="number" id="s-ded" min="0" max="70" step="0.1" inputmode="decimal"></div></div>
+  <div class="set-row"><span>Nome nel foglio Excel</span><div class="in" style="width:170px"><input type="text" id="s-xname" placeholder="Es. Lo Prete Alessandro"></div></div>
+  <div class="import-help">L'importazione riconosce sia elenchi con colonne Data/Turno, sia griglie con i nomi sulle righe o sulle colonne.</div>
+  <div style="height:18px"></div>
+  <div class="calc" id="store-info"></div>
+  <button class="btn" style="width:100%;margin-bottom:10px" id="seq">Incolla sequenza turni</button>
+  <div class="actions" style="margin-bottom:10px">
+    <button class="btn ghost" style="flex:1" id="imp">Importa da Excel</button>
+    <button class="btn ghost" style="flex:1" id="tpl">Scarica modello</button>
+  </div>
+  <div class="actions">
+    <button class="btn" id="set-close">Fatto</button>
+    <button class="btn ghost" id="copy">Copia riepilogo</button>
+  </div>
+  <div style="height:10px"></div>
+  <button class="btn danger" style="width:100%" id="wipe">Cancella tutti i dati</button>
+  <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
+</div>
+
+<div class="sheet" id="sheet-seq">
+  <h2>Incolla la sequenza</h2>
+  <div class="field" style="margin-bottom:12px">
+    <label for="q-date">Il primo turno della stringa è del</label>
+    <input type="date" id="q-date">
+  </div>
+  <div class="field" style="margin-bottom:12px">
+    <label for="q-text">Sequenza</label>
+    <textarea id="q-text" rows="4" placeholder="R N M M P P R R N R M P R DEAS..."></textarea>
+  </div>
+  <div class="calc" id="q-info">Codici: M mattina · P pomeriggio · N notte · DEAS · R riposo · F ferie · MAL malattia</div>
+  <div class="actions">
+    <button class="btn" id="q-go">Vedi anteprima</button>
+    <button class="btn ghost" id="q-cancel">Annulla</button>
+  </div>
+</div>
+
+<div class="sheet" id="sheet-imp">
+  <h2>Anteprima importazione</h2>
+  <div class="calc" id="imp-sum"></div>
+  <div id="imp-list" style="max-height:32vh;overflow-y:auto;margin-bottom:14px"></div>
+  <div class="set-row" style="border:none;padding-top:0">
+    <span>Sostituisci i turni già presenti</span>
+    <input type="checkbox" id="imp-over" checked style="width:22px;height:22px;flex:none;accent-color:var(--mattina)">
+  </div>
+  <div class="actions">
+    <button class="btn" id="imp-go">Importa</button>
+    <button class="btn ghost" id="imp-cancel">Annulla</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="./js/app.js"></script>
+<script src="./js/excel-import.js"></script>
+<script src="./js/sequence.js"></script>
+</body>
+</html>
