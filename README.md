@@ -50,3 +50,11 @@ Aggiunge:
 - copia del riepilogo paga.
 
 I turni continuano a usare la chiave `turni-app-stabile-v1`.
+
+
+## Versione 2.3 — Dashboard corretta e grafici
+
+- Dashboard integrata direttamente in `core.js`, così non dipende più da un file separato.
+- Ore del mese e netto usano la stessa fonte dati della sezione Statistiche.
+- Aggiunto grafico degli ultimi sei mesi con ore lavorate e netto stimato.
+- La chiave dati resta `turni-app-stabile-v1`.

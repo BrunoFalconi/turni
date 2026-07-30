@@ -88,3 +88,16 @@
       .dashboard-grid{grid-template-columns:1fr 1fr}
       .dash-tile .v{font-size:18px}
     }
+
+
+    .history-legend{display:flex;gap:16px;color:var(--muted);font-size:12px;margin-bottom:12px}
+    .history-legend span{display:flex;align-items:center;gap:6px}
+    .legend-dot{width:9px;height:9px;border-radius:3px;display:inline-block}
+    .hours-dot{background:var(--p)}.net-dot{background:var(--n)}
+    .history-chart{height:190px;display:grid;grid-template-columns:repeat(6,1fr);align-items:end;gap:8px;padding-top:10px}
+    .history-month{height:100%;display:grid;grid-template-rows:1fr auto auto;gap:4px;min-width:0}
+    .history-bars{height:100%;display:flex;align-items:end;justify-content:center;gap:4px;border-bottom:1px solid #ffffff18}
+    .history-bar{width:min(15px,38%);border-radius:6px 6px 2px 2px;transition:height .25s ease}
+    .hours-bar{background:var(--p)}.net-bar{background:var(--n);opacity:.85}
+    .history-label{text-align:center;font-size:11px;color:var(--muted);text-transform:uppercase}
+    .history-value{text-align:center;font-size:10px;color:var(--muted)}

@@ -101,6 +101,8 @@ function renderStats(y,m){
       <div class="amount">+ ${euro(s.payroll.amounts.holidayNight)}</div>
     </div>`;
 
+  if(typeof renderHistoryChart==='function')renderHistoryChart(y,m);
+
   document.getElementById('copyStats').onclick=async()=>{
     const text=[
       `${MONTHS[m]} ${y}`,
@@ -128,4 +130,41 @@ function renderStats(y,m){
       document.getElementById('status').textContent='Copia non riuscita.';
     }
   };
+}
+
+
+function previousMonth(year,month,offset){
+  const d=new Date(year,month-offset,1);
+  return{year:d.getFullYear(),month:d.getMonth()};
+}
+
+function renderHistoryChart(y,m){
+  const box=document.getElementById('historyChart');
+  if(!box)return;
+
+  const values=[];
+  for(let offset=5;offset>=0;offset--){
+    const p=previousMonth(y,m,offset);
+    const s=monthlyStats(p.year,p.month);
+    values.push({
+      ...p,
+      label:MONTHS[p.month].slice(0,3),
+      hours:s.workedMinutes/60,
+      net:s.payroll.net
+    });
+  }
+
+  const maxHours=Math.max(1,...values.map(v=>v.hours));
+  const maxNet=Math.max(1,...values.map(v=>v.net));
+
+  box.innerHTML=values.map(v=>`
+    <div class="history-month">
+      <div class="history-bars">
+        <div class="history-bar hours-bar" style="height:${Math.max(3,v.hours/maxHours*100)}%" title="${v.hours.toFixed(0)} ore"></div>
+        <div class="history-bar net-bar" style="height:${Math.max(3,v.net/maxNet*100)}%" title="${euro(v.net)}"></div>
+      </div>
+      <div class="history-label">${v.label}</div>
+      <div class="history-value">${Math.round(v.hours)}h</div>
+    </div>
+  `).join('');
 }

@@ -1,5 +1,5 @@
-const CACHE='turni-app-dashboard-payroll-v22';
-const CORE=['./','./index.html','./css/style.css','./js/core.js','./js/excel.js','./js/backup.js','./js/stats.js','./js/dashboard.js','./js/app.js','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
+const CACHE='turni-app-dashboard-grafici-v23';
+const CORE=['./','./index.html','./css/style.css','./js/core.js','./js/excel.js','./js/backup.js','./js/stats.js','./js/app.js','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',event=>{
   self.skipWaiting();
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
