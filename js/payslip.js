@@ -94,14 +94,65 @@ function numericItems(row){
     .filter(entry=>entry.value!=null);
 }
 
-function valueInColumn(row,columnX,nextColumnX=Infinity){
+function itemCenter(item){
+  return item.x+(item.width||0)/2;
+}
+
+function headerColumnCenters(header){
+  const find=rx=>header.items.find(item=>rx.test(item.text));
+  const importo=find(/IMPORTO/i);
+  const riferimento=find(/RIFERIMENTO/i);
+  const trattenute=find(/TRATTENUTE/i);
+  const competenze=find(/COMPETENZE/i);
+
+  if(!riferimento||!trattenute||!competenze)return null;
+
+  return{
+    importo:importo?itemCenter(importo):null,
+    riferimento:itemCenter(riferimento),
+    trattenute:itemCenter(trattenute),
+    competenze:itemCenter(competenze)
+  };
+}
+
+function strictColumnBounds(centers,column){
+  if(column==='trattenute'){
+    return{
+      min:(centers.riferimento+centers.trattenute)/2,
+      max:(centers.trattenute+centers.competenze)/2
+    };
+  }
+
+  if(column==='competenze'){
+    return{
+      min:(centers.trattenute+centers.competenze)/2,
+      max:Infinity
+    };
+  }
+
+  if(column==='riferimento'){
+    const left=centers.importo!=null
+      ?(centers.importo+centers.riferimento)/2
+      :centers.riferimento-70;
+    return{
+      min:left,
+      max:(centers.riferimento+centers.trattenute)/2
+    };
+  }
+
+  return{min:-Infinity,max:Infinity};
+}
+
+function valueInNamedColumn(row,centers,column){
+  const bounds=strictColumnBounds(centers,column);
   const candidates=numericItems(row)
-    .filter(({item,value})=>
-      item.x>=columnX-45 &&
-      item.x<nextColumnX-12 &&
-      Math.abs(value)<100000
-    )
-    .sort((a,b)=>a.item.x-b.item.x);
+    .filter(({item,value})=>{
+      const center=itemCenter(item);
+      return center>=bounds.min &&
+        center<bounds.max &&
+        Math.abs(value)<100000;
+    })
+    .sort((a,b)=>itemCenter(a.item)-itemCenter(b.item));
 
   return candidates.length?candidates.at(-1).value:null;
 }
@@ -133,19 +184,15 @@ function columnValuesFromPdf(pdfData){
     );
     if(!header)continue;
 
-    const trattenuteItem=header.items.find(item=>/TRATTENUTE/i.test(item.text));
-    const competenzeItem=header.items.find(item=>/COMPETENZE/i.test(item.text));
-    if(!trattenuteItem||!competenzeItem)continue;
-
-    const trattenuteX=trattenuteItem.x;
-    const competenzeX=competenzeItem.x;
+    const centers=headerColumnCenters(header);
+    if(!centers)continue;
 
     const cometaEmployeeRow=findRowByCode(page.rows,'Z20010',{
       contains:'COMETA',
       excludes:'C\\s*\\/?\\s*DITTA'
     });
     if(cometaEmployeeRow){
-      const value=valueInColumn(cometaEmployeeRow,trattenuteX,competenzeX);
+      const value=valueInNamedColumn(cometaEmployeeRow,centers,'trattenute');
       if(value!=null)result.cometaEmployee=value;
     }
 
@@ -153,7 +200,7 @@ function columnValuesFromPdf(pdfData){
       contains:'COMETA.*C\\s*\\/?\\s*DITTA'
     });
     if(cometaEmployerRow){
-      const value=valueInColumn(cometaEmployerRow,competenzeX,Infinity);
+      const value=valueInNamedColumn(cometaEmployerRow,centers,'competenze');
       if(value!=null)result.cometaEmployer=Math.abs(value);
     }
 
@@ -167,15 +214,17 @@ function columnValuesFromPdf(pdfData){
 
     const irpefRow=findRowByCode(page.rows,'F03020');
     if(irpefRow){
-      const value=valueInColumn(irpefRow,trattenuteX,competenzeX);
+      const value=valueInNamedColumn(irpefRow,centers,'trattenute');
       if(value!=null)result.irpefWithheld=value;
     }
 
     for(const code of ['F09110','F09130','F09140']){
       const row=findRowByCode(page.rows,code);
       if(!row)continue;
-      const value=valueInColumn(row,trattenuteX,competenzeX);
+      const value=valueInNamedColumn(row,centers,'trattenute');
       if(value!=null){
+        /* Per F09110/F09130/F09140 il valore a sinistra è il residuo/riferimento.
+           Sommiamo esclusivamente il numero geometricamente dentro TRATTENUTE. */
         localTaxes+=Math.abs(value);
         foundLocalTax=true;
       }
