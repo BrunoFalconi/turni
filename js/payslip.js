@@ -246,11 +246,11 @@ function columnValuesFromPdf(pdfData){
     }
   }
 
-  result.localTaxes=foundLocalTax?localTaxes:null,
-    regionalInstallment:null,
-    municipalBalanceInstallment:null,
-    municipalAdvanceInstallment:null,
-    fixedExtraDeductions:null;
+  result.localTaxes=[
+    result.regionalInstallment,
+    result.municipalBalanceInstallment,
+    result.municipalAdvanceInstallment
+  ].filter(v=>v!=null).reduce((a,b)=>a+b,0)||null;
   return result;
 }
 
@@ -266,9 +266,6 @@ function parsePayslipData(pdfData){
   if(columns.municipalBalanceInstallment!=null)detected.municipalBalanceInstallment=columns.municipalBalanceInstallment;
   if(columns.municipalAdvanceInstallment!=null)detected.municipalAdvanceInstallment=columns.municipalAdvanceInstallment;
   if(columns.fixedExtraDeductions!=null)detected.fixedExtraDeductions=columns.fixedExtraDeductions;
-
-  return detected;
-}
 
   return detected;
 }

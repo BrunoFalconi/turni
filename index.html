@@ -191,23 +191,23 @@
 <dialog id="payrollDialog">
   <h3>Profilo fiscale personale</h3>
   <div class="fields">
-    <div><label>Lordo fisso mensile €</label><input id="gross" type="number" step="0.01"></div>
-    <div><label>Divisore mensile</label><input id="divisor" type="number" step="1"></div>
-    <div><label>Contributi dipendente %</label><input id="socialPct" type="number" step="0.01"></div>
-    <div><label>Trattenute fisse extra €</label><input id="fixedExtraDeductions" type="number" step="0.01"></div>
-    <div><label>Addizionale regionale €</label><input id="regionalInstallment" type="number" step="0.01"></div>
-    <div><label>Comunale saldo €</label><input id="municipalBalanceInstallment" type="number" step="0.01"></div>
-    <div><label>Comunale acconto €</label><input id="municipalAdvanceInstallment" type="number" step="0.01"></div>
-    <div><label>Cometa lavoratore €</label><input id="cometaEmployee" type="number" step="0.01"></div>
-    <div><label>Cometa azienda €</label><input id="cometaEmployer" type="number" step="0.01"></div>
-    <div><label>Cometa deducibile €</label><input id="cometaDeductible" type="number" step="0.01"></div>
-    <div><label>Altre competenze €</label><input id="otherEarnings" type="number" step="0.01"></div>
-    <div><label>Altre trattenute €</label><input id="otherDeductions" type="number" step="0.01"></div>
-    <div><label>Giorni lavoro annui</label><input id="workingDaysAnnual" type="number" step="1"></div>
-    <div><label>Reddito annuo aggiuntivo €</label><input id="otherAnnualIncome" type="number" step="0.01"></div>
-    <div class="wide"><label><input id="useSubstituteTax" type="checkbox"> Applica imposta sostitutiva 15% alle maggiorazioni 2026</label></div>
-    <div><label>Limite annuo sostitutiva €</label><input id="substituteAnnualLimit" type="number" step="0.01"></div>
-    <div><label>Già usato nell'anno €</label><input id="substituteUsedYtd" type="number" step="0.01"></div>
+    <div><label>Lordo fisso mensile €</label><input id="pfGross" type="number" step="0.01"></div>
+    <div><label>Divisore mensile</label><input id="pfDivisor" type="number" step="1"></div>
+    <div><label>Contributi dipendente %</label><input id="pfSocialPct" type="number" step="0.01"></div>
+    <div><label>Trattenute fisse extra €</label><input id="pfFixedExtraDeductions" type="number" step="0.01"></div>
+    <div><label>Addizionale regionale €</label><input id="pfRegionalInstallment" type="number" step="0.01"></div>
+    <div><label>Comunale saldo €</label><input id="pfMunicipalBalanceInstallment" type="number" step="0.01"></div>
+    <div><label>Comunale acconto €</label><input id="pfMunicipalAdvanceInstallment" type="number" step="0.01"></div>
+    <div><label>Cometa lavoratore €</label><input id="pfCometaEmployee" type="number" step="0.01"></div>
+    <div><label>Cometa azienda €</label><input id="pfCometaEmployer" type="number" step="0.01"></div>
+    <div><label>Cometa deducibile €</label><input id="pfCometaDeductible" type="number" step="0.01"></div>
+    <div><label>Altre competenze €</label><input id="pfOtherEarnings" type="number" step="0.01"></div>
+    <div><label>Altre trattenute €</label><input id="pfOtherDeductions" type="number" step="0.01"></div>
+    <div><label>Giorni lavoro annui</label><input id="pfWorkingDaysAnnual" type="number" step="1"></div>
+    <div><label>Reddito annuo aggiuntivo €</label><input id="pfOtherAnnualIncome" type="number" step="0.01"></div>
+    <div class="wide"><label><input id="pfUseSubstituteTax" type="checkbox"> Applica imposta sostitutiva 15% alle maggiorazioni 2026</label></div>
+    <div><label>Limite annuo sostitutiva €</label><input id="pfSubstituteAnnualLimit" type="number" step="0.01"></div>
+    <div><label>Già usato nell'anno €</label><input id="pfSubstituteUsedYtd" type="number" step="0.01"></div>
   </div>
   <p class="notice">L'IRPEF viene calcolata dinamicamente sul lordo finale del mese, non con una percentuale fissa.</p>
   <div class="dialog-actions">

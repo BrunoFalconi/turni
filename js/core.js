@@ -305,8 +305,9 @@ function openPayrollDialog(){
     'otherEarnings','otherDeductions','workingDaysAnnual',
     'otherAnnualIncome','substituteAnnualLimit','substituteUsedYtd'
   ];
-  ids.forEach(id=>document.getElementById(id).value=state.settings[id]??0);
-  document.getElementById('useSubstituteTax').checked=!!state.settings.useSubstituteTax;
+  const fieldIds={gross:'pfGross',divisor:'pfDivisor',socialPct:'pfSocialPct',fixedExtraDeductions:'pfFixedExtraDeductions',regionalInstallment:'pfRegionalInstallment',municipalBalanceInstallment:'pfMunicipalBalanceInstallment',municipalAdvanceInstallment:'pfMunicipalAdvanceInstallment',cometaEmployee:'pfCometaEmployee',cometaEmployer:'pfCometaEmployer',cometaDeductible:'pfCometaDeductible',otherEarnings:'pfOtherEarnings',otherDeductions:'pfOtherDeductions',workingDaysAnnual:'pfWorkingDaysAnnual',otherAnnualIncome:'pfOtherAnnualIncome',substituteAnnualLimit:'pfSubstituteAnnualLimit',substituteUsedYtd:'pfSubstituteUsedYtd'};
+  ids.forEach(id=>document.getElementById(fieldIds[id]).value=state.settings[id]??0);
+  document.getElementById('pfUseSubstituteTax').checked=!!state.settings.useSubstituteTax;
   document.getElementById('payrollDialog').showModal();
 }
 
@@ -318,8 +319,9 @@ document.getElementById('savePayrollSettings').onclick=()=>{
     'otherEarnings','otherDeductions','workingDaysAnnual',
     'otherAnnualIncome','substituteAnnualLimit','substituteUsedYtd'
   ];
-  ids.forEach(id=>state.settings[id]=Number(document.getElementById(id).value)||0);
-  state.settings.useSubstituteTax=document.getElementById('useSubstituteTax').checked;
+  const fieldIds={gross:'pfGross',divisor:'pfDivisor',socialPct:'pfSocialPct',fixedExtraDeductions:'pfFixedExtraDeductions',regionalInstallment:'pfRegionalInstallment',municipalBalanceInstallment:'pfMunicipalBalanceInstallment',municipalAdvanceInstallment:'pfMunicipalAdvanceInstallment',cometaEmployee:'pfCometaEmployee',cometaEmployer:'pfCometaEmployer',cometaDeductible:'pfCometaDeductible',otherEarnings:'pfOtherEarnings',otherDeductions:'pfOtherDeductions',workingDaysAnnual:'pfWorkingDaysAnnual',otherAnnualIncome:'pfOtherAnnualIncome',substituteAnnualLimit:'pfSubstituteAnnualLimit',substituteUsedYtd:'pfSubstituteUsedYtd'};
+  ids.forEach(id=>state.settings[id]=Number(document.getElementById(fieldIds[id]).value)||0);
+  state.settings.useSubstituteTax=document.getElementById('pfUseSubstituteTax').checked;
   saveState();render();document.getElementById('payrollDialog').close();
 };
 
@@ -410,9 +412,6 @@ function render(){
 
     <div class="payrow net-final"><span>Netto stimato</span><span>${euro(p.net)}</span></div>
     <button class="btn alt pay-settings-btn" id="openPayrollSettings">Modifica profilo fiscale</button>`;
-
-  const openPayrollSettings=document.getElementById('openPayrollSettings');
-  if(openPayrollSettings)openPayrollSettings.onclick=openPayrollDialog;
 
   const openPayrollSettings=document.getElementById('openPayrollSettings');
   if(openPayrollSettings)openPayrollSettings.onclick=openPayrollDialog;
