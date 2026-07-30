@@ -44,3 +44,10 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
 }
 
 load();
+
+/* Avvio dell'app dopo il caricamento di tutti gli script */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => load(), { once: true });
+} else {
+  load();
+}
