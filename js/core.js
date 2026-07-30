@@ -27,13 +27,23 @@ const DEFAULT_STATE={
     holidayNightPct:55,
     deductionPct:31.34,
     socialPct:9.59,
-    taxPct:21.14,
-    localTaxes:76.73,
+    taxPct:0,
+    fixedExtraDeductions:0,
+    regionalInstallment:0,
+    municipalBalanceInstallment:0,
+    municipalAdvanceInstallment:0,
+    localTaxes:0,
     cometaEmployee:28.94,
     cometaEmployer:48.23,
     cometaDeductible:77.17,
     otherDeductions:0,
     otherEarnings:0,
+    workingDaysAnnual:365,
+    otherAnnualIncome:0,
+    useSubstituteTax:false,
+    substituteTaxRate:15,
+    substituteAnnualLimit:1500,
+    substituteUsedYtd:0,
     nightStart:'22:00',
     nightEnd:'06:00'
   }
@@ -129,6 +139,23 @@ function minuteBuckets(key,s){
   }
   return out;
 }
+function annualGrossIrpef(income){
+  const x=Math.max(0,Number(income)||0);
+  if(x<=28000)return x*0.23;
+  if(x<=50000)return 6440+(x-28000)*0.35;
+  return 14140+(x-50000)*0.43;
+}
+
+function employeeAnnualDeduction(income,workingDays=365){
+  const x=Math.max(0,Number(income)||0);
+  let d=0;
+  if(x<=15000)d=1955;
+  else if(x<=28000)d=1910+1190*((28000-x)/13000);
+  else if(x<=50000)d=1910*((50000-x)/22000);
+  if(x>25000&&x<=35000)d+=65;
+  return Math.max(0,d)*Math.min(365,Math.max(0,workingDays))/365;
+}
+
 function payroll(y,m){
   const mins={night:0,holiday:0,holidayNight:0},days=new Date(y,m+1,0).getDate();
   for(let d=1;d<=days;d++){
@@ -136,46 +163,69 @@ function payroll(y,m){
     const b=minuteBuckets(key,s);Object.keys(mins).forEach(k=>mins[k]+=b[k]);
   }
 
-  const hourly=Number(state.settings.gross)/(Number(state.settings.divisor)||173);
+  const baseGross=Number(state.settings.gross)||0;
+  const divisor=Number(state.settings.divisor)||173;
+  const hourly=baseGross/divisor;
+
   const amounts={
-    night:mins.night/60*hourly*Number(state.settings.nightPct)/100,
-    holiday:mins.holiday/60*hourly*Number(state.settings.holidayPct)/100,
-    holidayNight:mins.holidayNight/60*hourly*Number(state.settings.holidayNightPct)/100
+    night:mins.night/60*hourly*(Number(state.settings.nightPct)||0)/100,
+    holiday:mins.holiday/60*hourly*(Number(state.settings.holidayPct)||0)/100,
+    holidayNight:mins.holidayNight/60*hourly*(Number(state.settings.holidayNightPct)||0)/100
   };
 
-  const extras=amounts.night+amounts.holiday+amounts.holidayNight;
+  const premiums=amounts.night+amounts.holiday+amounts.holidayNight;
   const otherEarnings=Number(state.settings.otherEarnings)||0;
-  const gross=Number(state.settings.gross)+extras+otherEarnings;
+  const gross=baseGross+premiums+otherEarnings;
 
   const social=gross*(Number(state.settings.socialPct)||0)/100;
+  const fixedExtra=Number(state.settings.fixedExtraDeductions)||0;
   const cometaEmployee=Number(state.settings.cometaEmployee)||0;
   const cometaEmployer=Number(state.settings.cometaEmployer)||0;
   const cometaDeductible=Number(state.settings.cometaDeductible)||0;
-  /* IRPEF calcolata sul lordo finale:
-     lordo fisso + maggiorazioni + altre competenze,
-     meno contributi previdenziali e Cometa deducibile. */
-  const taxable=Math.max(0,gross-social-cometaDeductible);
-  const tax=taxable*(Number(state.settings.taxPct)||0)/100;
-  const localTaxes=Number(state.settings.localTaxes)||0;
+
+  const ordinaryTaxable=Math.max(0,gross-social-fixedExtra-cometaDeductible);
+  const annualProjected=ordinaryTaxable*12+(Number(state.settings.otherAnnualIncome)||0);
+  const annualIrpefGross=annualGrossIrpef(annualProjected);
+  const annualDeduction=employeeAnnualDeduction(
+    annualProjected,
+    Number(state.settings.workingDaysAnnual)||365
+  );
+
+  let substituteTax=0;
+  let ordinaryTaxableForIrpef=ordinaryTaxable;
+
+  if(y===2026&&state.settings.useSubstituteTax){
+    const limit=Math.max(0,(Number(state.settings.substituteAnnualLimit)||1500)-(Number(state.settings.substituteUsedYtd)||0));
+    const substituteBase=Math.min(premiums,limit);
+    substituteTax=substituteBase*(Number(state.settings.substituteTaxRate)||15)/100;
+    ordinaryTaxableForIrpef=Math.max(0,ordinaryTaxable-substituteBase);
+  }
+
+  const annualProjectedAdjusted=ordinaryTaxableForIrpef*12+(Number(state.settings.otherAnnualIncome)||0);
+  const annualIrpefAdjusted=annualGrossIrpef(annualProjectedAdjusted);
+  const annualDeductionAdjusted=employeeAnnualDeduction(
+    annualProjectedAdjusted,
+    Number(state.settings.workingDaysAnnual)||365
+  );
+  const tax=Math.max(0,(annualIrpefAdjusted-annualDeductionAdjusted)/12);
+
+  const regional=Number(state.settings.regionalInstallment)||0;
+  const municipalBalance=Number(state.settings.municipalBalanceInstallment)||0;
+  const municipalAdvance=Number(state.settings.municipalAdvanceInstallment)||0;
+  const localTaxes=regional+municipalBalance+municipalAdvance;
   const otherDeductions=Number(state.settings.otherDeductions)||0;
-  const deductions=social+tax+localTaxes+cometaEmployee+otherDeductions;
+
+  const deductions=
+    social+fixedExtra+tax+substituteTax+localTaxes+cometaEmployee+otherDeductions;
 
   return{
-    mins,
-    amounts,
-    extras,
-    otherEarnings,
-    gross,
-    social,
-    taxable,
-    tax,
-    localTaxes,
-    cometaEmployee,
-    cometaEmployer,
-    cometaDeductible,
-    otherDeductions,
-    deductions,
-    net:gross-deductions
+    mins,amounts,premiums,otherEarnings,gross,hourly,
+    social,fixedExtra,ordinaryTaxable,
+    annualProjected,annualIrpefGross,annualDeduction,
+    tax,substituteTax,
+    regional,municipalBalance,municipalAdvance,localTaxes,
+    cometaEmployee,cometaEmployer,cometaDeductible,
+    otherDeductions,deductions,net:gross-deductions
   };
 }
 
@@ -248,21 +298,34 @@ function renderDashboard(){
 }
 
 function openPayrollDialog(){
-  const ids=['socialPct','taxPct','localTaxes','cometaEmployee','cometaEmployer','cometaDeductible','otherDeductions','otherEarnings'];
+  const ids=[
+    'gross','divisor','socialPct','fixedExtraDeductions',
+    'regionalInstallment','municipalBalanceInstallment','municipalAdvanceInstallment',
+    'cometaEmployee','cometaEmployer','cometaDeductible',
+    'otherEarnings','otherDeductions','workingDaysAnnual',
+    'otherAnnualIncome','substituteAnnualLimit','substituteUsedYtd'
+  ];
   ids.forEach(id=>document.getElementById(id).value=state.settings[id]??0);
+  document.getElementById('useSubstituteTax').checked=!!state.settings.useSubstituteTax;
   document.getElementById('payrollDialog').showModal();
 }
 
 document.getElementById('savePayrollSettings').onclick=()=>{
-  const ids=['socialPct','taxPct','localTaxes','cometaEmployee','cometaEmployer','cometaDeductible','otherDeductions','otherEarnings'];
+  const ids=[
+    'gross','divisor','socialPct','fixedExtraDeductions',
+    'regionalInstallment','municipalBalanceInstallment','municipalAdvanceInstallment',
+    'cometaEmployee','cometaEmployer','cometaDeductible',
+    'otherEarnings','otherDeductions','workingDaysAnnual',
+    'otherAnnualIncome','substituteAnnualLimit','substituteUsedYtd'
+  ];
   ids.forEach(id=>state.settings[id]=Number(document.getElementById(id).value)||0);
-  saveState();
-  render();
-  document.getElementById('payrollDialog').close();
+  state.settings.useSubstituteTax=document.getElementById('useSubstituteTax').checked;
+  saveState();render();document.getElementById('payrollDialog').close();
 };
 
 document.getElementById('closePayrollSettings').onclick=()=>{
   document.getElementById('payrollDialog').close();
+};
 };
 
 document.getElementById('copyPayroll').onclick=async()=>{
@@ -327,23 +390,30 @@ function render(){
   document.getElementById('pay').innerHTML=`
     <div class="pay-section-title">Competenze</div>
     <div class="payrow main"><span>Lordo fisso</span><span>${euro(state.settings.gross)}</span></div>
-    <div class="payrow"><span>Notturne ${fmtMin(p.mins.night)} · ${state.settings.nightPct}%</span><span>+ ${euro(p.amounts.night)}</span></div>
-    <div class="payrow"><span>Festivi ${fmtMin(p.mins.holiday)} · ${state.settings.holidayPct}%</span><span>+ ${euro(p.amounts.holiday)}</span></div>
-    <div class="payrow"><span>Festivi notturni ${fmtMin(p.mins.holidayNight)} · ${state.settings.holidayNightPct}%</span><span>+ ${euro(p.amounts.holidayNight)}</span></div>
+    <div class="payrow"><span>Notturne ${fmtMin(p.mins.night)}</span><span>+ ${euro(p.amounts.night)}</span></div>
+    <div class="payrow"><span>Festivi ${fmtMin(p.mins.holiday)}</span><span>+ ${euro(p.amounts.holiday)}</span></div>
+    <div class="payrow"><span>Festivi notturni ${fmtMin(p.mins.holidayNight)}</span><span>+ ${euro(p.amounts.holidayNight)}</span></div>
     ${p.otherEarnings?`<div class="payrow"><span>Altre competenze</span><span>+ ${euro(p.otherEarnings)}</span></div>`:''}
-    <div class="payrow total-gross"><span>Lordo stimato</span><span>${euro(p.gross)}</span></div>
+    <div class="payrow total-gross"><span>Lordo finale</span><span>${euro(p.gross)}</span></div>
 
-    <div class="pay-section-title">Trattenute</div>
-    <div class="payrow deduction"><span>Contributi · ${state.settings.socialPct}%</span><span>− ${euro(p.social)}</span></div>
-    <div class="payrow deduction"><span>IRPEF stimata · ${state.settings.taxPct}%</span><span>− ${euro(p.tax)}</span></div>
-    <div class="payrow deduction"><span>Addizionali</span><span>− ${euro(p.localTaxes)}</span></div>
+    <div class="pay-section-title">Trattenute dinamiche</div>
+    <div class="payrow deduction"><span>Contributi dipendente</span><span>− ${euro(p.social)}</span></div>
+    ${p.fixedExtra?`<div class="payrow deduction"><span>Trattenute fisse extra</span><span>− ${euro(p.fixedExtra)}</span></div>`:''}
+    <div class="payrow deduction"><span>IRPEF netta stimata</span><span>− ${euro(p.tax)}</span></div>
+    ${p.substituteTax?`<div class="payrow deduction"><span>Imposta sostitutiva maggiorazioni</span><span>− ${euro(p.substituteTax)}</span></div>`:''}
+    <div class="payrow deduction"><span>Addizionale regionale</span><span>− ${euro(p.regional)}</span></div>
+    <div class="payrow deduction"><span>Comunale saldo</span><span>− ${euro(p.municipalBalance)}</span></div>
+    <div class="payrow deduction"><span>Comunale acconto</span><span>− ${euro(p.municipalAdvance)}</span></div>
     <div class="payrow deduction"><span>Cometa lavoratore</span><span>− ${euro(p.cometaEmployee)}</span></div>
     <div class="payrow"><span>Cometa azienda</span><span>${euro(p.cometaEmployer)}</span></div>
-    <div class="payrow"><span>Totale Cometa deducibile</span><span>${euro(p.cometaDeductible)}</span></div>
+    <div class="payrow"><span>Cometa deducibile</span><span>${euro(p.cometaDeductible)}</span></div>
     ${p.otherDeductions?`<div class="payrow deduction"><span>Altre trattenute</span><span>− ${euro(p.otherDeductions)}</span></div>`:''}
 
     <div class="payrow net-final"><span>Netto stimato</span><span>${euro(p.net)}</span></div>
-    <button class="btn alt pay-settings-btn" id="openPayrollSettings">Modifica trattenute</button>`;
+    <button class="btn alt pay-settings-btn" id="openPayrollSettings">Modifica profilo fiscale</button>`;
+
+  const openPayrollSettings=document.getElementById('openPayrollSettings');
+  if(openPayrollSettings)openPayrollSettings.onclick=openPayrollDialog;
 
   const openPayrollSettings=document.getElementById('openPayrollSettings');
   if(openPayrollSettings)openPayrollSettings.onclick=openPayrollDialog;

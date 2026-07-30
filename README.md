@@ -99,3 +99,28 @@ Ora legge l'ultimo importo della riga:
 - IRPEF trattenuta: colonna `TRATTENUTE`;
 - addizionali regionale/comunale/acconto: colonna `TRATTENUTE`;
 - IRPEF stimata applicata al lordo finale, comprese le maggiorazioni.
+
+
+## Versione 2.8 — Addizionali lette dalla colonna corretta
+
+Correzione dei confini geometrici delle colonne Zucchetti.
+
+Per le voci:
+- F09110 addizionale regionale;
+- F09130 addizionale comunale;
+- F09140 acconto addizionale comunale;
+
+viene letto esclusivamente l'importo nella colonna `TRATTENUTE`.
+I valori presenti in `RIFERIMENTO` o `Residuo` vengono ignorati.
+
+
+## V3 — Motore fiscale universale
+
+- profilo personale estratto dal cedolino;
+- lordo finale calcolato da base + maggiorazioni;
+- contributi dipendente dinamici;
+- IRPEF ricalcolata con proiezione annua e detrazioni;
+- addizionali separate e lette dalla colonna TRATTENUTE;
+- Cometa lavoratore/azienda/deducibile separati;
+- opzione imposta sostitutiva 15% sulle maggiorazioni 2026;
+- nessuna aliquota IRPEF fissa.

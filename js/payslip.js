@@ -172,7 +172,11 @@ function columnValuesFromPdf(pdfData){
     cometaEmployer:null,
     cometaDeductible:null,
     irpefWithheld:null,
-    localTaxes:null
+    localTaxes:null,
+    regionalInstallment:null,
+    municipalBalanceInstallment:null,
+    municipalAdvanceInstallment:null,
+    fixedExtraDeductions:null
   };
 
   let localTaxes=0;
@@ -218,20 +222,35 @@ function columnValuesFromPdf(pdfData){
       if(value!=null)result.irpefWithheld=value;
     }
 
-    for(const code of ['F09110','F09130','F09140']){
-      const row=findRowByCode(page.rows,code);
-      if(!row)continue;
-      const value=valueInNamedColumn(row,centers,'trattenute');
-      if(value!=null){
-        /* Per F09110/F09130/F09140 il valore a sinistra è il residuo/riferimento.
-           Sommiamo esclusivamente il numero geometricamente dentro TRATTENUTE. */
-        localTaxes+=Math.abs(value);
-        foundLocalTax=true;
-      }
+    const regionalRow=findRowByCode(page.rows,'F09110');
+    const municipalBalanceRow=findRowByCode(page.rows,'F09130');
+    const municipalAdvanceRow=findRowByCode(page.rows,'F09140');
+
+    if(regionalRow){
+      const value=valueInNamedColumn(regionalRow,centers,'trattenute');
+      if(value!=null)result.regionalInstallment=Math.abs(value);
+    }
+    if(municipalBalanceRow){
+      const value=valueInNamedColumn(municipalBalanceRow,centers,'trattenute');
+      if(value!=null)result.municipalBalanceInstallment=Math.abs(value);
+    }
+    if(municipalAdvanceRow){
+      const value=valueInNamedColumn(municipalAdvanceRow,centers,'trattenute');
+      if(value!=null)result.municipalAdvanceInstallment=Math.abs(value);
+    }
+
+    const eparRow=findRowByCode(page.rows,'003005',{contains:'Contributo\s+EPAR'});
+    if(eparRow){
+      const value=valueInNamedColumn(eparRow,centers,'trattenute');
+      if(value!=null)result.fixedExtraDeductions=Math.abs(value);
     }
   }
 
-  result.localTaxes=foundLocalTax?localTaxes:null;
+  result.localTaxes=foundLocalTax?localTaxes:null,
+    regionalInstallment:null,
+    municipalBalanceInstallment:null,
+    municipalAdvanceInstallment:null,
+    fixedExtraDeductions:null;
   return result;
 }
 
@@ -243,12 +262,13 @@ function parsePayslipData(pdfData){
   if(columns.cometaEmployer!=null)detected.cometaEmployer=columns.cometaEmployer;
   if(columns.cometaDeductible!=null)detected.cometaDeductible=columns.cometaDeductible;
   if(columns.localTaxes!=null)detected.localTaxes=columns.localTaxes;
+  if(columns.regionalInstallment!=null)detected.regionalInstallment=columns.regionalInstallment;
+  if(columns.municipalBalanceInstallment!=null)detected.municipalBalanceInstallment=columns.municipalBalanceInstallment;
+  if(columns.municipalAdvanceInstallment!=null)detected.municipalAdvanceInstallment=columns.municipalAdvanceInstallment;
+  if(columns.fixedExtraDeductions!=null)detected.fixedExtraDeductions=columns.fixedExtraDeductions;
 
-  const taxable=findAmountNear(pdfData.text,['Imponibile\\s+IRPEF']);
-  if(taxable&&columns.irpefWithheld!=null){
-    const rate=columns.irpefWithheld/taxable*100;
-    if(rate>=0&&rate<=60)detected.taxPct=rate;
-  }
+  return detected;
+}
 
   return detected;
 }
@@ -362,15 +382,17 @@ function fillPayslipDialog(data,fileName){
     psProfileName:data.profileName||current.profileName||'',
     psGross:data.gross??current.gross,
     psDivisor:data.divisor??current.divisor,
-    psNightPct:data.nightPct??current.nightPct,
-    psHolidayPct:data.holidayPct??current.holidayPct,
-    psHolidayNightPct:data.holidayNightPct??current.holidayNightPct,
     psSocialPct:data.socialPct??current.socialPct,
-    psTaxPct:data.taxPct??current.taxPct,
-    psLocalTaxes:data.localTaxes??current.localTaxes,
+    psFixedExtraDeductions:data.fixedExtraDeductions??current.fixedExtraDeductions,
+    psRegionalInstallment:data.regionalInstallment??current.regionalInstallment,
+    psMunicipalBalanceInstallment:data.municipalBalanceInstallment??current.municipalBalanceInstallment,
+    psMunicipalAdvanceInstallment:data.municipalAdvanceInstallment??current.municipalAdvanceInstallment,
     psCometaEmployee:data.cometaEmployee??current.cometaEmployee,
     psCometaEmployer:data.cometaEmployer??current.cometaEmployer,
-    psCometaDeductible:data.cometaDeductible??current.cometaDeductible
+    psCometaDeductible:data.cometaDeductible??current.cometaDeductible,
+    psNightPct:data.nightPct??current.nightPct,
+    psHolidayPct:data.holidayPct??current.holidayPct,
+    psHolidayNightPct:data.holidayNightPct??current.holidayNightPct
   };
   Object.entries(values).forEach(([id,value])=>document.getElementById(id).value=value??0);
   document.getElementById('payslipMessage').textContent=
@@ -412,15 +434,17 @@ document.getElementById('savePayslipProfile').onclick=()=>{
     profileName:'psProfileName',
     gross:'psGross',
     divisor:'psDivisor',
-    nightPct:'psNightPct',
-    holidayPct:'psHolidayPct',
-    holidayNightPct:'psHolidayNightPct',
     socialPct:'psSocialPct',
-    taxPct:'psTaxPct',
-    localTaxes:'psLocalTaxes',
+    fixedExtraDeductions:'psFixedExtraDeductions',
+    regionalInstallment:'psRegionalInstallment',
+    municipalBalanceInstallment:'psMunicipalBalanceInstallment',
+    municipalAdvanceInstallment:'psMunicipalAdvanceInstallment',
     cometaEmployee:'psCometaEmployee',
     cometaEmployer:'psCometaEmployer',
-    cometaDeductible:'psCometaDeductible'
+    cometaDeductible:'psCometaDeductible',
+    nightPct:'psNightPct',
+    holidayPct:'psHolidayPct',
+    holidayNightPct:'psHolidayNightPct'
   };
 
   for(const [key,id] of Object.entries(map)){
