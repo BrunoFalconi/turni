@@ -195,44 +195,110 @@ function weekStats(start){
 /* ---------- archivio ---------- */
 async function load(){
   try{
-    let r=await store.get(KEY);
-    let migratedFrom=null;
-    if(!r){
-      for(const oldKey of LEGACY_KEYS){
-        const old=await store.get(oldKey);
-        if(old){r=old;migratedFrom=oldKey;break}
+    const keys=[
+      'turni:app:v3',
+      'turni:app:v2',
+      'turni:app',
+      'turni:v5',
+      'turni:v4',
+      'turni:v3',
+      'turni:v2',
+      'turni:v1'
+    ];
+
+    const candidates=[];
+
+    for(const key of keys){
+      try{
+        const raw=localStorage.getItem(key);
+        if(!raw)continue;
+
+        const data=JSON.parse(raw);
+        const count=data?.shifts && typeof data.shifts==='object'
+          ? Object.keys(data.shifts).length
+          : 0;
+
+        candidates.push({
+          key,
+          raw,
+          data,
+          count
+        });
+      }catch(e){
+        console.warn('Salvataggio non leggibile:',key,e);
       }
     }
-    if(r&&r.value){
-      const d=JSON.parse(r.value);
+
+    candidates.sort((a,b)=>{
+      if(b.count!==a.count)return b.count-a.count;
+      return b.raw.length-a.raw.length;
+    });
+
+    const best=candidates[0];
+
+    if(best){
+      const d=best.data||{};
       const saved=d.settings||{};
-      state.shifts=d.shifts||{};
-      state.settings={...DEFAULTS,...saved,payroll:{...DEFAULTS.payroll,...(saved.payroll||{})}};
-      let changed=!!migratedFrom;
+
+      state.shifts=
+        d.shifts && typeof d.shifts==='object'
+          ? d.shifts
+          : {};
+
+      state.settings={
+        ...DEFAULTS,
+        ...saved,
+        payroll:{
+          ...DEFAULTS.payroll,
+          ...(saved.payroll||{})
+        },
+        presets:{
+          ...DEFAULTS.presets,
+          ...(saved.presets||{})
+        }
+      };
+
       if(((saved.payroll||{}).ratesV||0)<DEFAULTS.payroll.ratesV){
         state.settings.payroll.nightPct=50;
         state.settings.payroll.holidayPct=50;
         state.settings.payroll.holidayNightPct=55;
         state.settings.payroll.ratesV=DEFAULTS.payroll.ratesV;
-        changed=true;
       }
+
       if((saved.presetsV||0)<DEFAULTS.presetsV){
-        state.settings.presets={...DEFAULTS.presets};
+        state.settings.presets={
+          ...DEFAULTS.presets,
+          ...(saved.presets||{})
+        };
         state.settings.presetsV=DEFAULTS.presetsV;
-        changed=true;
       }
+
       for(const k in DEFAULTS.presets){
         const p=state.settings.presets[k];
+
         if(!Array.isArray(p)||p.length<2||!p[0]||!p[1]){
-          state.settings.presets[k]=[...DEFAULTS.presets[k]];
-          changed=true;
+          state.settings.presets[k]=[
+            ...DEFAULTS.presets[k]
+          ];
         }
       }
-      if(changed) saveNow();
+
+      const payload=JSON.stringify(state);
+
+      localStorage.setItem('turni:app:v3',payload);
+
+      try{
+        await idbSet('turni:app:v3',payload);
+      }catch(e){}
     }
-  }catch(e){console.error('Caricamento dati non riuscito',e)}
+  }catch(e){
+    console.error('Caricamento dati non riuscito',e);
+  }
+
   render();
-  const b=document.getElementById('boot'); if(b) b.remove();
+
+  const b=document.getElementById('boot');
+  if(b)b.remove();
 }
 async function saveNow(){
   const payload=JSON.stringify(state);
