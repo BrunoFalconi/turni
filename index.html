@@ -215,6 +215,11 @@ input[type=time]{font-family:var(--mono)}
     <div class="pay-note">La stima usa i parametri nelle impostazioni e non sostituisce il cedolino ufficiale.</div>
   </div>
 
+  <div class="actions" style="margin:0 0 18px">
+    <button class="btn" id="quick-add">Inserisci turno</button>
+    <button class="btn ghost" id="quick-import">Importa Excel</button>
+  </div>
+
   <div class="week-head"><div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div></div>
   <div class="grid" id="grid"></div>
   <div class="weeks" id="weeks"></div>
@@ -737,6 +742,12 @@ document.getElementById('fab').onclick=()=>{
   const t=new Date(), k=(t.getMonth()===view.getMonth()&&t.getFullYear()===view.getFullYear())?ymd(t):ymd(new Date(view.getFullYear(),view.getMonth(),1));
   openEditor(k);
 };
+document.getElementById('quick-add').onclick=()=>document.getElementById('fab').click();
+document.getElementById('quick-import').onclick=()=>{
+  const name=state.settings.payroll?.excelName||'';
+  if(!name){document.getElementById('settings').click();toast('Inserisci prima il nome usato nel foglio Excel');return}
+  document.getElementById('file').click();
+};
 document.getElementById('prev').onclick=()=>{view.setMonth(view.getMonth()-1);render()};
 document.getElementById('next').onclick=()=>{view.setMonth(view.getMonth()+1);render()};
 
@@ -848,10 +859,12 @@ function toTime(v){
   return pad(+m[1]%24)+':'+pad(m[2]?+m[2]:0);
 }
 function toType(v){
-  const n=norm(v); if(!n) return null;
+  /* Accetta anche codici come M (A), P (A), N (A), PERMESSO e LUTTO. */
+  const raw=norm(v); if(!raw) return null;
+  const n=raw.replace(/\s*\([^)]*\)\s*/g,'').trim();
   if(n.startsWith('deas')||n.startsWith('smart')||n==='sw'||n==='d') return 'deas';
   if(n.startsWith('mal')) return 'malattia';
-  if(n.startsWith('fer')||n==='f') return 'ferie';
+  if(n.startsWith('fer')||n.startsWith('perm')||n.startsWith('lutto')||n==='f') return 'ferie';
   if(n.startsWith('rip')||n.startsWith('lib')||n==='r'||n==='l'||n==='-') return 'riposo';
   if(n.startsWith('mat')||n==='m') return 'mattina';
   if(n.startsWith('pom')||n==='p') return 'pomeriggio';
@@ -891,6 +904,101 @@ function openPreview(label,skipped){
   });
   closeSheets(); showSheet('sheet-imp');
 }
+const MONTH_NUM={gennaio:0,febbraio:1,marzo:2,aprile:3,maggio:4,giugno:5,luglio:6,agosto:7,settembre:8,ottobre:9,novembre:10,dicembre:11};
+function sheetMonthInfo(names,index){
+  const parse=name=>{
+    const n=norm(name);
+    const month=Object.keys(MONTH_NUM).find(x=>n.includes(x));
+    const ym=String(name).match(/(?:19|20)\d{2}/);
+    return month?{month:MONTH_NUM[month],year:ym?Number(ym[0]):null}:null;
+  };
+  const own=parse(names[index]); if(!own)return null;
+  if(own.year!=null)return own;
+  /* I fogli sono in ordine mensile. Uso il foglio più vicino che contiene l'anno,
+     ad esempio "Giugno (2026)", per ricostruire correttamente anche i fogli precedenti. */
+  let best=null;
+  names.forEach((name,i)=>{const p=parse(name);if(p&&p.year!=null&&(!best||Math.abs(i-index)<Math.abs(best.i-index)))best={...p,i}});
+  if(!best)return {month:own.month,year:new Date().getFullYear()};
+  const d=new Date(best.year,best.month+(index-best.i),1);
+  return {month:d.getMonth(),year:d.getFullYear()};
+}
+function excelDateValue(v){
+  if(v instanceof Date && !isNaN(v)) return new Date(v.getFullYear(),v.getMonth(),v.getDate());
+  if(typeof v==='number' && v>20000 && v<80000){
+    const x=XLSX.SSF.parse_date_code(v);
+    return x?new Date(x.y,x.m-1,x.d):null;
+  }
+  return null;
+}
+function buildTurnisticaDateMap(rows,headerRow,nameCol,period){
+  const map={}; if(!period)return map;
+  const dayRow=headerRow-1;
+  const days=rows[dayRow]||[];
+  const first=nameCol+1;
+
+  /* Individua i blocchi mensili osservando quando i numeri ripartono da 1.
+     Nel file Turnistica T1 ogni foglio contiene: ultimi giorni del mese prima,
+     mese del foglio, primi giorni del mese dopo. */
+  const blocks=[];
+  let blockStart=null,prev=null;
+  for(let c=first;c<days.length;c++){
+    const day=Number(days[c]);
+    if(!Number.isInteger(day)||day<1||day>31)continue;
+    if(blockStart==null){blockStart=c;blocks.push({start:c,end:c});}
+    else if(prev!=null && day<=prev){blocks[blocks.length-1].end=c-1;blocks.push({start:c,end:c});}
+    else blocks[blocks.length-1].end=c;
+    prev=day;
+  }
+  if(!blocks.length)return map;
+
+  /* Prima prova a leggere le vere date presenti nella riga dei mesi
+     (nel file sono celle unite con una data Excel sul primo giorno del blocco). */
+  const monthRows=[];
+  for(let r=Math.max(0,headerRow-4);r<headerRow;r++) monthRows.push(rows[r]||[]);
+  blocks.forEach(b=>{
+    for(const row of monthRows){
+      for(let c=Math.max(first,b.start-1);c<=Math.min(days.length-1,b.start+1);c++){
+        const d=excelDateValue(row[c]);
+        if(d){b.year=d.getFullYear();b.month=d.getMonth();break;}
+      }
+      if(b.year!=null)break;
+    }
+  });
+
+  /* Il blocco centrale che comincia da 1 è il mese indicato dal nome foglio. */
+  let targetIndex=blocks.findIndex((b,i)=>Number(days[b.start])===1 && (i>0 || blocks.length===1));
+  if(targetIndex<0) targetIndex=blocks.findIndex(b=>Number(days[b.start])===1);
+  if(targetIndex<0) targetIndex=0;
+
+  blocks.forEach((b,i)=>{
+    if(b.year==null){
+      const d=new Date(period.year,period.month+(i-targetIndex),1);
+      b.year=d.getFullYear(); b.month=d.getMonth();
+    }
+    for(let c=b.start;c<=b.end;c++){
+      const day=Number(days[c]);
+      if(!Number.isInteger(day)||day<1||day>31)continue;
+      const d=new Date(b.year,b.month,day);
+      if(d.getFullYear()===b.year&&d.getMonth()===b.month&&d.getDate()===day) map[c]=d;
+    }
+  });
+  return map;
+}
+function findTurnisticaHeader(rows){
+  for(let r=0;r<Math.min(rows.length,20);r++){
+    for(let c=0;c<(rows[r]||[]).length;c++){
+      if(norm(rows[r][c]).includes('nome/turno')) return {r,c};
+    }
+  }
+  return null;
+}
+function nameMatches(cell,wanted){
+  const a=norm(cell),b=norm(wanted);
+  if(!a||!b)return false;
+  const aw=a.split(/\s+/).filter(Boolean),bw=b.split(/\s+/).filter(Boolean);
+  return a===b||a.includes(b)||b.includes(a)||bw.every(x=>aw.includes(x));
+}
+
 document.getElementById('imp').onclick=()=>document.getElementById('file').click();
 document.getElementById('file').addEventListener('change',async e=>{
   const f=e.target.files[0]; if(!f) return;
@@ -899,38 +1007,60 @@ document.getElementById('file').addEventListener('change',async e=>{
   try{
     const wb=XLSX.read(new Uint8Array(await f.arrayBuffer()),{type:'array',cellDates:true});
     const wanted=norm(state.settings.payroll?.excelName||'');
-    pending=[]; let skipped=0,used='';
-    for(const sheetName of wb.SheetNames){
+    if(!wanted){toast('Inserisci prima il nome nelle impostazioni');return}
+    const all=new Map(); let skipped=0; const used=[];
+    for(let si=0;si<wb.SheetNames.length;si++){
+      const sheetName=wb.SheetNames[si];
       const ws=wb.Sheets[sheetName],rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',blankrows:false});
       if(!rows.length)continue;
-      /* Formato elenco: Data | Turno | Inizio | Fine ... */
-      let map=null,head=-1;
-      for(let i=0;i<Math.min(rows.length,20);i++){const mm={};rows[i].forEach((c,j)=>{const k=matchCol(c);if(k&&mm[k]==null)mm[k]=j});if(mm.date!=null&&(mm.type!=null||mm.start!=null)){map=mm;head=i;break}}
-      if(map){for(let i=head+1;i<rows.length;i++){const r=rowToShift(rows[i],map);if(r)pending.push(r);else if(rows[i].some(c=>String(c).trim()))skipped++}if(pending.length){used=sheetName;break}}
-      /* Formato griglia: una riga per dipendente, date/giorni nell'intestazione */
-      if(wanted){
-        let hit=null;
-        for(let i=0;i<rows.length&&!hit;i++)for(let j=0;j<rows[i].length;j++){const cell=norm(rows[i][j]);if(cell&&(cell===wanted||cell.includes(wanted)||wanted.includes(cell))){hit={i,j};break}}
-        if(hit){
-          const candidates=[];
-          /* nome sulla riga: leggo i turni verso destra e cerco le date sopra */
-          for(let c=hit.j+1;c<rows[hit.i].length;c++){
-            const type=toType(rows[hit.i][c]);if(!type)continue;let date=null;
-            for(let r=hit.i-1;r>=0&&r>=hit.i-8;r--){date=toDate(rows[r]?.[c]);if(date)break}
-            if(date)candidates.push({key:ymd(date),shift:gridShift(type)});
+
+      /* Formato Turnistica T1: NOME/TURNO, numeri dei giorni in orizzontale
+         e una riga per ogni dipendente. */
+      const hdr=findTurnisticaHeader(rows);
+      if(hdr){
+        let personRow=-1;
+        for(let r=hdr.r+1;r<rows.length;r++){
+          if(nameMatches(rows[r]?.[hdr.c],wanted)){personRow=r;break}
+        }
+        if(personRow>=0){
+          const period=sheetMonthInfo(wb.SheetNames,si);
+          const dates=buildTurnisticaDateMap(rows,hdr.r,hdr.c,period);
+          let count=0;
+          for(let c=hdr.c+1;c<(rows[personRow]||[]).length;c++){
+            const raw=rows[personRow][c];
+            if(String(raw??'').trim()==='')continue;
+            const type=toType(raw);
+            if(!type){skipped++;continue}
+            const date=dates[c];
+            if(!date){skipped++;continue}
+            /* Importa solo il mese del foglio: i giorni ai bordi appartengono ai fogli adiacenti. */
+            if(period && (date.getFullYear()!==period.year || date.getMonth()!==period.month)) continue;
+            all.set(ymd(date),{key:ymd(date),shift:gridShift(type)}); count++;
           }
-          /* nome sulla colonna: leggo i turni sotto e cerco le date a sinistra */
-          for(let r=hit.i+1;r<rows.length;r++){
-            const type=toType(rows[r]?.[hit.j]);if(!type)continue;let date=null;
-            for(let c=hit.j-1;c>=0&&c>=hit.j-8;c--){date=toDate(rows[r]?.[c]);if(date)break}
-            if(date)candidates.push({key:ymd(date),shift:gridShift(type)});
-          }
-          if(candidates.length){const uniq=new Map(candidates.map(x=>[x.key,x]));pending=[...uniq.values()];used=`${sheetName} · ${state.settings.payroll.excelName}`;break}
+          if(count)used.push(`${sheetName} · ${rows[personRow][hdr.c]}`);
+          continue;
         }
       }
+
+      /* Formato elenco: Data | Turno | Inizio | Fine ... */
+      let map=null,head=-1;
+      for(let i=0;i<Math.min(rows.length,20);i++){
+        const mm={}; rows[i].forEach((c,j)=>{const k=matchCol(c);if(k&&mm[k]==null)mm[k]=j});
+        if(mm.date!=null&&(mm.type!=null||mm.start!=null)){map=mm;head=i;break}
+      }
+      if(map){
+        let count=0;
+        for(let i=head+1;i<rows.length;i++){
+          const r=rowToShift(rows[i],map);
+          if(r){all.set(r.key,r);count++}
+          else if(rows[i].some(c=>String(c).trim()))skipped++;
+        }
+        if(count)used.push(sheetName);
+      }
     }
-    if(!pending.length){toast(wanted?'Nome o turni non trovati nel file':'Inserisci prima il nome nelle impostazioni');return}
-    openPreview(used||f.name,skipped);
+    pending=[...all.values()].sort((a,b)=>a.key.localeCompare(b.key));
+    if(!pending.length){toast('Nome o turni non trovati nel file');return}
+    openPreview(`${used.length} fogli · ${wanted}`,skipped);
   }catch(err){console.error(err);toast('File Excel non leggibile o formato non riconosciuto')}
 });
 function gridShift(type){
@@ -941,9 +1071,15 @@ document.getElementById('imp-cancel').onclick=()=>{pending=[];closeSheets()};
 document.getElementById('imp-go').onclick=()=>{
   const over=document.getElementById('imp-over').checked;
   let n=0;
+  if(over){
+    /* Elimina i vecchi turni importati, compresi quelli salvati con date errate da versioni precedenti. */
+    Object.keys(state.shifts).forEach(k=>{
+      if(state.shifts[k]?.note==='Importato da Excel') delete state.shifts[k];
+    });
+  }
   pending.forEach(p=>{ if(state.shifts[p.key]&&!over) return; state.shifts[p.key]={...p.shift}; n++; });
-  const first=pending.map(p=>p.key).sort()[0];
-  if(first){const d=new Date(first+'T00:00:00'); view=new Date(d.getFullYear(),d.getMonth(),1);}
+  const last=pending.map(p=>p.key).sort().at(-1);
+  if(last){const d=new Date(last+'T00:00:00'); view=new Date(d.getFullYear(),d.getMonth(),1);}
   pending=[]; save(); closeSheets(); render();
   toast(n?`${n} turni importati`:'Nessun turno aggiunto');
 };
