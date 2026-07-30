@@ -1,5 +1,5 @@
-const CACHE='turni-app-pulito-v1';
-const CORE=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
+const CACHE='turni-app-modulare-v2';
+const CORE=['./','./index.html','./css/style.css','./js/core.js','./js/excel.js','./js/backup.js','./js/app.js','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',event=>{
   self.skipWaiting();
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));

@@ -1,22 +1,20 @@
-# TurniApp pulita
+# TurniApp modulare
 
-Carica nella root del repository GitHub Pages:
+Struttura:
 
-- index.html
-- sw.js
-- manifest.webmanifest
-- icon-192.png
-- icon-512.png
+- `index.html`
+- `css/style.css`
+- `js/core.js` — stato, salvataggio, calendario, turni e stipendio
+- `js/excel.js` — importazione Turnistica T1
+- `js/backup.js` — esportazione/importazione JSON
+- `js/app.js` — avvio, sincronizzazione e service worker
+- `sw.js`
+- `manifest.webmanifest`
+- `icon-192.png`
+- `icon-512.png`
 
-## Uso
+## Pubblicazione su GitHub Pages
 
-1. Apri Impostazioni e inserisci il nome presente nell'Excel, per esempio `Lo Prete`.
-2. Importa il file Excel.
-3. I turni vengono salvati nel browser con la chiave `turni-app-stabile-v1`.
-4. Per trasferire i dati su un altro dispositivo usa Esporta backup / Importa backup.
-5. Dopo il primo accesso online, l'app funziona anche offline.
+Carica nella root del repository tutto il contenuto della cartella estratta, mantenendo le cartelle `css` e `js`.
 
-Maggiorazioni predefinite:
-- notte 50%
-- festivo/domenica 50%
-- festivo notturno 55%
+L'app usa la chiave locale `turni-app-stabile-v1`, quindi mantiene i dati già inseriti nella versione precedente sullo stesso browser.
