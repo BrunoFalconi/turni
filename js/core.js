@@ -141,6 +141,8 @@ function render(){
   document.getElementById('totRest').textContent=rests;
   document.getElementById('status').textContent=`Salvato sul dispositivo · ${Object.keys(state.shifts).length} giorni`;
 
+  if(typeof renderStats==='function')renderStats(y,m);
+
   const p=payroll(y,m);
   document.getElementById('pay').innerHTML=`
     <div class="payrow"><span>Lordo fisso</span><span>${euro(state.settings.gross)}</span></div>

@@ -41,6 +41,29 @@
   <div class="week"><div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div></div>
   <div class="grid" id="calendar"></div>
 
+
+  <section class="card stats-card">
+    <div class="section-head">
+      <div>
+        <div class="lab">Riepilogo mensile</div>
+        <div class="section-title" id="statsTitle">Statistiche</div>
+      </div>
+      <button class="mini-btn" id="copyStats">Copia</button>
+    </div>
+
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="stat-block">
+      <div class="stat-block-title">Distribuzione turni</div>
+      <div id="shiftBars"></div>
+    </div>
+
+    <div class="stat-block">
+      <div class="stat-block-title">Ore con maggiorazione</div>
+      <div id="premiumStats"></div>
+    </div>
+  </section>
+
   <section class="card" style="margin-top:14px">
     <div class="lab">Stima stipendio</div>
     <div id="pay"></div>
@@ -106,6 +129,7 @@
 <script src="./js/core.js"></script>
 <script src="./js/excel.js"></script>
 <script src="./js/backup.js"></script>
+<script src="./js/stats.js"></script>
 <script src="./js/app.js"></script>
 </body>
 </html>

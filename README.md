@@ -18,3 +18,17 @@ Struttura:
 Carica nella root del repository tutto il contenuto della cartella estratta, mantenendo le cartelle `css` e `js`.
 
 L'app usa la chiave locale `turni-app-stabile-v1`, quindi mantiene i dati già inseriti nella versione precedente sullo stesso browser.
+
+
+## Versione 2.1 — Statistiche
+
+Aggiunge:
+
+- conteggio per tipo di turno;
+- giorni lavorati e assenze;
+- ore straordinarie oltre 8 ore/giorno;
+- dettaglio ore notturne, festive e festive notturne;
+- distribuzione grafica dei turni;
+- pulsante per copiare il riepilogo mensile.
+
+La chiave di salvataggio resta `turni-app-stabile-v1`, quindi i dati già presenti non vengono persi.
