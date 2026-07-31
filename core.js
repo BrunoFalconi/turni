@@ -15,7 +15,7 @@ const TYPES={
 };
 const DEFAULT_STATE={
   shifts:{},
-  premiumOverrides:{},
+  monthOverrides:{},
   settings:{
     profileName:'',
     excelName:'',
@@ -92,7 +92,8 @@ function normalizeState(raw){
 
   return {
     shifts:s.shifts&&typeof s.shifts==='object'?s.shifts:{},
-    premiumOverrides:s.premiumOverrides&&typeof s.premiumOverrides==='object'?s.premiumOverrides:{},
+    monthOverrides:(s.monthOverrides&&typeof s.monthOverrides==='object'?s.monthOverrides:null)
+      ||(s.premiumOverrides&&typeof s.premiumOverrides==='object'?s.premiumOverrides:{}),
     settings:{...DEFAULT_STATE.settings,...saved}
   };
 }
@@ -180,13 +181,20 @@ function payroll(y,m){
      Con la banca ore la maggiorazione si applica alle ore accantonate,
      non a ogni ora notturna o festiva lavorata. Quando il mese ha un
      override, le ore inserite a mano hanno la precedenza. */
-  const override=(state.premiumOverrides||{})[`${y}-${pad(m+1)}`];
-  const overridden=!!override;
-  if(overridden){
-    if(override.night!=null)mins.night=Math.round(Number(override.night)*60)||0;
-    if(override.holiday!=null)mins.holiday=Math.round(Number(override.holiday)*60)||0;
-    if(override.holidayNight!=null)mins.holidayNight=Math.round(Number(override.holidayNight)*60)||0;
-  }
+  const monthKey=`${y}-${pad(m+1)}`;
+  const override=(state.monthOverrides||state.premiumOverrides||{})[monthKey]||{};
+  const overridden=Object.keys(override).length>0;
+  if(override.night!=null)mins.night=Math.round(Number(override.night)*60)||0;
+  if(override.holiday!=null)mins.holiday=Math.round(Number(override.holiday)*60)||0;
+  if(override.holidayNight!=null)mins.holidayNight=Math.round(Number(override.holidayNight)*60)||0;
+
+  /* Alcune voci non sono costanti: gli arretrati EPAR compaiono solo in
+     certi mesi, l'ulteriore detrazione varia con l'imponibile, le rate
+     delle addizionali si arrotondano diversamente. Se il mese ha un
+     valore proprio si usa quello, altrimenti vale il profilo generale. */
+  const pick=name=>override[name]!=null
+    ?Number(override[name])||0
+    :Number(state.settings[name])||0;
 
   const baseGross=Number(state.settings.gross)||0;
   const divisor=Number(state.settings.divisor)||173;
@@ -210,7 +218,7 @@ function payroll(y,m){
   const gross=baseGross+premiums+otherEarnings;
 
   const social=gross*(Number(state.settings.socialPct)||0)/100;
-  const fixedExtra=Number(state.settings.fixedExtraDeductions)||0;
+  const fixedExtra=pick('fixedExtraDeductions');
   const cometaEmployee=Number(state.settings.cometaEmployee)||0;
   const cometaEmployer=Number(state.settings.cometaEmployer)||0;
   const cometaDeductible=Number(state.settings.cometaDeductible)||0;
@@ -245,12 +253,12 @@ function payroll(y,m){
   );
   /* Detrazione aggiuntiva mensile (in Zucchetti: F02801, L.207/24).
      È già un importo mensile, non va diviso per 12. */
-  const additionalDeduction=Number(state.settings.additionalDeduction)||0;
+  const additionalDeduction=pick('additionalDeduction');
   const tax=Math.max(0,(annualIrpefAdjusted-annualDeductionAdjusted)/12-additionalDeduction);
 
-  const regional=Number(state.settings.regionalInstallment)||0;
-  const municipalBalance=Number(state.settings.municipalBalanceInstallment)||0;
-  const municipalAdvance=Number(state.settings.municipalAdvanceInstallment)||0;
+  const regional=pick('regionalInstallment');
+  const municipalBalance=pick('municipalBalanceInstallment');
+  const municipalAdvance=pick('municipalAdvanceInstallment');
   const localTaxes=regional+municipalBalance+municipalAdvance;
   const otherDeductions=Number(state.settings.otherDeductions)||0;
 
@@ -430,29 +438,56 @@ document.getElementById('closePayrollSettings').onclick=()=>{
   document.getElementById('payrollDialog').close();
 };
 
-/* ---------- Ore con maggiorazione: override manuale ---------- */
+/* ---------- Dati specifici del mese ---------- */
+
+const MONTH_OVERRIDE_FIELDS=[
+  ['night','calNightH'],
+  ['holiday','calHolidayH'],
+  ['holidayNight','calHolidayNightH'],
+  ['fixedExtraDeductions','calFixedExtra'],
+  ['additionalDeduction','calAdditionalDeduction'],
+  ['regionalInstallment','calRegional'],
+  ['municipalBalanceInstallment','calMunicipalBalance'],
+  ['municipalAdvanceInstallment','calMunicipalAdvance']
+];
 
 function monthOverrideKey(y,m){return `${y}-${pad(m+1)}`}
 
 function openCalibrationDialog(){
   const y=view.getFullYear(),m=view.getMonth();
-  const p=payroll(y,m);
   const key=monthOverrideKey(y,m);
-  const saved=(state.premiumOverrides||{})[key];
+  const saved=(state.monthOverrides||{})[key]||{};
+
+  /* Le ore automatiche si leggono ignorando l'override, altrimenti
+     mostrerebbero il valore già inserito a mano. */
+  const auto={night:0,holiday:0,holidayNight:0};
+  const days=new Date(y,m+1,0).getDate();
+  for(let d=1;d<=days;d++){
+    const k=`${y}-${pad(m+1)}-${pad(d)}`,sh=state.shifts[k];
+    if(!sh)continue;
+    const b=minuteBuckets(k,sh);
+    Object.keys(auto).forEach(x=>auto[x]+=b[x]);
+  }
 
   document.getElementById('calMonth').textContent=`${MONTHS[m]} ${y}`;
   document.getElementById('calComputed').textContent=
-    `Calcolate dai turni: ${(p.mins.night/60).toFixed(2)}h notturne · `+
-    `${(p.mins.holiday/60).toFixed(2)}h festive · `+
-    `${(p.mins.holidayNight/60).toFixed(2)}h festive notturne`;
+    `Dai turni: ${(auto.night/60).toFixed(2)}h notturne · `+
+    `${(auto.holiday/60).toFixed(2)}h festive · `+
+    `${(auto.holidayNight/60).toFixed(2)}h festive notturne`;
 
-  document.getElementById('calNightH').value=saved?.night??(p.mins.night/60).toFixed(2);
-  document.getElementById('calHolidayH').value=saved?.holiday??(p.mins.holiday/60).toFixed(2);
-  document.getElementById('calHolidayNightH').value=saved?.holidayNight??(p.mins.holidayNight/60).toFixed(2);
+  document.getElementById('calNightH').value=saved.night??(auto.night/60).toFixed(2);
+  document.getElementById('calHolidayH').value=saved.holiday??(auto.holiday/60).toFixed(2);
+  document.getElementById('calHolidayNightH').value=saved.holidayNight??(auto.holidayNight/60).toFixed(2);
 
-  document.getElementById('calResult').textContent=saved
-    ? 'Questo mese usa ore inserite a mano.'
-    : 'Questo mese usa le ore calcolate dai turni.';
+  ['fixedExtraDeductions','additionalDeduction','regionalInstallment',
+   'municipalBalanceInstallment','municipalAdvanceInstallment'].forEach(name=>{
+    const el=document.getElementById(MONTH_OVERRIDE_FIELDS.find(f=>f[0]===name)[1]);
+    if(el)el.value=saved[name]??state.settings[name]??0;
+  });
+
+  document.getElementById('calResult').textContent=Object.keys(saved).length
+    ? 'Questo mese usa valori inseriti a mano.'
+    : 'Questo mese usa il profilo generale.';
 
   document.getElementById('calibrationDialog').showModal();
 }
@@ -461,12 +496,13 @@ const applyHoursBtn=document.getElementById('applyPremiumHours');
 if(applyHoursBtn){
   applyHoursBtn.onclick=()=>{
     const y=view.getFullYear(),m=view.getMonth();
-    if(!state.premiumOverrides)state.premiumOverrides={};
-    state.premiumOverrides[monthOverrideKey(y,m)]={
-      night:Number(document.getElementById('calNightH').value)||0,
-      holiday:Number(document.getElementById('calHolidayH').value)||0,
-      holidayNight:Number(document.getElementById('calHolidayNightH').value)||0
-    };
+    if(!state.monthOverrides)state.monthOverrides={};
+    const entry={};
+    MONTH_OVERRIDE_FIELDS.forEach(([name,fieldId])=>{
+      const el=document.getElementById(fieldId);
+      if(el)entry[name]=Number(el.value)||0;
+    });
+    state.monthOverrides[monthOverrideKey(y,m)]=entry;
     saveState();render();
     const p=payroll(y,m);
     document.getElementById('calResult').textContent=
@@ -478,7 +514,7 @@ const clearHoursBtn=document.getElementById('clearPremiumHours');
 if(clearHoursBtn){
   clearHoursBtn.onclick=()=>{
     const y=view.getFullYear(),m=view.getMonth();
-    if(state.premiumOverrides)delete state.premiumOverrides[monthOverrideKey(y,m)];
+    if(state.monthOverrides)delete state.monthOverrides[monthOverrideKey(y,m)];
     saveState();render();openCalibrationDialog();
   };
 }

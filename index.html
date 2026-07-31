@@ -100,7 +100,7 @@
     </div>
 
     <div class="stat-block">
-      <div class="stat-block-title">Ore con maggiorazione</div>
+      <div class="stat-block-title">Dati del mese</div>
       <div id="premiumStats"></div>
     </div>
   </section>
@@ -224,31 +224,44 @@
   <p class="notice">Le maggiorazioni in busta paga si calcolano su paga base + contingenza + EDR, non sul lordo fisso completo. Se la stima non torna, usa la calibrazione.</p>
   <div class="dialog-actions">
     <button class="btn" id="savePayrollSettings">Salva</button>
-    <button class="btn alt" id="openCalibration">Ore con maggiorazione</button>
+    <button class="btn alt" id="openCalibration">Dati del mese</button>
     <button class="btn alt" id="closePayrollSettings">Chiudi</button>
   </div>
 </dialog>
 
 
 <dialog id="calibrationDialog">
-  <h3>Ore con maggiorazione</h3>
+  <h3>Dati del mese</h3>
   <p class="notice">
-    Le ore contate dai turni non sempre coincidono con quelle pagate.
-    Con la banca ore la maggiorazione si applica alle ore accantonate,
-    non a ogni ora notturna o festiva lavorata. Se la stima non torna,
-    copia qui le ore dalle voci di maggiorazione del cedolino.
+    Alcune voci cambiano da un mese all'altro: gli arretrati EPAR compaiono
+    solo in certi cedolini, l'ulteriore detrazione varia con l'imponibile,
+    e con la banca ore la maggiorazione si applica alle ore accantonate,
+    non a ogni ora notturna lavorata. Copia qui i valori dal cedolino di
+    questo mese; gli altri mesi restano sul profilo generale.
   </p>
   <div class="notice">Mese: <b id="calMonth">&mdash;</b></div>
   <div class="notice" id="calComputed">&mdash;</div>
+
+  <div class="pay-section-title">Dati del mese</div>
   <div class="fields">
     <div><label>Ore al 50% (notturne)</label><input id="calNightH" type="number" step="0.01"></div>
     <div><label>Ore al 50% (festive)</label><input id="calHolidayH" type="number" step="0.01"></div>
-    <div><label>Ore al 55% (festive notturne)</label><input id="calHolidayNightH" type="number" step="0.01"></div>
+    <div><label>Ore al 55% (fest. notturne)</label><input id="calHolidayNightH" type="number" step="0.01"></div>
   </div>
+
+  <div class="pay-section-title">Trattenute del mese</div>
+  <div class="fields">
+    <div><label>EPAR / trattenute fisse €</label><input id="calFixedExtra" type="number" step="0.01"></div>
+    <div><label>Ulteriore detrazione €</label><input id="calAdditionalDeduction" type="number" step="0.01"></div>
+    <div><label>Addizionale regionale €</label><input id="calRegional" type="number" step="0.01"></div>
+    <div><label>Comunale saldo €</label><input id="calMunicipalBalance" type="number" step="0.01"></div>
+    <div><label>Comunale acconto €</label><input id="calMunicipalAdvance" type="number" step="0.01"></div>
+  </div>
+
   <div class="notice" id="calResult" style="white-space:pre-line"></div>
   <div class="dialog-actions">
     <button class="btn" id="applyPremiumHours">Applica a questo mese</button>
-    <button class="btn alt" id="clearPremiumHours">Torna al calcolo automatico</button>
+    <button class="btn alt" id="clearPremiumHours">Usa profilo generale</button>
     <button class="btn alt" id="closeCalibration">Chiudi</button>
   </div>
 </dialog>

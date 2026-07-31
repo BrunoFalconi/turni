@@ -122,3 +122,99 @@ se la riga proprio manca ricava la quota per differenza
 Il PDF che hai caricato contiene nome, codice fiscale, IBAN e matricola.
 L'app li tiene in locale, ma per condividere un cedolino conviene
 oscurarli.
+
+
+---
+
+# Aggiornamento dopo il cedolino di Marzo 2026
+
+Marzo conferma le correzioni, ma ha fatto emergere un limite strutturale
+dell'app: **teneva un solo profilo fiscale valido per tutti i mesi**,
+mentre quattro voci cambiano da un cedolino all'altro.
+
+## Le voci che variano
+
+| Voce | Marzo | Maggio |
+|---|---:|---:|
+| EPAR / trattenute fisse | 11,18 | 2,54 |
+| Ulteriore detrazione L.207/24 | 66,30 | 61,85 |
+| Acconto addiz. comunale | 7,69 | 7,70 |
+| Ore al 50% | 58 | 62 |
+| Ore al 55% | 6 | 8 |
+
+L'EPAR è il caso più vistoso. A maggio c'è **una riga** (2.538,46 × 0,10% =
+2,54). A marzo ce ne sono **cinque**, perché sono stati recuperati gli
+arretrati di dicembre 2025, gennaio e febbraio 2026:
+
+```
+003005 Contributo EPAR 12/25  2.158,26 x 0,10% = 2,16
+003005 Contributo EPAR 12/25  2.158,26 x 0,10% = 2,16
+003005 Contributo EPAR 01/26  2.158,26 x 0,10% = 2,16
+003005 Contributo EPAR 02/26  2.158,26 x 0,10% = 2,16
+003005 Contributo EPAR        2.538,46 x 0,10% = 2,54
+                                        totale  11,18
+```
+
+Con un profilo unico da 2,54 l'app sbagliava marzo di 8,64 € di contributi,
+e di conseguenza anche l'imponibile IRPEF.
+
+## Cosa è cambiato
+
+Il dialog *Dati del mese* (prima si chiamava "Ore con maggiorazione") ora
+copre anche le trattenute variabili: EPAR, ulteriore detrazione e le tre
+addizionali. Quello che inserisci vale solo per quel mese; gli altri
+continuano a usare il profilo generale.
+
+Internamente `state.premiumOverrides` diventa `state.monthOverrides` e
+contiene otto campi invece di tre. I dati già salvati con il nome vecchio
+vengono letti lo stesso, quindi non perdi nulla.
+
+## Risultato sui due mesi, stesso profilo generale
+
+| Voce | Marzo stima | Marzo cedolino | Maggio stima | Maggio cedolino |
+|---|---:|---:|---:|---:|
+| Lordo | 3.012,40 | 3.012,40 | 3.057,89 | 3.057,89 |
+| Contributi | 297,06 | 297,02 | 292,73 | 292,74 |
+| Imponibile IRPEF | 2.687,05 | 2.687,08 | 2.736,86 | 2.736,85 |
+| IRPEF | 460,29 | 461,80 | 486,50 | 485,78 |
+| **Netto** | **2.150,04** | **2.149,00** | **2.173,64** | **2.174,00** |
+
+Scarto: 1,04 € a marzo, 0,36 € a maggio.
+
+## Perché resta uno scarto di circa un euro
+
+L'IRPEF del cedolino usa il **conguaglio progressivo sul cumulato
+annuo**: a marzo il progressivo è 6.883,18 con 934,48 già versati, a
+maggio 12.278,57 con 1.873,84. L'app invece proietta l'imponibile del
+mese × 12, che è un'approssimazione. Nota che a marzo sbaglia in difetto
+e a maggio in eccesso: è il comportamento tipico di questa
+approssimazione, non un errore sistematico.
+
+Portarla a zero richiederebbe di tenere il progressivo annuo in memoria e
+ricalcolare l'imposta sul cumulato a ogni mese. È fattibile ma va fatto
+bene: se ti interessa dimmelo, perché cambia la struttura del calcolo.
+
+## Valori da inserire per marzo
+
+Vai su marzo → *Dati del mese*:
+
+| Campo | Valore |
+|---|---|
+| Ore al 50% (notturne) | 58 |
+| Ore al 50% (festive) | 0 |
+| Ore al 55% | 6 |
+| EPAR / trattenute fisse | 11,18 |
+| Ulteriore detrazione | 66,30 |
+| Addizionale regionale | 51,84 |
+| Comunale saldo | 17,18 |
+| Comunale acconto | 7,69 |
+
+## Sui 2.046 € che vedevi
+
+Non riesco a riprodurre quel numero: con le correzioni applicate e le ore
+giuste marzo dà 2.150. Il candidato più probabile è che l'override delle
+ore non fosse stato inserito per marzo e l'app stesse ancora contando le
+ore dai turni, che nel tuo contratto non corrispondono a quelle pagate.
+Dopo aver inserito i valori qui sopra, se il numero resta lontano dimmi
+che **lordo** mostra l'app per marzo: da lì si capisce subito se il
+problema è sulle competenze o sulle trattenute.
