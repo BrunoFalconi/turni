@@ -188,6 +188,34 @@ input[type=time]{font-family:var(--mono)}
 .alert b{color:var(--extra);font-weight:600;display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;margin-bottom:3px}
 .warn{position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--extra)}
 .calc .issue{color:var(--extra);display:block;margin-top:6px}
+/* ---- schermi larghi: due colonne affiancate ---- */
+@media (min-width:900px){
+  #app{max-width:1180px;padding:28px 28px 60px}
+  .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:26px;align-items:start}
+  .col-a{position:sticky;top:28px}
+  .month-name{font-size:32px}
+  .cell{aspect-ratio:1/.92;padding:8px 7px 7px;border-radius:14px}
+  .cell .num{font-size:16px}
+  .cell .hrs{font-size:12px}
+  .grid,.week-head{gap:6px}
+  .week-head div{font-size:12px}
+  .tot-value{font-size:40px}
+  .tot-side .tot-value{font-size:26px}
+  .list-title{font-size:18px}
+  .row{padding:13px 16px}
+  /* i pannelli diventano finestre centrate invece che fogli dal basso */
+  .sheet{top:50%;bottom:auto;left:50%;right:auto;transform:translate(-50%,-46%) scale(.97);
+    width:560px;max-width:92vw;border-radius:20px;max-height:86vh;padding:24px 24px 22px;
+    opacity:0;transition:opacity .18s ease,transform .18s ease;
+    box-shadow:0 24px 70px #0009;border:1px solid var(--line)}
+  .sheet.on{transform:translate(-50%,-50%) scale(1);opacity:1}
+  .fab{left:auto;right:28px;transform:none;bottom:28px}
+  #stampa{display:none}
+}
+@media (min-width:1400px){
+  #app{max-width:1340px}
+  .cell{aspect-ratio:1/.85}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -196,6 +224,8 @@ input[type=time]{font-family:var(--mono)}
     <b style="color:#FF7A6B">L'app non è partita.</b><br>
     Questa finestra non esegue il codice: succede aprendo il file dall'app File. Aprilo in Safari, oppure dall'app Claude.
   </div>
+  <div class="wrap">
+  <div class="col-a">
   <div class="month-bar">
     <button class="nav-btn" id="prev" aria-label="Mese precedente">‹</button>
     <div class="month-name" id="mname"></div>
@@ -240,6 +270,8 @@ input[type=time]{font-family:var(--mono)}
 
   <div id="nudge"></div>
 
+  </div>
+  <div class="col-b">
   <div class="week-head"><div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div></div>
   <div class="grid" id="grid"></div>
   <div class="weeks" id="weeks"></div>
@@ -249,6 +281,8 @@ input[type=time]{font-family:var(--mono)}
   <div class="list-title">Turni del mese</div>
   <div id="list"></div>
 
+  </div>
+  </div>
   <button class="fab" id="fab">Aggiungi turno</button>
   <div class="toast" id="toast"></div>
 </div>
@@ -418,7 +452,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='16 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='17 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
