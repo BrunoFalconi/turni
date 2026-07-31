@@ -2,6 +2,7 @@
 <title>Turni</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0E1420">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Turni">
@@ -139,6 +140,20 @@ input[type=time]{font-family:var(--mono)}
 .set-row span{font-size:14px}
 .set-row .in{width:110px;flex:none}
 .set-row .in input{text-align:right;font-family:var(--mono)}
+#stampa{display:none}
+@media print{
+  body *{visibility:hidden}
+  #stampa,#stampa *{visibility:visible}
+  #stampa{display:block;position:absolute;left:0;top:0;width:100%;
+    background:#fff;color:#000;font-family:Helvetica,Arial,sans-serif}
+  #stampa h1{font-size:15pt;margin:0 0 8pt;font-weight:700}
+  #stampa table{width:100%;border-collapse:collapse;font-size:9pt}
+  #stampa th,#stampa td{border:0.5pt solid #666;padding:3pt 5pt;text-align:left}
+  #stampa th{background:#eee;font-weight:700}
+  #stampa td.g{font-variant-numeric:tabular-nums;white-space:nowrap}
+  #stampa .io{font-weight:700}
+  @page{margin:12mm}
+}
 .pay{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
 .pay-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
 .pay-top span{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
@@ -237,6 +252,8 @@ input[type=time]{font-family:var(--mono)}
   <div class="toast" id="toast"></div>
 </div>
 
+<div id="stampa"></div>
+
 <div class="scrim" id="scrim"></div>
 
 <div class="sheet" id="sheet">
@@ -276,7 +293,7 @@ input[type=time]{font-family:var(--mono)}
   <div class="set-row"><span>Straordinario oltre (ore/giorno)</span><div class="in"><input type="number" id="s-day" min="0" step="0.5" inputmode="decimal"></div></div>
   <div class="set-row"><span>Fascia notturna dalle</span><div class="in"><input type="time" id="s-n1"></div></div>
   <div class="set-row"><span>alle</span><div class="in"><input type="time" id="s-n2"></div></div>
-  <div class="set-row"><span>Lordo fisso mensile (€)</span><div class="in"><input type="number" id="s-lordo" min="0" step="0.01" inputmode="decimal"></div></div>
+  <div class="set-row"><span>Lordo fisso mensile (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-lordo" placeholder="es. 2174,00"></div></div>
   <div class="set-row"><span>Ore contrattuali mensili</span><div class="in"><input type="number" id="s-orec" min="1" step="1" inputmode="numeric"></div></div>
   <div class="set-row"><span>Maggiorazione notturna %</span><div class="in"><input type="number" id="s-pn" min="0" step="1" inputmode="numeric"></div></div>
   <div class="set-row"><span>Maggiorazione festiva %</span><div class="in"><input type="number" id="s-pf" min="0" step="1" inputmode="numeric"></div></div>
@@ -286,10 +303,10 @@ input[type=time]{font-family:var(--mono)}
   </select></div></div>
   <div class="set-row"><span>Maggiorazione straordinario %</span><div class="in"><input type="number" id="s-ps" min="0" step="1" inputmode="numeric"></div></div>
   <div class="set-row" style="border:none;padding-bottom:2px"><span style="color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase">Dalla tua busta paga</span></div>
-  <div class="set-row"><span>Netto del mese (€)</span><div class="in"><input type="number" id="s-bn" min="0" step="0.01" inputmode="decimal"></div></div>
-  <div class="set-row"><span>Totale competenze (€)</span><div class="in"><input type="number" id="s-bc" min="0" step="0.01" inputmode="decimal"></div></div>
-  <div class="set-row"><span>Imponibile IRPEF (€)</span><div class="in"><input type="number" id="s-bi" min="0" step="0.01" inputmode="decimal"></div></div>
-  <div class="set-row"><span>Maggiorazioni in questa busta (€)</span><div class="in"><input type="number" id="s-bm" min="0" step="0.01" inputmode="decimal"></div></div>
+  <div class="set-row"><span>Netto del mese (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bn" placeholder="es. 2174,00"></div></div>
+  <div class="set-row"><span>Totale competenze (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bc" placeholder="es. 2174,00"></div></div>
+  <div class="set-row"><span>Imponibile IRPEF (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bi" placeholder="es. 2174,00"></div></div>
+  <div class="set-row"><span>Maggiorazioni in questa busta (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bm" placeholder="es. 2174,00"></div></div>
   <div class="set-row"><span>Scaglione IRPEF</span><div class="in"><select id="s-bs">
     <option value="0">Automatico</option><option value="23">23%</option><option value="35">35%</option><option value="43">43%</option>
   </select></div></div>
@@ -314,6 +331,7 @@ input[type=time]{font-family:var(--mono)}
     <button class="btn ghost" style="flex:1" id="imp">Importa da Excel</button>
     <button class="btn ghost" style="flex:1" id="tpl">Scarica modello</button>
   </div>
+  <button class="btn ghost" style="width:100%;margin-bottom:10px" id="pdf">Turnario del mese in PDF</button>
   <div class="actions">
     <button class="btn" id="set-close">Fatto</button>
     <button class="btn ghost" id="copy">Copia riepilogo</button>
@@ -323,13 +341,23 @@ input[type=time]{font-family:var(--mono)}
   <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
 </div>
 
+<div class="sheet" id="sheet-pdf">
+  <h2 id="pdf-title">Turnario del mese</h2>
+  <div class="calc" id="pdf-info" style="margin-bottom:12px"></div>
+  <div id="pdf-prev" style="max-height:46vh;overflow:auto;margin-bottom:14px"></div>
+  <div class="actions">
+    <button class="btn" id="pdf-go">Stampa o salva in PDF</button>
+    <button class="btn ghost" id="pdf-close">Chiudi</button>
+  </div>
+</div>
+
 <div class="sheet" id="sheet-ced">
   <h2>Cedolini dei mesi scorsi</h2>
   <div class="calc" id="ced-info" style="margin-bottom:12px"></div>
   <div id="ced-list" style="max-height:34vh;overflow-y:auto;margin-bottom:12px"></div>
   <div class="fields">
     <div class="field"><label for="ced-mese">Mese</label><select id="ced-mese"></select></div>
-    <div class="field"><label for="ced-netto">Netto incassato (€)</label><input type="number" id="ced-netto" step="0.01" inputmode="decimal"></div>
+    <div class="field"><label for="ced-netto">Netto incassato (€)</label><input type="text" inputmode="decimal" id="ced-netto" placeholder="es. 2174,00"></div>
   </div>
   <div class="actions">
     <button class="btn" id="ced-add">Aggiungi</button>
@@ -444,7 +472,7 @@ const DEFAULTS={
   presets:{mattina:['08:00','16:00'],pomeriggio:['16:00','00:00'],notte:['00:00','08:00'],deas:['09:00','18:00']}
 };
 
-let state={shifts:{},settings:{...DEFAULTS}};
+let state={shifts:{},roster:{},settings:{...DEFAULTS}};
 let view=new Date(); view.setDate(1);
 let editing=null;   // stringa data 'YYYY-MM-DD'
 let draft=null;
@@ -527,6 +555,7 @@ async function load(){
       const d=JSON.parse(r.value);
       const saved=d.settings||{};
       state.shifts=d.shifts||{};
+      state.roster=d.roster||{};
       state.settings={...DEFAULTS,...saved};
       let changed=false;
       /* la versione va letta dal dato salvato, non da quello già unito */
@@ -612,7 +641,9 @@ function render(){
   document.getElementById('tot-x').innerHTML=fmt(ex);
   document.getElementById('tot-n').innerHTML=fmt(nt);
 
-  const target=Math.round(state.settings.weekHours*60*days/7);
+  const target=Number(state.settings.lordoFisso)>0&&Number(state.settings.oreContratto)>0
+    ? Math.round(Number(state.settings.oreContratto)*60)
+    : Math.round(state.settings.weekHours*60*days/7);
   const base=Math.min(tot,target), over=Math.max(0,tot-target);
   document.getElementById('bar-1').style.width=(target?base/target*100:0)+'%';
   document.getElementById('bar-2').style.width=(target?Math.min(over/target*100,100-base/target*100):0)+'%';
@@ -650,12 +681,21 @@ function renderPay(y,m){
   if(P.oreStra>0.02) r.push([`Straordinario ${P.oreStra.toFixed(1)}h`,eur(P.stra)]);
   document.getElementById('pay-rows').innerHTML=r.map(([a,b])=>`<div>${a}<i>${b}</i></div>`).join('');
   const mag=P.magNott+P.magFest+P.magFN+P.stra, N=nettoDa(mag);
-  const netBox=document.getElementById('pay-net');
+  const netBox=document.getElementById('pay-net'), netV=document.getElementById('pay-net-v');
+  netBox.style.display='';
   if(N){
-    netBox.style.display='';
-    document.getElementById('pay-net-v').textContent=eur(N.v);
+    netV.textContent=eur(N.v);
+    netV.style.cssText='';
     netBox.querySelector('span').textContent=N.fonte==='cedolini'?'Netto (dai cedolini)':'Netto stimato';
-  } else netBox.style.display='none';
+    netBox.onclick=null; netBox.style.cursor='';
+  }else{
+    /* meglio dire cosa manca che sparire in silenzio */
+    netBox.querySelector('span').textContent='Netto';
+    netV.textContent='mancano i dati della busta →';
+    netV.style.cssText='font-size:12px;color:var(--muted);font-family:var(--body);font-weight:400';
+    netBox.style.cursor='pointer';
+    netBox.onclick=()=>document.getElementById('settings').click();
+  }
   document.getElementById('pay-note').textContent=
     `Base ${eur(P.ph)} l'ora (${eur(P.lordo)} ÷ ${S.oreContratto}h). Stima al lordo: non sostituisce la busta paga.`;
 }
@@ -733,6 +773,18 @@ function isFest(key){
   return festOf(+key.slice(0,4)).has(key) || new Date(key+'T00:00:00').getDay()===0;
 }
 const eur=v=>'€ '+(Math.round(v*100)/100).toFixed(2).replace('.',',');
+/* Accetta 2174 · 2174,00 · 2.174,00 · 2.174 · 2174.00 senza sorprese:
+   il punto delle migliaia altrimenti diventa un punto decimale. */
+function numIta(v){
+  let t=String(v??'').trim().replace(/[€\s]/g,'');
+  if(!t) return 0;
+  const c=t.lastIndexOf(','), p=t.lastIndexOf('.');
+  if(c>-1&&p>-1)      t = c>p ? t.replace(/\./g,'').replace(',','.') : t.replace(/,/g,'');
+  else if(c>-1)       t = t.replace(/\./g,'').replace(',','.');
+  else if(p>-1&&/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g,'');
+  const n=Number(t);
+  return isNaN(n)?0:n;
+}
 
 /* Divide un turno in quattro fasce di retribuzione. Ogni minuto finisce in una
    sola fascia, perché le maggiorazioni non si sommano fra loro: quella festiva
@@ -954,7 +1006,7 @@ document.getElementById('settings').onclick=()=>{
 };
 Object.entries(setMap).forEach(([id,[key,kind]])=>{
   document.getElementById(id).addEventListener('input',e=>{
-    state.settings[key]=kind==='num'?(Number(e.target.value)||0):e.target.value;
+    state.settings[key]=kind==='num'?numIta(e.target.value):e.target.value;
     for(const y in festCache) delete festCache[y];
     renderProfilo(); save(); render();
   });
@@ -1307,7 +1359,15 @@ function apriPersone(){
 }
 function scegliPersona(i){
   const p=cartella.persone[i];
-  state.settings.nome=p.nome; save();
+  state.settings.nome=p.nome;
+  /* conservo il turnario di tutti: serve per la tabella di reparto */
+  state.roster={};
+  cartella.persone.forEach(q=>{
+    const m={};
+    for(const k in q.turni) m[k]=q.turni[k].type;
+    state.roster[q.nome]=m;
+  });
+  save();
   pending=Object.keys(p.turni).sort().map(k=>({key:k,shift:p.turni[k]}));
   openPreview(p.nome,Object.values(cartella.ignorati).reduce((a,b)=>a+b,0));
 }
@@ -1366,6 +1426,64 @@ function renderNudge(){
   b.onclick=()=>apriSequenza(ymd(new Date(n.getFullYear(),n.getMonth(),compilati+1)));
   box.appendChild(b);
 }
+
+/* ---------- turnario di reparto in PDF ---------- */
+/* Le tre colonne sono i turni che coprono le 24 ore, nell'ordine del vostro
+   modello: notte, mattina, pomeriggio. Chi è a riposo, in ferie o in DEAS
+   non compare, esattamente come nel foglio che stampate oggi. */
+const COLONNE=['notte','mattina','pomeriggio'];
+function tabellaMese(y,m){
+  const nomi=Object.keys(state.roster||{});
+  if(!nomi.length) return null;
+  const days=new Date(y,m+1,0).getDate();
+  const ore=t=>{const p=presetOf(t); return `${p[0]}-${p[1]==='00:00'?'24:00':p[1]}`};
+  let righe='', vuoti=0;
+  for(let d=1;d<=days;d++){
+    const key=`${y}-${pad(m+1)}-${pad(d)}`;
+    const celle=COLONNE.map(t=>{
+      const chi=nomi.filter(n=>state.roster[n][key]===t);
+      return chi.map(n=>n===state.settings.nome?`<span class="io">${n}</span>`:n).join(', ');
+    });
+    if(!celle.some(Boolean)) vuoti++;
+    righe+=`<tr><td class="g">${pad(d)}/${pad(m+1)}</td>`+
+           celle.map(c=>`<td>${c||'—'}</td>`).join('')+`</tr>`;
+  }
+  const html=`<h1>Turni ${MESI[m]} ${y}</h1><table>
+    <thead><tr><th>Data</th>`+
+    COLONNE.map((t,i)=>`<th>TURNO ${i+1} (${ore(t)})</th>`).join('')+
+    `</tr></thead><tbody>${righe}</tbody></table>`;
+  return {html,vuoti,days,nomi:nomi.length};
+}
+function apriPdf(){
+  const y=view.getFullYear(), m=view.getMonth();
+  const T=tabellaMese(y,m);
+  const info=document.getElementById('pdf-info');
+  document.getElementById('pdf-title').textContent=`Turni ${MESI[m]} ${y}`;
+  if(!T){
+    document.getElementById('pdf-prev').innerHTML='';
+    info.innerHTML='<span class="issue">Non ho il turnario di reparto. Importa il file Excel collettivo: da lì l\'app tiene i turni di tutti, non solo i tuoi.</span>';
+  }else{
+    document.getElementById('pdf-prev').innerHTML=
+      `<div style="background:#fff;color:#111;padding:10px;border-radius:8px;font-size:11px;overflow:auto">
+         <style>#pdf-prev table{width:100%;border-collapse:collapse}
+                #pdf-prev th,#pdf-prev td{border:1px solid #bbb;padding:3px 5px;text-align:left;white-space:nowrap}
+                #pdf-prev th{background:#eee}#pdf-prev h1{font-size:13px;margin:0 0 6px}
+                #pdf-prev .io{font-weight:700}</style>${T.html}</div>`;
+    info.innerHTML=`<b>${T.nomi}</b> persone · <b>${T.days-T.vuoti}</b> giorni coperti su ${T.days}`+
+      (T.vuoti?`<span class="issue">${T.vuoti} giorni senza nessun turno: probabilmente il mese non è nel file importato.</span>`:'');
+  }
+  closeSheets(); showSheet('sheet-pdf');
+}
+document.getElementById('pdf').onclick=apriPdf;
+document.getElementById('pdf-close').onclick=closeSheets;
+document.getElementById('pdf-go').onclick=()=>{
+  const y=view.getFullYear(), m=view.getMonth(), T=tabellaMese(y,m);
+  if(!T){toast('Manca il turnario di reparto');return}
+  document.getElementById('stampa').innerHTML=T.html;
+  const t=document.title;
+  document.title=`Turni ${MESI[m]} ${y}`;      /* diventa il nome del file PDF */
+  setTimeout(()=>{window.print(); document.title=t;},80);
+};
 
 /* ---------- il netto misurato sui cedolini ---------- */
 /* Con due o più cedolini non serve modellare la busta: il legame fra
@@ -1469,8 +1587,9 @@ document.getElementById('ced').onclick=()=>{renderCedolini();closeSheets();showS
 document.getElementById('ced-close').onclick=closeSheets;
 document.getElementById('ced-add').onclick=()=>{
   const mese=document.getElementById('ced-mese').value;
-  const netto=Number(document.getElementById('ced-netto').value);
+  const netto=numIta(document.getElementById('ced-netto').value);
   if(!mese||!/^\d{4}-\d{2}$/.test(mese)||!netto){toast('Servono il mese e il netto');return}
+  if(netto<100){toast('Netto troppo basso: scrivilo per intero, es. 2174');return}
   state.settings.cedolini=[...(state.settings.cedolini||[]).filter(c=>c.mese!==mese),{mese,netto}];
   document.getElementById('ced-netto').value='';
   save(); renderCedolini(); render();
