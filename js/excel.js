@@ -213,10 +213,42 @@ pendingAllShifts = allShifts;
     document.getElementById('previewDialog').showModal();
   }catch(err){console.error(err);alert('File Excel non leggibile o formato non riconosciuto.')}
 });
-document.getElementById('confirmImport').onclick=()=>{
-  Object.keys(state.shifts).forEach(k=>{if(state.shifts[k]?.note==='Importato da Excel')delete state.shifts[k]});
-  pending.forEach(p=>state.shifts[p.key]=p.shift);
-  const last=pending.at(-1)?.key;if(last){const d=new Date(last+'T00:00:00');view=new Date(d.getFullYear(),d.getMonth(),1)}
-  pending=[];saveState();render();document.getElementById('previewDialog').close();
+document.getElementById('confirmImport').onclick = () => {
+  Object.keys(state.shifts).forEach(key => {
+    if (
+      state.shifts[key]?.note ===
+      'Importato da Excel'
+    ) {
+      delete state.shifts[key];
+    }
+  });
+
+  pending.forEach(item => {
+    state.shifts[item.key] = item.shift;
+  });
+
+  state.allShifts = pendingAllShifts;
+
+  const last = pending.at(-1)?.key;
+
+  if (last) {
+    const date = new Date(last + 'T00:00:00');
+
+    view = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      1
+    );
+  }
+
+  pending = [];
+  pendingAllShifts = {};
+
+  saveState();
+  render();
+
+  document
+    .getElementById('previewDialog')
+    .close();
 };
 document.getElementById('cancelImport').onclick=()=>{pending=[];document.getElementById('previewDialog').close()};
