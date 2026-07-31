@@ -1,175 +1,197 @@
 'use strict';
 
 (function () {
-  /**
-   * Calcola l'IRPEF mensile stimata partendo
-   * dall'imponibile previdenziale mensile già pulito dai contributi.
-   *
-   * Le aliquote e le soglie devono essere mantenute coerenti
-   * con la logica fiscale già presente nell'app.
-   */
-  function calcolaIrpefAnnuaProiettata(
-    imponibileMensile,
-    opzioni = {}
-  ) {
-    const mesiProiezione = opzioni.mesiProiezione || 12;
-    const detrazioneAnnua = opzioni.detrazioneAnnua || 0;
+  function progressiveTax(annualTaxable) {
+    const taxable = Math.max(0, Number(annualTaxable) || 0);
 
-    const imponibileAnnuo =
-      Math.max(0, imponibileMensile) * mesiProiezione;
-
-    let irpefLordaAnnua = 0;
-
-    /*
-     * Inserisci qui gli stessi scaglioni già usati
-     * dalla tua app.
-     *
-     * Questo esempio usa tre fasce generiche:
-     * sostituiscile con quelle effettivamente configurate.
-     */
-    const scaglioni = [
-      {
-        finoA: 28000,
-        aliquota: 0.23
-      },
-      {
-        finoA: 50000,
-        aliquota: 0.35
-      },
-      {
-        finoA: Infinity,
-        aliquota: 0.43
-      }
-    ];
-
-    let precedente = 0;
-    let residuo = imponibileAnnuo;
-
-    for (const scaglione of scaglioni) {
-      if (residuo <= 0) break;
-
-      const ampiezza =
-        scaglione.finoA === Infinity
-          ? residuo
-          : scaglione.finoA - precedente;
-
-      const imponibileFascia =
-        Math.min(residuo, ampiezza);
-
-      irpefLordaAnnua +=
-        imponibileFascia * scaglione.aliquota;
-
-      residuo -= imponibileFascia;
-      precedente = scaglione.finoA;
+    if (taxable <= 28000) {
+      return taxable * 0.23;
     }
 
-    const irpefNettaAnnua = Math.max(
-      0,
-      irpefLordaAnnua - detrazioneAnnua
-    );
+    if (taxable <= 50000) {
+      return 28000 * 0.23 +
+        (taxable - 28000) * 0.35;
+    }
 
-    return irpefNettaAnnua / mesiProiezione;
+    return 28000 * 0.23 +
+      22000 * 0.35 +
+      (taxable - 50000) * 0.43;
   }
 
-  function calcolaSimulazioneMese(
-    profilo,
-    meseSimulazione,
-    oreLavorate,
-    opzioniFiscali = {}
-  ) {
-    if (!profilo) {
-      throw new Error('Profilo cedolino non disponibile');
-    }
-
-    const pagaOrariaBase =
-      profilo.lordoFisso / profilo.oreContrattuali;
-
-    let lordoMaggiorazioni = 0;
-
-    if (oreLavorate.notturne) {
-      lordoMaggiorazioni +=
-        oreLavorate.notturne *
-        pagaOrariaBase *
-        profilo.moltiplicatori.notturno;
-    }
-
-    if (oreLavorate.festive) {
-      lordoMaggiorazioni +=
-        oreLavorate.festive *
-        pagaOrariaBase *
-        profilo.moltiplicatori.festivo;
-    }
-
-    if (oreLavorate.festiveNotturne) {
-      lordoMaggiorazioni +=
-        oreLavorate.festiveNotturne *
-        pagaOrariaBase *
-        profilo.moltiplicatori.festivoNotturno;
-    }
-
-    const lordoTotale =
-      profilo.lordoFisso + lordoMaggiorazioni;
-
-    let totaleContributi = 0;
-
-    profilo.contributi.dinamici.forEach(contributo => {
-      totaleContributi +=
-        lordoTotale * contributo.aliquota;
-    });
-
-    profilo.contributi.fissi.forEach(contributo => {
-      totaleContributi +=
-        profilo.lordoFisso * contributo.aliquota;
-    });
+  function employeeDeduction(annualTaxable) {
+    const income = Math.max(0, Number(annualTaxable) || 0);
 
     /*
-     * Base IRPEF pulita dai contributi calcolati
-     * dinamicamente.
+     * Inserisci qui la stessa formula delle detrazioni
+     * già usata dal calcolo attuale dell'app.
+     *
+     * Per ora restituisce zero per evitare errori.
      */
-    const imponibileIrpef = Math.max(
+    return 0;
+  }
+
+  function calculateProjectedMonthlyIrpef(monthlyTaxable) {
+    const annualTaxable =
+      Math.max(0, Number(monthlyTaxable) || 0) * 12;
+
+    const annualGrossTax = progressiveTax(annualTaxable);
+    const annualDeduction = employeeDeduction(annualTaxable);
+
+    const annualNetTax = Math.max(
       0,
-      lordoTotale - totaleContributi
+      annualGrossTax - annualDeduction
     );
 
-    const irpefNetta =
-      calcolaIrpefAnnuaProiettata(
-        imponibileIrpef,
-        opzioniFiscali
-      );
+    return annualNetTax / 12;
+  }
 
-    const mesiSenzaAddizionali = [1, 2];
+  function getMonthKey(year, month) {
+    return `${year}-${String(month + 1).padStart(2, '0')}`;
+  }
 
-    const addizionali =
-      mesiSenzaAddizionali.includes(meseSimulazione)
-        ? 0
-        : profilo.addizionaliMensili;
-
-    const nettoStimato =
-      imponibileIrpef -
-      irpefNetta -
-      addizionali;
+  function getPayrollProfile(year, month) {
+    const settings = state.settings || {};
+    const override =
+      state.monthOverrides?.[getMonthKey(year, month)] || {};
 
     return {
-      competenze: {
-        lordoBase: profilo.lordoFisso,
-        maggiorazioni: lordoMaggiorazioni,
-        lordoFinale: lordoTotale
-      },
+      gross: Number(settings.gross) || 0,
+      divisor: Number(settings.divisor) || 173,
 
-      trattenute: {
-        contributiInpsFondi: totaleContributi,
-        irpef: irpefNetta,
-        addizionali
-      },
+      socialPct: Number(settings.socialPct) || 0,
 
-      imponibileIrpef,
-      nettoStimato
+      fixedExtraDeductions:
+        Number(
+          override.fixedExtraDeductions ??
+          settings.fixedExtraDeductions
+        ) || 0,
+
+      additionalDeduction:
+        Number(
+          override.additionalDeduction ??
+          settings.additionalDeduction
+        ) || 0,
+
+      regionalInstallment:
+        Number(
+          override.regionalInstallment ??
+          settings.regionalInstallment
+        ) || 0,
+
+      municipalBalanceInstallment:
+        Number(
+          override.municipalBalanceInstallment ??
+          settings.municipalBalanceInstallment
+        ) || 0,
+
+      municipalAdvanceInstallment:
+        Number(
+          override.municipalAdvanceInstallment ??
+          settings.municipalAdvanceInstallment
+        ) || 0,
+
+      nightPct: Number(settings.nightPct) || 50,
+      holidayPct: Number(settings.holidayPct) || 50,
+      holidayNightPct:
+        Number(settings.holidayNightPct) || 55,
+
+      cometaEmployee:
+        Number(settings.cometaEmployee) || 0
     };
   }
 
-  window.calcolaIrpefAnnuaProiettata =
-    calcolaIrpefAnnuaProiettata;
+  function calculatePayrollSimulation({
+    year,
+    month,
+    nightHours = 0,
+    holidayHours = 0,
+    holidayNightHours = 0
+  }) {
+    const profile = getPayrollProfile(year, month);
 
-  window.calcolaSimulazioneMese =
-    calcolaSimulazioneMese;
+    if (profile.gross <= 0) {
+      throw new Error(
+        'Lordo mensile non disponibile. Importa prima un cedolino.'
+      );
+    }
+
+    const hourlyRate =
+      profile.gross / profile.divisor;
+
+    const nightAmount =
+      Number(nightHours || 0) *
+      hourlyRate *
+      (profile.nightPct / 100);
+
+    const holidayAmount =
+      Number(holidayHours || 0) *
+      hourlyRate *
+      (profile.holidayPct / 100);
+
+    const holidayNightAmount =
+      Number(holidayNightHours || 0) *
+      hourlyRate *
+      (profile.holidayNightPct / 100);
+
+    const additions =
+      nightAmount +
+      holidayAmount +
+      holidayNightAmount;
+
+    const grossTotal =
+      profile.gross + additions;
+
+    const socialContributions =
+      grossTotal * (profile.socialPct / 100);
+
+    const taxableIrpef = Math.max(
+      0,
+      grossTotal -
+      socialContributions -
+      profile.cometaEmployee
+    );
+
+    const monthlyIrpef =
+      calculateProjectedMonthlyIrpef(taxableIrpef);
+
+    const localTaxes =
+      profile.regionalInstallment +
+      profile.municipalBalanceInstallment +
+      profile.municipalAdvanceInstallment;
+
+    const totalDeductions =
+      socialContributions +
+      profile.cometaEmployee +
+      profile.fixedExtraDeductions +
+      monthlyIrpef +
+      localTaxes;
+
+    const estimatedNet =
+      grossTotal -
+      totalDeductions +
+      profile.additionalDeduction;
+
+    return {
+      grossBase: profile.gross,
+      additions,
+      grossTotal,
+      socialContributions,
+      cometaEmployee: profile.cometaEmployee,
+      taxableIrpef,
+      monthlyIrpef,
+      localTaxes,
+      fixedExtraDeductions:
+        profile.fixedExtraDeductions,
+      additionalDeduction:
+        profile.additionalDeduction,
+      totalDeductions,
+      estimatedNet
+    };
+  }
+
+  window.calculateProjectedMonthlyIrpef =
+    calculateProjectedMonthlyIrpef;
+
+  window.calculatePayrollSimulation =
+    calculatePayrollSimulation;
 })();
