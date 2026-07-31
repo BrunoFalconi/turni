@@ -1,7 +1,7 @@
-(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['core']='3.4';
+(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['core']='3.5';
 'use strict';
 
-const APP_VERSION='3.4';
+const APP_VERSION='3.5';
 const STORAGE_KEY='turni-app-stabile-v1';
 const MONTHS=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const DAYS=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
@@ -178,6 +178,25 @@ function employeeAnnualDeduction(income,workingDays=365){
   return Math.max(0,d)*Math.min(365,Math.max(0,workingDays))/365;
 }
 
+/* Mese di riferimento scelto dall'app quando l'utente non ne ha indicato
+   uno. Fra i cedolini caricati si preferisce quello con le trattenute
+   fisse piu basse: un mese con arretrati EPAR non e rappresentativo e
+   ripeterebbe quegli importi su tutti gli altri mesi. A parita, vince il
+   piu recente. */
+function autoBaselineMonth(){
+  const registry=state.payslipRegistry||{};
+  const overrides=state.monthOverrides||{};
+  const keys=Object.keys(registry);
+  if(!keys.length)return '';
+
+  return keys.sort((a,b)=>{
+    const ea=Number(overrides[a]?.fixedExtraDeductions)||0;
+    const eb=Number(overrides[b]?.fixedExtraDeductions)||0;
+    if(ea!==eb)return ea-eb;
+    return b.localeCompare(a);
+  })[0];
+}
+
 function payroll(y,m){
   const mins={night:0,holiday:0,holidayNight:0},days=new Date(y,m+1,0).getDate();
   for(let d=1;d<=days;d++){
@@ -205,7 +224,7 @@ function payroll(y,m){
        3. il profilo generale.
      Il mese tipo va scelto fra quelli normali: se si indica un mese con
      arretrati, quegli importi verrebbero ripetuti ovunque. */
-  const baselineKey=state.settings.baselineMonth;
+  const baselineKey=state.settings.baselineMonth||autoBaselineMonth();
   const baseline=(baselineKey&&baselineKey!==monthKey)
     ?((state.monthOverrides||{})[baselineKey]||{})
     :{};
@@ -631,13 +650,17 @@ function render(){
     if(p.verified){
       payBadge.className='accuracy ok';
       payBadge.textContent='Verificato sul cedolino di questo mese';
-    }else if(state.settings.baselineMonth){
-      const [by,bm]=state.settings.baselineMonth.split('-').map(Number);
-      payBadge.className='accuracy est';
-      payBadge.textContent=`Stima · trattenute da ${MONTHS[bm-1]} ${by}, ore dai turni`;
     }else{
+      const key=state.settings.baselineMonth||autoBaselineMonth();
       payBadge.className='accuracy est';
-      payBadge.textContent='Stima · nessun cedolino di riferimento';
+      if(key){
+        const [by,bm]=key.split('-').map(Number);
+        const auto=state.settings.baselineMonth?'':' (scelto in automatico)';
+        payBadge.textContent=
+          `Stima · trattenute da ${MONTHS[bm-1]} ${by}${auto}, ore dai turni`;
+      }else{
+        payBadge.textContent='Stima · nessun cedolino caricato';
+      }
     }
   }
 
@@ -783,7 +806,12 @@ function renderBaselineSelect(){
   const entries=Object.entries(state.payslipRegistry||{})
     .sort((a,b)=>b[0].localeCompare(a[0]));
 
-  sel.innerHTML='<option value="">Nessuno (usa il profilo generale)</option>'+
+  const auto=autoBaselineMonth();
+  const autoLabel=auto
+    ?(()=>{const [yy,mm]=auto.split('-').map(Number);return `${MONTHS[mm-1]} ${yy}`})()
+    :'nessuno';
+
+  sel.innerHTML=`<option value="">Automatico (${autoLabel})</option>`+
     entries.map(([key])=>{
       const [yy,mm]=key.split('-').map(Number);
       const sel_=key===state.settings.baselineMonth?' selected':'';
