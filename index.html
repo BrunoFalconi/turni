@@ -888,108 +888,55 @@ document.getElementById('copy').onclick=async()=>{
   const txt=`${MESI[m]} ${y}\n${lines.join('\n')}\n\nTotale ${fmtPlain(tot)} · straordinari ${fmtPlain(ex)} · notturne ${fmtPlain(nt)}`;
   try{await navigator.clipboard.writeText(txt);toast('Riepilogo copiato')}catch(e){toast('Copia non riuscita')}
 };
-/* ---------- importazione da Excel ---------- */
+/* ---------- importazione da Excel + PDF turni di tutti ---------- */
 
-/*
- * Importatore compatibile con:
- *
- * 1. Il modello semplice:
- *    Data | Turno | Inizio | Fine | Pausa | Note
- *
- * 2. La Turnistica T1:
- *    - un foglio per mese;
- *    - dipendenti sulle righe;
- *    - giorni sulle colonne;
- *    - codici M, P, N, R, DEAS ecc.;
- *    - finestre che possono iniziare nel mese precedente;
- *    - turno M 08-20 da dodici ore.
- */
-
-const norm = value => String(value ?? '')
+const norm=value=>String(value??'')
   .trim()
   .toLowerCase()
-  .replace(/[àáâä]/g, 'a')
-  .replace(/[èéêë]/g, 'e')
-  .replace(/[ìíîï]/g, 'i')
-  .replace(/[òóôö]/g, 'o')
-  .replace(/[ùúûü]/g, 'u')
-  .replace(/[–—]/g, '-')
-  .replace(/\s+/g, ' ');
+  .replace(/[àáâä]/g,'a')
+  .replace(/[èéêë]/g,'e')
+  .replace(/[ìíîï]/g,'i')
+  .replace(/[òóôö]/g,'o')
+  .replace(/[ùúûü]/g,'u')
+  .replace(/[–—]/g,'-')
+  .replace(/\s+/g,' ');
 
-const IMPORT_MONTHS = {
-  gennaio: 0,
-  febbraio: 1,
-  marzo: 2,
-  aprile: 3,
-  maggio: 4,
-  giugno: 5,
-  luglio: 6,
-  agosto: 7,
-  settembre: 8,
-  ottobre: 9,
-  novembre: 10,
-  dicembre: 11
+const IMPORT_MONTHS={
+  gennaio:0,
+  febbraio:1,
+  marzo:2,
+  aprile:3,
+  maggio:4,
+  giugno:5,
+  luglio:6,
+  agosto:7,
+  settembre:8,
+  ottobre:9,
+  novembre:10,
+  dicembre:11
 };
 
-const COLS = {
-  date: [
-    'data',
-    'giorno',
-    'date'
-  ],
-
-  type: [
-    'turno',
-    'tipo',
-    'shift',
-    'codice',
-    'sigla'
-  ],
-
-  start: [
-    'inizio',
-    'entrata',
-    'dalle',
-    'ora inizio',
-    'start'
-  ],
-
-  end: [
-    'fine',
-    'uscita',
-    'alle',
-    'ora fine',
-    'end'
-  ],
-
-  brk: [
-    'pausa',
-    'break'
-  ],
-
-  note: [
-    'note',
-    'nota',
-    'commento',
-    'reparto',
-    'sede'
-  ]
+const COLS={
+  date:['data','giorno','date'],
+  type:['turno','tipo','shift','codice','sigla'],
+  start:['inizio','entrata','dalle','ora inizio','start'],
+  end:['fine','uscita','alle','ora fine','end'],
+  brk:['pausa','break'],
+  note:['note','nota','commento','reparto','sede']
 };
 
-function matchCol(header) {
-  const normalized = norm(header);
+function matchCol(header){
+  const normalized=norm(header);
 
-  if (!normalized) {
-    return null;
-  }
+  if(!normalized)return null;
 
-  for (const [key, names] of Object.entries(COLS)) {
-    if (
-      names.some(name =>
-        normalized === name ||
+  for(const [key,names] of Object.entries(COLS)){
+    if(
+      names.some(name=>
+        normalized===name ||
         normalized.startsWith(name)
       )
-    ) {
+    ){
       return key;
     }
   }
@@ -997,11 +944,11 @@ function matchCol(header) {
   return null;
 }
 
-function toDate(value) {
-  if (
+function toDate(value){
+  if(
     value instanceof Date &&
     !Number.isNaN(value.getTime())
-  ) {
+  ){
     return new Date(
       value.getFullYear(),
       value.getMonth(),
@@ -1009,61 +956,51 @@ function toDate(value) {
     );
   }
 
-  if (
-    typeof value === 'number' &&
-    value > 20000 &&
-    value < 80000
-  ) {
-    const decoded =
-      XLSX.SSF.parse_date_code(value);
+  if(
+    typeof value==='number' &&
+    value>20000 &&
+    value<80000
+  ){
+    const decoded=XLSX.SSF.parse_date_code(value);
 
     return decoded
-      ? new Date(
-          decoded.y,
-          decoded.m - 1,
-          decoded.d
-        )
+      ? new Date(decoded.y,decoded.m-1,decoded.d)
       : null;
   }
 
-  const text =
-    String(value ?? '').trim();
+  const text=String(value??'').trim();
 
-  if (!text) {
-    return null;
-  }
+  if(!text)return null;
 
-  let match = text.match(
+  let match=text.match(
     /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/
   );
 
-  if (match) {
-    let year = Number(match[3]);
+  if(match){
+    let year=Number(match[3]);
 
-    if (year < 100) {
-      year += 2000;
-    }
+    if(year<100)year+=2000;
 
     return new Date(
       year,
-      Number(match[2]) - 1,
+      Number(match[2])-1,
       Number(match[1])
     );
   }
 
-  match = text.match(
+  match=text.match(
     /^(\d{4})-(\d{1,2})-(\d{1,2})/
   );
 
-  if (match) {
+  if(match){
     return new Date(
       Number(match[1]),
-      Number(match[2]) - 1,
+      Number(match[2])-1,
       Number(match[3])
     );
   }
 
-  const date = new Date(text);
+  const date=new Date(text);
 
   return Number.isNaN(date.getTime())
     ? null
@@ -1074,210 +1011,175 @@ function toDate(value) {
       );
 }
 
-function toTime(value) {
-  if (
+function toTime(value){
+  if(
     value instanceof Date &&
     !Number.isNaN(value.getTime())
-  ) {
-    return (
-      pad(value.getHours()) +
-      ':' +
+  ){
+    return(
+      pad(value.getHours())+
+      ':'+
       pad(value.getMinutes())
     );
   }
 
-  if (typeof value === 'number') {
-    let fraction = value % 1;
+  if(typeof value==='number'){
+    let fraction=value%1;
 
-    if (
-      fraction === 0 &&
-      value >= 1 &&
-      value < 24
-    ) {
-      fraction = value / 24;
+    if(
+      fraction===0 &&
+      value>=1 &&
+      value<24
+    ){
+      fraction=value/24;
     }
 
-    const minutes =
-      Math.round(fraction * 1440) % 1440;
+    const minutes=
+      Math.round(fraction*1440)%1440;
 
-    return (
-      pad(Math.floor(minutes / 60)) +
-      ':' +
-      pad(minutes % 60)
+    return(
+      pad(Math.floor(minutes/60))+
+      ':'+
+      pad(minutes%60)
     );
   }
 
-  const text =
-    String(value ?? '').trim();
+  const text=String(value??'').trim();
 
-  if (!text) {
-    return null;
-  }
+  if(!text)return null;
 
-  const match = text.match(
+  const match=text.match(
     /^(\d{1,2})\s*[:.hH]?\s*(\d{2})?/
   );
 
-  if (!match) {
-    return null;
-  }
+  if(!match)return null;
 
-  return (
-    pad(Number(match[1]) % 24) +
-    ':' +
-    pad(match[2] ? Number(match[2]) : 0)
+  return(
+    pad(Number(match[1])%24)+
+    ':'+
+    pad(match[2]?Number(match[2]):0)
   );
 }
 
 /*
- * Restituisce una descrizione completa del codice.
+ * Riconoscimento dei codici presenti nella Turnistica T1.
  */
-function parseExcelShiftCode(value) {
-  const original = norm(value);
+function parseExcelShiftCode(value){
+  const original=norm(value);
 
-  if (!original) {
-    return null;
-  }
+  if(!original)return null;
 
   /*
-   * Turno speciale di dodici ore.
+   * Turno speciale di 12 ore: 08:00-20:00.
    */
-  if (
+  if(
     /^m\s*0?8\s*[-/]\s*20\b/.test(original) ||
     /^0?8\s*[-/]\s*20\b/.test(original)
-  ) {
-    return {
-      type: 'mattina',
-      start: '08:00',
-      end: '20:00',
-      break: 0,
-      label: 'Mattina 08:00–20:00'
+  ){
+    return{
+      type:'mattina',
+      start:'08:00',
+      end:'20:00',
+      break:0,
+      isTwelveHours:true
     };
   }
 
   /*
-   * Rimuove annotazioni:
-   * M(A), P(A), N (A) ecc.
+   * Rimuove annotazioni come M(A), P(A), N(A).
    */
-  const code = original
-    .replace(/\s*\([^)]*\)\s*/g, '')
+  const code=original
+    .replace(/\s*\([^)]*\)\s*/g,'')
     .trim();
 
-  if (
+  if(
     code.startsWith('deas') ||
     code.startsWith('smart') ||
-    code === 'sw' ||
-    code === 'd'
-  ) {
-    return {
-      type: 'deas'
-    };
+    code==='sw' ||
+    code==='d'
+  ){
+    return{type:'deas'};
   }
 
-  if (code.startsWith('mal')) {
-    return {
-      type: 'malattia'
-    };
+  if(code.startsWith('mal')){
+    return{type:'malattia'};
   }
 
-  if (
+  if(
     code.startsWith('fer') ||
     code.startsWith('perm') ||
     code.startsWith('par') ||
     code.startsWith('lutto') ||
-    code === 'f'
-  ) {
-    return {
-      type: 'ferie'
-    };
+    code==='f'
+  ){
+    return{type:'ferie'};
   }
 
-  if (
+  if(
     code.startsWith('rip') ||
     code.startsWith('lib') ||
-    code === 'r' ||
-    code === 'rc' ||
-    code === 'l' ||
-    code === '-'
-  ) {
-    return {
-      type: 'riposo'
-    };
+    code==='r' ||
+    code==='rc' ||
+    code==='l' ||
+    code==='-'
+  ){
+    return{type:'riposo'};
   }
 
-  if (
+  if(
     code.startsWith('mat') ||
-    code === 'm'
-  ) {
-    return {
-      type: 'mattina'
-    };
+    code==='m'
+  ){
+    return{type:'mattina'};
   }
 
-  if (
+  if(
     code.startsWith('pom') ||
-    code === 'p'
-  ) {
-    return {
-      type: 'pomeriggio'
-    };
+    code==='p'
+  ){
+    return{type:'pomeriggio'};
   }
 
-  if (
+  if(
     code.startsWith('not') ||
-    code === 'n'
-  ) {
-    return {
-      type: 'notte'
-    };
+    code==='n'
+  ){
+    return{type:'notte'};
   }
 
   return null;
 }
 
 /*
- * Serve anche alla funzione "Incolla sequenza",
- * che usa già toType().
+ * Compatibilità con "Incolla sequenza".
  */
-function toType(value) {
-  return parseExcelShiftCode(value)?.type || null;
+function toType(value){
+  return parseExcelShiftCode(value)?.type||null;
 }
 
-function makeImportedShift(descriptor) {
-  if (!descriptor) {
-    return null;
-  }
+function makeImportedShift(descriptor){
+  if(!descriptor)return null;
 
-  const definition =
-    typeOf(descriptor.type);
+  const definition=typeOf(descriptor.type);
 
-  if (!definition) {
-    return null;
-  }
+  if(!definition)return null;
 
-  if (!definition.work) {
-    return {
-      type: descriptor.type,
-      start: '',
-      end: '',
-      break: 0,
-      note: 'Importato da Excel'
+  if(!definition.work){
+    return{
+      type:descriptor.type,
+      start:'',
+      end:'',
+      break:0,
+      note:'Importato da Excel'
     };
   }
 
-  const preset =
-    presetOf(descriptor.type);
+  const preset=presetOf(descriptor.type);
 
-  return {
-    type: descriptor.type,
-
-    start:
-      descriptor.start ||
-      preset[0],
-
-    end:
-      descriptor.end ||
-      preset[1],
+  return{
+    type:descriptor.type,
+    start:descriptor.start||preset[0],
+    end:descriptor.end||preset[1],
 
     break:
       descriptor.break ??
@@ -1285,387 +1187,310 @@ function makeImportedShift(descriptor) {
       state.settings.defaultBreak ??
       0,
 
-    note:
-      descriptor.label
-        ? `Importato da Excel · ${descriptor.label}`
-        : 'Importato da Excel'
+    note:'Importato da Excel'
   };
 }
 
-/* ---------- modello Excel semplice ---------- */
+/* ---------- formato Excel semplice ---------- */
 
-function rowToShift(cells, map) {
-  const date =
-    toDate(cells[map.date]);
+function rowToShift(cells,map){
+  const date=toDate(cells[map.date]);
 
-  if (!date) {
-    return null;
-  }
+  if(!date)return null;
 
-  const descriptor =
-    map.type != null
-      ? parseExcelShiftCode(
-          cells[map.type]
-        )
+  const descriptor=
+    map.type!=null
+      ? parseExcelShiftCode(cells[map.type])
       : null;
 
-  let type =
-    descriptor?.type || null;
+  let type=descriptor?.type||null;
 
-  let start =
-    map.start != null
+  let start=
+    map.start!=null
       ? toTime(cells[map.start])
       : null;
 
-  let end =
-    map.end != null
+  let end=
+    map.end!=null
       ? toTime(cells[map.end])
       : null;
 
-  if (!type && !start) {
-    return null;
+  if(!type&&!start)return null;
+
+  if(descriptor?.start&&descriptor?.end){
+    start=descriptor.start;
+    end=descriptor.end;
   }
 
-  if (
-    descriptor?.start &&
-    descriptor?.end
-  ) {
-    start = descriptor.start;
-    end = descriptor.end;
-  }
+  if(type&&!typeOf(type).work){
+    return{
+      key:ymd(date),
 
-  if (
-    type &&
-    !typeOf(type).work
-  ) {
-    return {
-      key: ymd(date),
-
-      shift: {
+      shift:{
         type,
-        start: '',
-        end: '',
-        break: 0,
+        start:'',
+        end:'',
+        break:0,
+
         note:
-          map.note != null
-            ? String(cells[map.note] ?? '').trim()
+          map.note!=null
+            ? String(cells[map.note]??'').trim()
             : 'Importato da Excel'
       }
     };
   }
 
-  if (
+  if(
     !start &&
     type &&
     DEFAULTS.presets[type]
-  ) {
-    [start, end] =
-      presetOf(type);
+  ){
+    [start,end]=presetOf(type);
   }
 
-  if (!start || !end) {
-    return null;
-  }
+  if(!start||!end)return null;
 
-  if (!type) {
-    type =
+  if(!type){
+    type=
       Object.keys(DEFAULTS.presets)
-        .find(key =>
-          presetOf(key)[0] === start
-        ) ||
+        .find(key=>presetOf(key)[0]===start) ||
       (
-        toMin(start) < 12
+        toMin(start)<12
           ? 'mattina'
-          : toMin(start) < 20
+          : toMin(start)<20
             ? 'pomeriggio'
             : 'notte'
       );
   }
 
-  const pause =
-    map.brk != null
+  const pause=
+    map.brk!=null
       ? Math.max(
           0,
           Number(
-            String(cells[map.brk])
-              .replace(',', '.')
-          ) || 0
+            String(cells[map.brk]).replace(',','.')
+          )||0
         )
-      : (
+      :(
           descriptor?.break ??
           typeOf(type).brk ??
           state.settings.defaultBreak ??
           0
         );
 
-  return {
-    key: ymd(date),
+  return{
+    key:ymd(date),
 
-    shift: {
+    shift:{
       type,
       start,
       end,
-      break: pause,
+      break:pause,
 
       note:
-        map.note != null
-          ? String(cells[map.note] ?? '').trim()
+        map.note!=null
+          ? String(cells[map.note]??'').trim()
           : 'Importato da Excel'
     }
   };
 }
 
-function parseSimpleSheet(rows) {
-  let map = null;
-  let headerRow = -1;
+function parseSimpleSheet(rows){
+  let map=null;
+  let headerRow=-1;
 
-  for (
-    let rowIndex = 0;
-    rowIndex < Math.min(rows.length, 15);
+  for(
+    let rowIndex=0;
+    rowIndex<Math.min(rows.length,15);
     rowIndex++
-  ) {
-    const candidate = {};
+  ){
+    const candidate={};
 
-    (rows[rowIndex] || [])
-      .forEach((cell, columnIndex) => {
-        const key =
-          matchCol(cell);
+    (rows[rowIndex]||[])
+      .forEach((cell,columnIndex)=>{
+        const key=matchCol(cell);
 
-        if (
+        if(
           key &&
-          candidate[key] == null
-        ) {
-          candidate[key] =
-            columnIndex;
+          candidate[key]==null
+        ){
+          candidate[key]=columnIndex;
         }
       });
 
-    if (
-      candidate.date != null &&
+    if(
+      candidate.date!=null &&
       (
-        candidate.type != null ||
-        candidate.start != null
+        candidate.type!=null ||
+        candidate.start!=null
       )
-    ) {
-      map = candidate;
-      headerRow = rowIndex;
+    ){
+      map=candidate;
+      headerRow=rowIndex;
       break;
     }
   }
 
-  if (!map) {
-    return null;
-  }
+  if(!map)return null;
 
-  const result = [];
-  let skipped = 0;
+  const shifts=[];
+  let skipped=0;
 
-  for (
-    let rowIndex = headerRow + 1;
-    rowIndex < rows.length;
+  for(
+    let rowIndex=headerRow+1;
+    rowIndex<rows.length;
     rowIndex++
-  ) {
-    const item =
-      rowToShift(
-        rows[rowIndex],
-        map
-      );
+  ){
+    const item=rowToShift(
+      rows[rowIndex],
+      map
+    );
 
-    if (item) {
-      result.push(item);
-    } else if (
-      (rows[rowIndex] || [])
-        .some(cell =>
-          String(cell).trim()
-        )
-    ) {
+    if(item){
+      shifts.push(item);
+    }else if(
+      (rows[rowIndex]||[])
+        .some(cell=>String(cell).trim())
+    ){
       skipped++;
     }
   }
 
-  return {
-    shifts: result,
+  return{
+    shifts,
     skipped
   };
 }
 
 /* ---------- Turnistica T1 a griglia ---------- */
 
-function parseSheetPeriods(sheetNames) {
-  const parsed =
-    sheetNames.map(name => {
-      const normalized =
-        norm(name);
+function parseSheetPeriods(sheetNames){
+  const parsed=sheetNames.map(name=>{
+    const normalized=norm(name);
 
-      const monthName =
-        Object.keys(IMPORT_MONTHS)
-          .find(month =>
-            normalized.includes(month)
-          );
-
-      const yearMatch =
-        String(name).match(
-          /(?:19|20)\d{2}/
+    const monthName=
+      Object.keys(IMPORT_MONTHS)
+        .find(month=>
+          normalized.includes(month)
         );
 
-      if (!monthName) {
+    const yearMatch=
+      String(name).match(/(?:19|20)\d{2}/);
+
+    if(!monthName)return null;
+
+    return{
+      month:IMPORT_MONTHS[monthName],
+      year:yearMatch
+        ? Number(yearMatch[0])
+        : null
+    };
+  });
+
+  const anchors=parsed
+    .map((period,index)=>{
+      if(!period||period.year==null){
         return null;
       }
 
-      return {
-        month:
-          IMPORT_MONTHS[monthName],
-
-        year:
-          yearMatch
-            ? Number(yearMatch[0])
-            : null
+      return{
+        ...period,
+        index
       };
-    });
+    })
+    .filter(Boolean);
 
-  const anchors =
-    parsed
-      .map((period, index) => {
-        if (
-          !period ||
-          period.year == null
-        ) {
-          return null;
-        }
+  return parsed.map((period,index)=>{
+    if(!period)return null;
 
-        return {
-          ...period,
-          index
-        };
-      })
-      .filter(Boolean);
+    if(period.year!=null){
+      return period;
+    }
 
-  return parsed.map(
-    (period, index) => {
-      if (!period) {
-        return null;
-      }
-
-      if (period.year != null) {
-        return period;
-      }
-
-      if (!anchors.length) {
-        return {
-          month: period.month,
-          year:
-            new Date().getFullYear()
-        };
-      }
-
-      const nearest =
-        anchors
-          .slice()
-          .sort((a, b) =>
-            Math.abs(a.index - index) -
-            Math.abs(b.index - index)
-          )[0];
-
-      const absoluteMonth =
-        nearest.year * 12 +
-        nearest.month +
-        (index - nearest.index);
-
-      return {
-        year:
-          Math.floor(
-            absoluteMonth / 12
-          ),
-
-        month:
-          (
-            (
-              absoluteMonth % 12
-            ) + 12
-          ) % 12
+    if(!anchors.length){
+      return{
+        month:period.month,
+        year:new Date().getFullYear()
       };
     }
-  );
+
+    const nearest=anchors
+      .slice()
+      .sort((a,b)=>
+        Math.abs(a.index-index)-
+        Math.abs(b.index-index)
+      )[0];
+
+    const absoluteMonth=
+      nearest.year*12+
+      nearest.month+
+      (index-nearest.index);
+
+    return{
+      year:Math.floor(absoluteMonth/12),
+
+      month:
+        ((absoluteMonth%12)+12)%12
+    };
+  });
 }
 
-function validDay(value) {
-  const number =
-    Number(
-      String(value ?? '').trim()
-    );
+function validDay(value){
+  const number=Number(
+    String(value??'').trim()
+  );
 
-  return (
+  return(
     Number.isInteger(number) &&
-    number >= 1 &&
-    number <= 31
+    number>=1 &&
+    number<=31
   )
     ? number
     : null;
 }
 
-function isWeekdayCode(value) {
-  const code =
-    String(value ?? '')
-      .trim()
-      .toUpperCase();
+function isWeekdayCode(value){
+  const code=String(value??'')
+    .trim()
+    .toUpperCase();
 
-  return [
-    'L',
-    'M',
-    'ME',
-    'G',
-    'V',
-    'S',
-    'D',
-    'LU',
-    'MA',
-    'MI',
-    'GI',
-    'VE',
-    'SA',
-    'DO'
+  return[
+    'L','M','ME','G','V','S','D',
+    'LU','MA','MI','GI','VE','SA','DO'
   ].includes(code);
 }
 
-function findGridLayout(rows) {
-  const limit =
-    Math.min(
-      rows.length - 1,
-      30
-    );
+function findGridLayout(rows){
+  const limit=Math.min(
+    rows.length-1,
+    30
+  );
 
   /*
    * Caso con cella NOME/TURNO.
    */
-  for (
-    let rowIndex = 0;
-    rowIndex < limit;
+  for(
+    let rowIndex=0;
+    rowIndex<limit;
     rowIndex++
-  ) {
-    const row =
-      rows[rowIndex] || [];
+  ){
+    const row=rows[rowIndex]||[];
 
-    for (
-      let columnIndex = 0;
-      columnIndex < row.length;
+    for(
+      let columnIndex=0;
+      columnIndex<row.length;
       columnIndex++
-    ) {
-      const cell =
-        norm(row[columnIndex]);
+    ){
+      const cell=norm(row[columnIndex]);
 
-      if (
+      if(
         cell.includes('nome/turno') ||
         cell.includes('nome turno')
-      ) {
-        return {
-          dayRow:
-            rowIndex - 1,
-
-          weekdayRow:
-            rowIndex,
-
-          nameColumn:
-            columnIndex
+      ){
+        return{
+          dayRow:rowIndex-1,
+          weekdayRow:rowIndex,
+          nameColumn:columnIndex
         };
       }
     }
@@ -1674,36 +1499,27 @@ function findGridLayout(rows) {
   /*
    * Caso con cella NOME/TURNO vuota.
    */
-  for (
-    let rowIndex = 0;
-    rowIndex < limit;
+  for(
+    let rowIndex=0;
+    rowIndex<limit;
     rowIndex++
-  ) {
-    const current =
-      rows[rowIndex] || [];
+  ){
+    const current=rows[rowIndex]||[];
+    const next=rows[rowIndex+1]||[];
 
-    const next =
-      rows[rowIndex + 1] || [];
+    const days=current
+      .filter(cell=>validDay(cell)!=null)
+      .length;
 
-    const days =
-      current.filter(cell =>
-        validDay(cell) != null
-      ).length;
+    const weekdays=next
+      .filter(isWeekdayCode)
+      .length;
 
-    const weekdays =
-      next.filter(
-        isWeekdayCode
-      ).length;
-
-    if (
-      days >= 7 &&
-      weekdays >= 5
-    ) {
-      return {
-        dayRow: rowIndex,
-        weekdayRow:
-          rowIndex + 1,
-        nameColumn: 0
+    if(days>=7&&weekdays>=5){
+      return{
+        dayRow:rowIndex,
+        weekdayRow:rowIndex+1,
+        nameColumn:0
       };
     }
   }
@@ -1711,89 +1527,69 @@ function findGridLayout(rows) {
   return null;
 }
 
-function normalizePersonName(value) {
+function normalizePersonName(value){
   return norm(value)
-    .replace(/[^a-z0-9 ]/g, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/[^a-z0-9 ]/g,' ')
+    .replace(/\s+/g,' ')
     .trim();
 }
 
 function personNameMatches(
   actualValue,
   requestedValue
-) {
-  const actual =
+){
+  const actual=
     normalizePersonName(actualValue);
 
-  const requested =
+  const requested=
     normalizePersonName(requestedValue);
 
-  if (
-    !actual ||
-    !requested
-  ) {
-    return false;
-  }
+  if(!actual||!requested)return false;
 
-  const actualWords =
-    actual
-      .split(' ')
-      .filter(Boolean);
+  const actualWords=actual
+    .split(' ')
+    .filter(Boolean);
 
-  const requestedWords =
-    requested
-      .split(' ')
-      .filter(Boolean);
+  const requestedWords=requested
+    .split(' ')
+    .filter(Boolean);
 
-  return (
-    actual === requested ||
+  return(
+    actual===requested ||
     actual.includes(requested) ||
     requested.includes(actual) ||
-    requestedWords.every(word =>
+    requestedWords.every(word=>
       actualWords.includes(word)
     )
   );
 }
 
-/*
- * Costruisce una data per ogni colonna.
- *
- * Il giorno 1 viene ancorato al mese indicato
- * dal nome del foglio. Le colonne precedenti
- * finiscono automaticamente nel mese precedente.
- */
 function buildGridDateMap(
   rows,
   layout,
   period
-) {
-  const result =
-    new Map();
+){
+  const result=new Map();
 
-  if (
+  if(
     !layout ||
     !period ||
-    layout.dayRow < 0
-  ) {
+    layout.dayRow<0
+  ){
     return result;
   }
 
-  const dayRow =
-    rows[layout.dayRow] || [];
+  const dayRow=rows[layout.dayRow]||[];
+  const columns=[];
 
-  const columns = [];
-
-  for (
-    let column =
-      layout.nameColumn + 1;
-
-    column < dayRow.length;
+  for(
+    let column=layout.nameColumn+1;
+    column<dayRow.length;
     column++
-  ) {
-    const day =
-      validDay(dayRow[column]);
+  ){
+    const day=validDay(dayRow[column]);
 
-    if (day != null) {
+    if(day!=null){
       columns.push({
         column,
         day
@@ -1801,24 +1597,19 @@ function buildGridDateMap(
     }
   }
 
-  if (!columns.length) {
-    return result;
+  if(!columns.length)return result;
+
+  let anchorIndex=
+    columns.findIndex(entry=>entry.day===1);
+
+  if(anchorIndex<0){
+    anchorIndex=0;
   }
 
-  let anchorIndex =
-    columns.findIndex(
-      entry => entry.day === 1
-    );
+  const anchorEntry=columns[anchorIndex];
 
-  if (anchorIndex < 0) {
-    anchorIndex = 0;
-  }
-
-  const anchorEntry =
-    columns[anchorIndex];
-
-  const anchorDate =
-    anchorEntry.day === 1
+  const anchorDate=
+    anchorEntry.day===1
       ? new Date(
           period.year,
           period.month,
@@ -1830,36 +1621,27 @@ function buildGridDateMap(
           anchorEntry.day
         );
 
-  columns.forEach(
-    (entry, index) => {
-      const date =
-        new Date(anchorDate);
+  columns.forEach((entry,index)=>{
+    const date=new Date(anchorDate);
 
-      date.setDate(
-        anchorDate.getDate() +
-        index -
-        anchorIndex
-      );
+    date.setDate(
+      anchorDate.getDate()+
+      index-
+      anchorIndex
+    );
 
-      result.set(
-        entry.column,
-        date
-      );
-    }
-  );
+    result.set(entry.column,date);
+  });
 
   return result;
 }
 
-function isSummaryName(value) {
-  const name =
-    norm(value);
+function isSummaryName(value){
+  const name=norm(value);
 
-  if (!name) {
-    return true;
-  }
+  if(!name)return true;
 
-  return [
+  return[
     'm',
     'p',
     'n',
@@ -1883,81 +1665,68 @@ function parseGridSheet(
   rows,
   period,
   requestedName
-) {
-  const layout =
-    findGridLayout(rows);
+){
+  const layout=findGridLayout(rows);
 
-  if (
-    !layout ||
-    !period
-  ) {
-    return {
-      foundPerson: false,
-      shifts: [],
-      unknownCodes: []
+  if(!layout||!period){
+    return{
+      foundPerson:false,
+      shifts:[],
+      unknownCodes:[]
     };
   }
 
-  let personRow = -1;
+  let personRow=-1;
 
-  for (
-    let rowIndex =
-      layout.weekdayRow + 1;
-
-    rowIndex < rows.length;
+  for(
+    let rowIndex=layout.weekdayRow+1;
+    rowIndex<rows.length;
     rowIndex++
-  ) {
-    const name =
-      rows[rowIndex]?.[
-        layout.nameColumn
-      ];
+  ){
+    const name=
+      rows[rowIndex]?.[layout.nameColumn];
 
-    if (
+    if(
       personNameMatches(
         name,
         requestedName
       )
-    ) {
-      personRow = rowIndex;
+    ){
+      personRow=rowIndex;
       break;
     }
   }
 
-  if (personRow < 0) {
-    return {
-      foundPerson: false,
-      shifts: [],
-      unknownCodes: []
+  if(personRow<0){
+    return{
+      foundPerson:false,
+      shifts:[],
+      unknownCodes:[]
     };
   }
 
-  const dateMap =
-    buildGridDateMap(
-      rows,
-      layout,
-      period
-    );
+  const dateMap=buildGridDateMap(
+    rows,
+    layout,
+    period
+  );
 
-  const row =
-    rows[personRow] || [];
+  const row=rows[personRow]||[];
 
-  const shifts = [];
-  const unknownCodes = [];
+  const shifts=[];
+  const unknownCodes=[];
 
-  for (
-    const [column, date]
+  for(
+    const [column,date]
     of dateMap.entries()
-  ) {
-    const rawCode =
-      row[column];
+  ){
+    const rawCode=row[column];
 
-    const descriptor =
+    const descriptor=
       parseExcelShiftCode(rawCode);
 
-    if (!descriptor) {
-      if (
-        String(rawCode ?? '').trim()
-      ) {
+    if(!descriptor){
+      if(String(rawCode??'').trim()){
         unknownCodes.push(
           String(rawCode).trim()
         );
@@ -1966,106 +1735,194 @@ function parseGridSheet(
       continue;
     }
 
-    const shift =
-      makeImportedShift(
-        descriptor
-      );
+    const shift=
+      makeImportedShift(descriptor);
 
-    if (!shift) {
-      continue;
-    }
+    if(!shift)continue;
 
     shifts.push({
-      key: ymd(date),
+      key:ymd(date),
       shift
     });
   }
 
-  return {
-    foundPerson: true,
+  return{
+    foundPerson:true,
     shifts,
     unknownCodes
   };
 }
 
+/*
+ * Legge tutti i dipendenti per il PDF.
+ */
+function parseAllPeopleGrid(rows,period){
+  const layout=findGridLayout(rows);
+
+  if(!layout||!period){
+    return{};
+  }
+
+  const dateMap=buildGridDateMap(
+    rows,
+    layout,
+    period
+  );
+
+  const result={};
+
+  for(
+    let rowIndex=layout.weekdayRow+1;
+    rowIndex<rows.length;
+    rowIndex++
+  ){
+    const rawName=
+      rows[rowIndex]?.[layout.nameColumn];
+
+    const name=String(rawName||'')
+      .replace(/\s+/g,' ')
+      .trim();
+
+    if(
+      !name ||
+      isSummaryName(name)
+    ){
+      continue;
+    }
+
+    const row=rows[rowIndex]||[];
+
+    for(
+      const [column,date]
+      of dateMap.entries()
+    ){
+      const descriptor=
+        parseExcelShiftCode(row[column]);
+
+      if(!descriptor)continue;
+
+      const key=ymd(date);
+
+      if(!result[key]){
+        result[key]={
+          notte:[],
+          mattina:[],
+          pomeriggio:[]
+        };
+      }
+
+      if(descriptor.type==='notte'){
+        if(!result[key].notte.includes(name)){
+          result[key].notte.push(name);
+        }
+      }
+
+      if(descriptor.type==='mattina'){
+        if(!result[key].mattina.includes(name)){
+          result[key].mattina.push(name);
+        }
+
+        /*
+         * Il turno 08:00-20:00 copre
+         * sia il turno 2 sia il turno 3.
+         */
+        if(
+          descriptor.isTwelveHours &&
+          !result[key].pomeriggio.includes(name)
+        ){
+          result[key].pomeriggio.push(name);
+        }
+      }
+
+      if(descriptor.type==='pomeriggio'){
+        if(!result[key].pomeriggio.includes(name)){
+          result[key].pomeriggio.push(name);
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+function mergeAllPeopleShifts(target,source){
+  Object.entries(source)
+    .forEach(([key,value])=>{
+      target[key]={
+        notte:[...(value.notte||[])],
+        mattina:[...(value.mattina||[])],
+        pomeriggio:[...(value.pomeriggio||[])]
+      };
+    });
+}
+
 /* ---------- anteprima ---------- */
 
-let pending = [];
+let pending=[];
+let pendingAllShifts={};
 
 function openPreview(
   label,
   skipped,
-  details = ''
-) {
-  const duplicates =
-    pending.filter(item =>
-      state.shifts[item.key]
-    ).length;
+  details=''
+){
+  const duplicates=pending
+    .filter(item=>state.shifts[item.key])
+    .length;
 
   document
     .getElementById('imp-sum')
-    .innerHTML =
-      `<b>${pending.length}</b> turni letti da ` +
-      `<b>${label}</b><br>` +
-      `Non riconosciuti <b>${skipped}</b> · ` +
-      `già presenti in agenda <b>${duplicates}</b>` +
+    .innerHTML=
+      `<b>${pending.length}</b> turni letti da `+
+      `<b>${label}</b><br>`+
+      `Non riconosciuti <b>${skipped}</b> · `+
+      `già presenti in agenda <b>${duplicates}</b>`+
       (
         details
           ? `<br>${details}`
           : ''
       );
 
-  const box =
-    document.getElementById(
-      'imp-list'
+  const box=
+    document.getElementById('imp-list');
+
+  box.innerHTML='';
+
+  pending.forEach(item=>{
+    const date=new Date(
+      item.key+'T00:00:00'
     );
 
-  box.innerHTML = '';
+    const type=typeOf(item.shift.type);
 
-  pending.forEach(item => {
-    const date =
-      new Date(
-        item.key + 'T00:00:00'
-      );
+    const row=document.createElement('div');
 
-    const type =
-      typeOf(item.shift.type);
+    row.className='row';
 
-    const row =
-      document.createElement('div');
+    row.innerHTML=
+      `<span class="dot" `+
+      `style="background:${type.color}"></span>`+
 
-    row.className = 'row';
+      `<span class="d">`+
+      `${GIORNI[date.getDay()]} `+
+      `${date.getDate()}/${date.getMonth()+1}`+
+      `</span>`+
 
-    row.innerHTML =
-      `<span class="dot" ` +
-      `style="background:${type.color}"></span>` +
-
-      `<span class="d">` +
-      `${GIORNI[date.getDay()]} ` +
-      `${date.getDate()}/${date.getMonth() + 1}` +
-      `</span>` +
-
-      `<span class="t">` +
-      `${type.label}` +
-
+      `<span class="t">`+
+      `${type.label}`+
       (
         isWork(item.shift)
           ? `<em>${item.shift.start}–${item.shift.end}</em>`
           : ''
-      ) +
+      )+
+      `</span>`+
 
-      `</span>` +
-
-      `<span class="h">` +
-
+      `<span class="h">`+
       (
         isWork(item.shift)
-          ? fmtPlain(
-              worked(item.shift)
-            )
+          ? fmtPlain(worked(item.shift))
           : '—'
-      ) +
-
+      )+
       `</span>`;
 
     box.appendChild(row);
@@ -2075,11 +1932,11 @@ function openPreview(
   showSheet('sheet-imp');
 }
 
-/* ---------- apertura e lettura file ---------- */
+/* ---------- selezione file ---------- */
 
 document
   .getElementById('imp')
-  .onclick = () => {
+  .onclick=()=>{
     document
       .getElementById('file')
       .click();
@@ -2089,75 +1946,66 @@ document
   .getElementById('file')
   .addEventListener(
     'change',
-    async event => {
-      const file =
-        event.target.files[0];
+    async event=>{
+      const file=event.target.files[0];
 
-      event.target.value = '';
+      event.target.value='';
 
-      if (!file) {
-        return;
-      }
+      if(!file)return;
 
-      if (
-        typeof XLSX === 'undefined'
-      ) {
+      if(typeof XLSX==='undefined'){
         toast(
-          'Libreria non caricata: ' +
+          'Libreria non caricata: '+
           'riapri la pagina online'
         );
 
         return;
       }
 
-      try {
-        const workbook =
-          XLSX.read(
-            new Uint8Array(
-              await file.arrayBuffer()
-            ),
-            {
-              type: 'array',
-              cellDates: true
-            }
-          );
+      try{
+        const workbook=XLSX.read(
+          new Uint8Array(
+            await file.arrayBuffer()
+          ),
+          {
+            type:'array',
+            cellDates:true
+          }
+        );
 
         /*
          * Prima prova il modello semplice.
          */
-        if (
-          workbook.SheetNames.length === 1
-        ) {
-          const firstSheet =
+        if(workbook.SheetNames.length===1){
+          const firstSheet=
             workbook.Sheets[
               workbook.SheetNames[0]
             ];
 
-          const simpleRows =
+          const simpleRows=
             XLSX.utils.sheet_to_json(
               firstSheet,
               {
-                header: 1,
-                defval: '',
-                blankrows: false,
-                raw: true
+                header:1,
+                defval:'',
+                blankrows:false,
+                raw:true
               }
             );
 
-          const simple =
+          const simple=
             parseSimpleSheet(simpleRows);
 
-          if (
+          if(
             simple &&
             simple.shifts.length
-          ) {
-            pending =
-              simple.shifts.sort(
-                (a, b) =>
-                  a.key.localeCompare(
-                    b.key
-                  )
-              );
+          ){
+            pending=simple.shifts.sort(
+              (a,b)=>
+                a.key.localeCompare(b.key)
+            );
+
+            pendingAllShifts={};
 
             openPreview(
               file.name,
@@ -2169,30 +2017,18 @@ document
           }
         }
 
-        /*
-         * Turnistica T1.
-         */
-        const savedName =
-          String(
-            state.settings.importPersonName ||
-            ''
-          ).trim();
+        const savedName=String(
+          state.settings.importPersonName||''
+        ).trim();
 
-        const requestedName =
-          prompt(
-            'Scrivi il cognome o il nome da importare:',
-            savedName || 'Lo Prete'
-          );
+        const requestedName=prompt(
+          'Scrivi il cognome o il nome da importare:',
+          savedName||'Lo Prete'
+        );
 
-        if (
-          requestedName == null
-        ) {
-          return;
-        }
+        if(requestedName==null)return;
 
-        if (
-          !requestedName.trim()
-        ) {
+        if(!requestedName.trim()){
           toast(
             'Inserisci il nome del dipendente'
           );
@@ -2200,89 +2036,97 @@ document
           return;
         }
 
-        state.settings.importPersonName =
+        state.settings.importPersonName=
           requestedName.trim();
 
-        const periods =
-          parseSheetPeriods(
-            workbook.SheetNames
-          );
+        const periods=parseSheetPeriods(
+          workbook.SheetNames
+        );
 
-        const shiftMap =
-          new Map();
+        const shiftMap=new Map();
+        const allPeopleShifts={};
+        const unknownCodes=new Set();
 
-        const unknownCodes =
-          new Set();
-
-        let readSheets = 0;
-        let sheetsWithPerson = 0;
+        let readSheets=0;
+        let sheetsWithPerson=0;
 
         workbook.SheetNames.forEach(
-          (sheetName, sheetIndex) => {
-            const period =
-              periods[sheetIndex];
+          (sheetName,sheetIndex)=>{
+            const period=periods[sheetIndex];
 
-            if (!period) {
-              return;
-            }
+            if(!period)return;
 
-            const sheet =
-              workbook.Sheets[
-                sheetName
-              ];
+            const sheet=
+              workbook.Sheets[sheetName];
 
-            const rows =
+            const rows=
               XLSX.utils.sheet_to_json(
                 sheet,
                 {
-                  header: 1,
-                  defval: '',
-                  blankrows: false,
-                  raw: true
+                  header:1,
+                  defval:'',
+                  blankrows:false,
+                  raw:true
                 }
               );
 
-            const parsed =
-              parseGridSheet(
-                rows,
-                period,
-                requestedName
-              );
+            const parsed=parseGridSheet(
+              rows,
+              period,
+              requestedName
+            );
 
             readSheets++;
 
-            if (parsed.foundPerson) {
+            if(parsed.foundPerson){
               sheetsWithPerson++;
             }
 
             parsed.unknownCodes
-              .forEach(code =>
+              .forEach(code=>
                 unknownCodes.add(code)
               );
 
             /*
-             * I fogli successivi sostituiscono
+             * I fogli successivi sovrascrivono
              * le date duplicate dei precedenti.
              */
-            parsed.shifts
-              .forEach(item =>
-                shiftMap.set(
-                  item.key,
-                  item
-                )
+            parsed.shifts.forEach(item=>{
+              shiftMap.set(
+                item.key,
+                item
               );
+            });
+
+            /*
+             * Lettura di tutti i dipendenti.
+             */
+            const completeSheet=
+              parseAllPeopleGrid(
+                rows,
+                period
+              );
+
+            mergeAllPeopleShifts(
+              allPeopleShifts,
+              completeSheet
+            );
           }
         );
 
-        pending =
-          [...shiftMap.values()]
-            .sort((a, b) =>
-              a.key.localeCompare(
-                b.key
-              )
-            );
+        pendingAllShifts=
+          allPeopleShifts;
 
-        if (!pending.length) {
+        pending=[
+          ...shiftMap.values()
+        ].sort(
+          (a,b)=>
+            a.key.localeCompare(b.key)
+        );
+
+        if(!pending.length){
+          pendingAllShifts={};
+
           toast(
             `Nessun turno trovato per “${requestedName}”`
           );
@@ -2290,14 +2134,11 @@ document
           return;
         }
 
-        const firstKey =
-          pending[0].key;
+        const firstKey=pending[0].key;
+        const lastKey=pending.at(-1).key;
 
-        const lastKey =
-          pending.at(-1).key;
-
-        const details = [
-          `Formato: Turnistica T1`,
+        const details=[
+          'Formato: Turnistica T1',
           `${readSheets} fogli letti`,
           `${sheetsWithPerson} con il dipendente`,
           `dal ${firstKey} al ${lastKey}`
@@ -2309,56 +2150,56 @@ document
           details
         );
 
-        if (unknownCodes.size) {
+        if(unknownCodes.size){
           console.warn(
             'Codici turno non riconosciuti:',
             [...unknownCodes]
           );
         }
 
-      } catch (error) {
+      }catch(error){
         console.error(
           'Errore importazione Excel:',
           error
         );
 
-        pending = [];
+        pending=[];
+        pendingAllShifts={};
 
-        toast(
-          'File non leggibile'
-        );
+        toast('File non leggibile');
       }
     }
   );
 
-/* ---------- conferma o annullamento ---------- */
+/* ---------- conferma importazione ---------- */
 
 document
   .getElementById('imp-cancel')
-  .onclick = () => {
-    pending = [];
+  .onclick=()=>{
+    pending=[];
+    pendingAllShifts={};
     closeSheets();
   };
 
 document
   .getElementById('imp-go')
-  .onclick = () => {
-    const overwrite =
+  .onclick=()=>{
+    const overwrite=
       document
         .getElementById('imp-over')
         .checked;
 
-    let imported = 0;
+    let imported=0;
 
-    pending.forEach(item => {
-      if (
+    pending.forEach(item=>{
+      if(
         state.shifts[item.key] &&
         !overwrite
-      ) {
+      ){
         return;
       }
 
-      state.shifts[item.key] = {
+      state.shifts[item.key]={
         ...item.shift
       };
 
@@ -2366,28 +2207,33 @@ document
     });
 
     /*
-     * Porta il calendario sul primo mese importato.
+     * Salva anche i turni di tutti.
      */
-    const firstKey =
-      pending
-        .map(item => item.key)
-        .sort()[0];
-
-    if (firstKey) {
-      const date =
-        new Date(
-          firstKey + 'T00:00:00'
-        );
-
-      view =
-        new Date(
-          date.getFullYear(),
-          date.getMonth(),
-          1
-        );
+    if(
+      pendingAllShifts &&
+      Object.keys(pendingAllShifts).length
+    ){
+      state.allShifts=pendingAllShifts;
     }
 
-    pending = [];
+    const firstKey=pending
+      .map(item=>item.key)
+      .sort()[0];
+
+    if(firstKey){
+      const date=new Date(
+        firstKey+'T00:00:00'
+      );
+
+      view=new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        1
+      );
+    }
+
+    pending=[];
+    pendingAllShifts={};
 
     save();
     closeSheets();
@@ -2399,6 +2245,169 @@ document
         : 'Nessun turno aggiunto'
     );
   };
+
+/* ---------- esportazione PDF turni di tutti ---------- */
+
+function exportAllShiftsPdf(){
+  if(
+    !window.jspdf ||
+    !window.jspdf.jsPDF
+  ){
+    toast(
+      'Libreria PDF non disponibile'
+    );
+
+    return;
+  }
+
+  if(
+    !state.allShifts ||
+    !Object.keys(state.allShifts).length
+  ){
+    toast(
+      'Importa prima la Turnistica T1'
+    );
+
+    return;
+  }
+
+  const year=view.getFullYear();
+  const month=view.getMonth();
+
+  const daysInMonth=
+    new Date(
+      year,
+      month+1,
+      0
+    ).getDate();
+
+  const body=[];
+
+  for(
+    let day=1;
+    day<=daysInMonth;
+    day++
+  ){
+    const key=
+      `${year}-`+
+      `${pad(month+1)}-`+
+      `${pad(day)}`;
+
+    const data=
+      state.allShifts[key]||{
+        notte:[],
+        mattina:[],
+        pomeriggio:[]
+      };
+
+    body.push([
+      `${pad(day)}/${pad(month+1)}`,
+
+      data.notte.length
+        ? data.notte.join(', ')
+        : '—',
+
+      data.mattina.length
+        ? data.mattina.join(', ')
+        : '—',
+
+      data.pomeriggio.length
+        ? data.pomeriggio.join(', ')
+        : '—'
+    ]);
+  }
+
+  const {jsPDF}=window.jspdf;
+
+  const pdf=new jsPDF({
+    orientation:'portrait',
+    unit:'mm',
+    format:'a4'
+  });
+
+  pdf.setFont(
+    'helvetica',
+    'bold'
+  );
+
+  pdf.setFontSize(18);
+
+  pdf.text(
+    `Turni ${MESI[month]} ${year}`,
+    105,
+    16,
+    {
+      align:'center'
+    }
+  );
+
+  pdf.autoTable({
+    startY:24,
+
+    head:[[
+      'Data',
+      'TURNO 1 (00:00-08:00)',
+      'TURNO 2 (08:00-16:00)',
+      'TURNO 3 (16:00-24:00)'
+    ]],
+
+    body,
+
+    theme:'grid',
+
+    margin:{
+      left:10,
+      right:10
+    },
+
+    styles:{
+      font:'helvetica',
+      fontSize:8.5,
+      halign:'center',
+      valign:'middle',
+      cellPadding:2,
+      lineWidth:0.1,
+      lineColor:[190,190,190]
+    },
+
+    headStyles:{
+      fillColor:[0,0,0],
+      textColor:[255,255,255],
+      fontStyle:'bold',
+      fontSize:8
+    },
+
+    alternateRowStyles:{
+      fillColor:[240,240,240]
+    },
+
+    columnStyles:{
+      0:{cellWidth:23},
+      1:{cellWidth:55},
+      2:{cellWidth:55},
+      3:{cellWidth:55}
+    }
+  });
+
+  const fileName=
+    `turni-tutti-`+
+    `${MESI[month].toLowerCase()}-`+
+    `${year}.pdf`;
+
+  pdf.save(fileName);
+
+  toast('PDF generato');
+}
+
+const exportAllButton=
+  document.getElementById(
+    'export-all-pdf'
+  );
+
+if(exportAllButton){
+  exportAllButton.onclick=
+    exportAllShiftsPdf;
+}
 document.getElementById('tpl').onclick=()=>{
   if(typeof XLSX==='undefined'){toast('Libreria non caricata: riapri la pagina online');return}
   const p={mattina:presetOf('mattina'),pomeriggio:presetOf('pomeriggio'),notte:presetOf('notte'),deas:presetOf('deas')};
