@@ -1,4 +1,4 @@
-(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['app']='3.5';
+(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['app']='3.6';
 window.addEventListener('storage',e=>{if(e.key===STORAGE_KEY){state=loadState();render()}});
 window.addEventListener('pagehide',saveState);
 
@@ -85,4 +85,46 @@ if(forceUpdateBtn){
   };
 
   if(window.Logger)Logger.error('Moduli non allineati',{expected,found});
+})();
+
+/* Navigazione a schede.
+   La pagina era diventata un unico rotolo: calendario, statistiche,
+   grafico e busta paga uno sotto l'altro. Ora sono quattro pannelli e
+   solo uno per volta e visibile. La scelta viene ricordata. */
+(function setupTabs(){
+  const TAB_KEY='turni-app-tab';
+  const bar=document.getElementById('tabbar');
+  if(!bar)return;
+
+  const panels=[...document.querySelectorAll('.tab-panel')];
+  const buttons=[...bar.querySelectorAll('.tab')];
+
+  function show(name){
+    const valid=panels.some(p=>p.id===`tab-${name}`);
+    const target=valid?name:'oggi';
+
+    panels.forEach(p=>p.classList.toggle('active',p.id===`tab-${target}`));
+    buttons.forEach(b=>{
+      const on=b.dataset.tab===target;
+      b.classList.toggle('active',on);
+      b.setAttribute('aria-current',on?'page':'false');
+    });
+
+    /* Il pulsante "Aggiungi turno" ha senso solo dove ci sono i turni. */
+    const fab=document.getElementById('addBtn');
+    if(fab)fab.style.display=(target==='calendario'||target==='oggi')?'':'none';
+
+    window.scrollTo(0,0);
+    try{localStorage.setItem(TAB_KEY,target)}catch(e){}
+  }
+
+  buttons.forEach(b=>b.addEventListener('click',()=>show(b.dataset.tab)));
+
+  let saved='oggi';
+  try{saved=localStorage.getItem(TAB_KEY)||'oggi'}catch(e){}
+  show(saved);
+
+  /* Toccare un giorno del calendario apre il turno: dopo il salvataggio
+     e utile restare dove si era, quindi non si forza nessun cambio. */
+  window.showTab=show;
 })();

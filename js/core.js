@@ -1,7 +1,7 @@
-(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['core']='3.5';
+(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['core']='3.6';
 'use strict';
 
-const APP_VERSION='3.5';
+const APP_VERSION='3.6';
 const STORAGE_KEY='turni-app-stabile-v1';
 const MONTHS=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const DAYS=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
