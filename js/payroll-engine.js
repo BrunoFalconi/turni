@@ -56,11 +56,6 @@
   }
 
   function getPayrollProfile(year, month) {
-    employeeDeduction:
-  Number(
-    override.employeeDeduction ??
-    settings.employeeDeduction
-  ) || 0,
     const settings = state.settings || {};
 
     const override =
@@ -83,7 +78,13 @@
           override.fixedExtraDeductions ??
           settings.fixedExtraDeductions
         ) || 0,
-
+      
+      employeeDeduction:
+      Number(
+    override.employeeDeduction ??
+    settings.employeeDeduction
+  ) || 0,
+      
       additionalDeduction:
         Number(
           override.additionalDeduction ??
