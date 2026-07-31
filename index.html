@@ -2567,7 +2567,35 @@ function parsePayslipText(text){
   const hours55=last('Magg\\.\\s*banca\\s*ore\\s*55%',120);
   const addition50=last('Magg\\.\\s*banca\\s*ore\\s*50%',220);
   const addition55=last('Magg\\.\\s*banca\\s*ore\\s*55%',220);
-  const socialIvs=last('Contributo\\s+IVS',170);
+  /*
+ * Contributo IVS:
+ * 3.058,00 imponibile · 9,19000% · 281,03 trattenuta
+ */
+let socialIvs = null;
+
+const ivsMatch = normalized.match(
+  /Contributo\s+IVS\s+[0-9.]+,[0-9]{2,5}\s+[0-9.]+,[0-9]{2,5}\s*%\s+([0-9.]+,[0-9]{2})/i
+);
+
+if(ivsMatch){
+  socialIvs =
+    parseItalianMoney(ivsMatch[1]);
+}
+
+/*
+ * Contributo CIGS:
+ * 3.058,00 imponibile · 0,30000% · 9,17 trattenuta
+ */
+let socialCigs = null;
+
+const cigsMatch = normalized.match(
+  /Contributo\s+CIGS\s+[0-9.]+,[0-9]{2,5}\s+[0-9.]+,[0-9]{2,5}\s*%\s+([0-9.]+,[0-9]{2})/i
+);
+
+if(cigsMatch){
+  socialCigs =
+    parseItalianMoney(cigsMatch[1]);
+}
   const socialCigs=last('Contributo\\s+CIGS',170);
   const epar=last('Contributo\\s+EPAR',170);
   const cometaEmployee=last('Contributo\\s+base\\s+COMETA(?!\\s+C\\/Ditta)',180);
