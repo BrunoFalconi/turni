@@ -16,7 +16,7 @@
   <title>Turni</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="stylesheet" href="./css/style.css?v=3.3">
+  <link rel="stylesheet" href="./css/style.css?v=3.4">
 </head>
 <body>
 <div id="app">
@@ -130,6 +130,7 @@
       </div>
       <button class="mini-btn" id="copyPayroll">Copia</button>
     </div>
+    <div id="payAccuracy" class="accuracy est"></div>
     <div id="pay"></div>
     <div class="payroll-note">La stima usa le percentuali configurate nelle impostazioni e non sostituisce il cedolino ufficiale.</div>
   </section>
@@ -175,6 +176,14 @@
     <button class="btn" id="uploadPayslip">Carica busta paga PDF</button>
     <div class="payslip-status" id="payslipStatus">Nessuna busta paga caricata.</div>
     <div id="payslipArchive" class="payslip-archive"></div>
+    <div class="baseline-box">
+      <label for="baselineMonth">Mese di riferimento per i mesi senza cedolino</label>
+      <select id="baselineMonth"></select>
+      <div class="baseline-hint">
+        Scegli un mese normale, senza arretrati: le sue trattenute fisse
+        verranno usate come stima per i mesi di cui non hai la busta paga.
+      </div>
+    </div>
   </div>
   <div class="backup">
     <button class="btn alt" id="exportBackup">Esporta backup</button>
@@ -301,12 +310,12 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="./js/logger.js?v=3.3"></script>
-<script src="./js/core.js?v=3.3"></script>
-<script src="./js/excel.js?v=3.3"></script>
-<script src="./js/backup.js?v=3.3"></script>
-<script src="./js/stats.js?v=3.3"></script>
-<script src="./js/payslip.js?v=3.3"></script>
-<script src="./js/app.js?v=3.3"></script>
+<script src="./js/logger.js?v=3.4"></script>
+<script src="./js/core.js?v=3.4"></script>
+<script src="./js/excel.js?v=3.4"></script>
+<script src="./js/backup.js?v=3.4"></script>
+<script src="./js/stats.js?v=3.4"></script>
+<script src="./js/payslip.js?v=3.4"></script>
+<script src="./js/app.js?v=3.4"></script>
 </body>
 </html>

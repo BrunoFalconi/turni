@@ -478,3 +478,73 @@ cartella `js/` intera, che contiene sette file.
 Poi ricarica. Se compare la fascia rossa, premi il pulsante. Se non
 compare e in fondo leggi `v3.3`, sei allineato e il caricamento del
 cedolino ti dira finalmente di che mese e.
+
+
+---
+
+# v3.4 — I mesi senza cedolino
+
+Quello che hai notato e corretto: caricando solo marzo, solo marzo torna.
+E il comportamento voluto, perche i valori del cedolino appartengono a
+quel mese. Ma lasciava gli altri mesi con una stima peggiore del
+necessario.
+
+## Perche un mese senza cedolino non puo essere esatto
+
+Due voci non sono ricavabili:
+
+**Le ore.** Con la banca ore la maggiorazione si paga sulle ore
+accantonate, non su quelle notturne lavorate. A marzo i turni ne davano
+~30, il cedolino ne pagava 64. Nessun calcolo puo indovinare quel numero
+prima che la busta paga esista.
+
+**Gli arretrati.** A marzo c'erano quattro mensilita EPAR arretrate
+(11,18 invece di 2,54). Sono decisioni dell'azienda, non prevedibili.
+
+Quindi un mese senza cedolino resta una stima. Si puo pero renderla molto
+piu vicina al vero.
+
+## Mese di riferimento
+
+Nelle impostazioni, sotto l'archivio, c'e un menu a tendina:
+
+```
+Mese di riferimento per i mesi senza cedolino
+[ Maggio 2026 ▾ ]
+```
+
+I mesi che non hanno un cedolino proprio useranno le trattenute fisse di
+quel mese invece dei valori generici. La differenza non e piccola: su un
+mese di prova la stima passa da 2.070 a 2.131 euro, perche altrimenti
+mancherebbe del tutto l'ulteriore detrazione da ~62 euro.
+
+**Scegli un mese normale.** Se indichi marzo, i suoi 11,18 di arretrati
+EPAR verrebbero ripetuti su tutti i mesi. Maggio, con 2,54, e il
+candidato giusto.
+
+## Stima o verificato
+
+Nella scheda della busta paga ora compare un'etichetta:
+
+- verde `Verificato sul cedolino di questo mese` — il mese ha il suo PDF,
+  i numeri sono quelli veri
+- grigia `Stima · trattenute da Maggio 2026, ore dai turni` — mese senza
+  cedolino, e ti dice da dove arrivano i valori usati
+
+Serve a non confondere un dato certo con una proiezione.
+
+## Ordine di precedenza
+
+1. il cedolino del mese stesso, se caricato;
+2. il mese di riferimento, per le trattenute fisse;
+3. il profilo generale.
+
+Le ore seguono la stessa logica, ma senza cedolino vengono dai turni, che
+e la migliore approssimazione disponibile.
+
+## Come usarla
+
+Carica i cedolini che hai (quelli sono esatti), imposta maggio come mese
+di riferimento, e i mesi mancanti diventano stime ragionevoli. Man mano
+che arrivano le buste paga nuove, caricale: ogni mese caricato passa da
+stima a verificato.
