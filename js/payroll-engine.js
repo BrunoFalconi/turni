@@ -177,10 +177,15 @@ const taxableIrpef = Math.max(
   profile.cometaEmployee
 );
 
-    const monthlyIrpef =
-      calculateProjectedMonthlyIrpef(
-        taxableIrpef
-      );
+const grossMonthlyIrpef =
+  calculateProjectedMonthlyIrpef(taxableIrpef);
+
+const monthlyIrpef = Math.max(
+  0,
+  grossMonthlyIrpef -
+  profile.employeeDeduction -
+  profile.additionalDeduction
+);
 
     const localTaxes =
       profile.regionalInstallment +
