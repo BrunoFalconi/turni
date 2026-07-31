@@ -616,26 +616,364 @@ function render(){
   }
 }
 
+/* ---------- stima del netto dai cedolini precedenti ---------- */
+
+function averageNumbers(values){
+  const valid = values.filter(value =>
+    Number.isFinite(value)
+  );
+
+  if(!valid.length){
+    return 0;
+  }
+
+  return valid.reduce(
+    (sum, value) => sum + value,
+    0
+  ) / valid.length;
+}
+
+function estimateNetFromPayslips(grossTotal){
+  const payslips = Object.values(
+    state.payslips || {}
+  )
+    .filter(item =>
+      item &&
+      Number(item.grossTotal) > 0 &&
+      Number(item.netPay) > 0
+    )
+    .sort((a, b) =>
+      String(a.period?.key || '')
+        .localeCompare(
+          String(b.period?.key || '')
+        )
+    )
+    /*
+     * Usa al massimo gli ultimi sei cedolini.
+     */
+    .slice(-6);
+
+  if(!payslips.length){
+    return null;
+  }
+
+  /*
+   * Percentuale media dei contributi IVS + CIGS.
+   */
+  const socialPct = averageNumbers(
+    payslips.map(item => {
+      const gross =
+        Number(item.grossTotal) || 0;
+
+      const contributions =
+        Number(
+          item.socialContributions
+        ) || 0;
+
+      return gross > 0
+        ? contributions / gross
+        : NaN;
+    })
+  );
+
+  /*
+   * Aliquota IRPEF effettivamente trattenuta.
+   *
+   * Questa percentuale incorpora già:
+   * - detrazione lavoro dipendente;
+   * - ulteriore detrazione;
+   * - andamento fiscale dei cedolini reali.
+   */
+  const effectiveIrpefPct = averageNumbers(
+    payslips.map(item => {
+      const taxable =
+        Number(item.taxableIrpef) || 0;
+
+      const withheld =
+        Number(item.irpefWithheld) || 0;
+
+      return taxable > 0
+        ? withheld / taxable
+        : NaN;
+    })
+  );
+
+  /*
+   * Voci mensili ricorrenti.
+   */
+  const epar = averageNumbers(
+    payslips.map(item =>
+      Number(item.epar) || 0
+    )
+  );
+
+  const cometaEmployee = averageNumbers(
+    payslips.map(item =>
+      Number(item.cometaEmployee) || 0
+    )
+  );
+
+  const localTaxes = averageNumbers(
+    payslips.map(item =>
+      Number(item.localTaxes) || 0
+    )
+  );
+
+  /*
+   * Calcolo del nuovo cedolino.
+   */
+  const socialContributions =
+    grossTotal * socialPct;
+
+  const taxableIrpef = Math.max(
+    0,
+    grossTotal -
+    socialContributions -
+    epar -
+    cometaEmployee
+  );
+
+  const irpefWithheld =
+    taxableIrpef *
+    effectiveIrpefPct;
+
+  const totalDeductions =
+    socialContributions +
+    epar +
+    cometaEmployee +
+    irpefWithheld +
+    localTaxes;
+
+  const estimatedNet =
+    grossTotal -
+    totalDeductions;
+
+  /*
+   * Calcola lo scostamento medio del modello
+   * sui cedolini già caricati.
+   */
+  const historicalErrors = payslips.map(item => {
+    const historicalGross =
+      Number(item.grossTotal) || 0;
+
+    const historicalSocial =
+      historicalGross * socialPct;
+
+    const historicalTaxable = Math.max(
+      0,
+      historicalGross -
+      historicalSocial -
+      epar -
+      cometaEmployee
+    );
+
+    const historicalIrpef =
+      historicalTaxable *
+      effectiveIrpefPct;
+
+    const predicted =
+      historicalGross -
+      historicalSocial -
+      epar -
+      cometaEmployee -
+      historicalIrpef -
+      localTaxes;
+
+    return Math.abs(
+      predicted -
+      Number(item.netPay)
+    );
+  });
+
+  const averageError =
+    averageNumbers(historicalErrors);
+
+  return {
+    estimatedNet,
+    grossTotal,
+
+    socialContributions,
+    taxableIrpef,
+    irpefWithheld,
+
+    epar,
+    cometaEmployee,
+    localTaxes,
+    totalDeductions,
+
+    payslipCount:
+      payslips.length,
+
+    averageError,
+
+    minimum:
+      estimatedNet -
+      Math.max(averageError, 10),
+
+    maximum:
+      estimatedNet +
+      Math.max(averageError, 10)
+  };
+}
+
+/* ---------- riepilogo economico del mese ---------- */
+
 function renderPay(y,m){
-  const box=document.getElementById('pay'), P=paga(y,m);
-  if(!P){box.style.display='none';return}
-  box.style.display='';
-  document.getElementById('pay-tot').textContent=eur(P.totale);
-  const S=state.settings, r=[['Lordo fisso',eur(P.lordo)]];
-  if(P.B.nott)     r.push([`Notturne ${fmtPlain(P.B.nott)} · +${S.pctNotturno}%`,eur(P.magNott)]);
-  if(P.B.fest)     r.push([`Festive ${fmtPlain(P.B.fest)} · +${S.pctFestivo}%`,eur(P.magFest)]);
-  if(P.B.festNott) r.push([`Festive notturne ${fmtPlain(P.B.festNott)} · +${S.pctFestNott}%`,eur(P.magFN)]);
-  if(P.oreStra>0.02) r.push([`Straordinario ${P.oreStra.toFixed(1)}h`,eur(P.stra)]);
-  document.getElementById('pay-rows').innerHTML=r.map(([a,b])=>`<div>${a}<i>${b}</i></div>`).join('');
-  const mag=P.magNott+P.magFest+P.magFN+P.stra, nr=Number(S.nettoRif)||0;
-  const netBox=document.getElementById('pay-net');
-  if(nr>0){
-    const c=(Number(S.aliqContrib)||0)/100, i=(Number(S.aliqIrpef)||0)/100;
-    netBox.style.display='';
-    document.getElementById('pay-net-v').textContent=eur(nr+mag*(1-c)*(1-i));
-  } else netBox.style.display='none';
-  document.getElementById('pay-note').textContent=
-    `Base ${eur(P.ph)} l'ora (${eur(P.lordo)} ÷ ${S.oreContratto}h). Stima al lordo: non sostituisce la busta paga.`;
+  const box =
+    document.getElementById('pay');
+
+  const P = paga(y,m);
+
+  if(!P){
+    box.style.display = 'none';
+    return;
+  }
+
+  box.style.display = '';
+
+  document
+    .getElementById('pay-tot')
+    .textContent =
+      eur(P.totale);
+
+  const S = state.settings;
+
+  const rows = [
+    [
+      'Lordo fisso',
+      eur(P.lordo)
+    ]
+  ];
+
+  if(P.B.nott){
+    rows.push([
+      `Notturne ${fmtPlain(P.B.nott)} · +${S.pctNotturno}%`,
+      eur(P.magNott)
+    ]);
+  }
+
+  if(P.B.fest){
+    rows.push([
+      `Festive ${fmtPlain(P.B.fest)} · +${S.pctFestivo}%`,
+      eur(P.magFest)
+    ]);
+  }
+
+  if(P.B.festNott){
+    rows.push([
+      `Festive notturne ${fmtPlain(P.B.festNott)} · +${S.pctFestNott}%`,
+      eur(P.magFN)
+    ]);
+  }
+
+  if(P.oreStra > 0.02){
+    rows.push([
+      `Straordinario ${P.oreStra.toFixed(1)}h`,
+      eur(P.stra)
+    ]);
+  }
+
+  document
+    .getElementById('pay-rows')
+    .innerHTML =
+      rows
+        .map(([label, amount]) =>
+          `<div>${label}<i>${amount}</i></div>`
+        )
+        .join('');
+
+  const netBox =
+    document.getElementById('pay-net');
+
+  const netValue =
+    document.getElementById('pay-net-v');
+
+  const note =
+    document.getElementById('pay-note');
+
+  const estimate =
+    estimateNetFromPayslips(
+      P.totale
+    );
+
+  if(estimate){
+    netBox.style.display = '';
+
+    netValue.textContent =
+      eur(estimate.estimatedNet);
+
+    note.innerHTML =
+      `Base oraria <b>${eur(P.ph)}</b> ` +
+      `(${eur(P.lordo)} ÷ ${S.oreContratto}h).<br>` +
+
+      `Stima basata su ` +
+      `<b>${estimate.payslipCount}</b> ` +
+      `${
+        estimate.payslipCount === 1
+          ? 'cedolino'
+          : 'cedolini'
+      } caricati.<br>` +
+
+      `Intervallo stimato: ` +
+      `<b>${eur(estimate.minimum)}</b> – ` +
+      `<b>${eur(estimate.maximum)}</b>.`;
+
+    /*
+     * Dettaglio del calcolo nella Console.
+     */
+    console.log(
+      `Stima cedolino ${MESI[m]} ${y}`,
+      estimate
+    );
+
+    return;
+  }
+
+  /*
+   * Vecchio metodo di riserva:
+   * viene usato soltanto se non è stato
+   * ancora caricato alcun cedolino.
+   */
+  const referenceNet =
+    Number(S.nettoRif) || 0;
+
+  if(referenceNet > 0){
+    const additions =
+      P.magNott +
+      P.magFest +
+      P.magFN +
+      P.stra;
+
+    const contributionRate =
+      (Number(S.aliqContrib) || 0) /
+      100;
+
+    const irpefRate =
+      (Number(S.aliqIrpef) || 0) /
+      100;
+
+    const estimatedNet =
+      referenceNet +
+      additions *
+      (1 - contributionRate) *
+      (1 - irpefRate);
+
+    netBox.style.display = '';
+
+    netValue.textContent =
+      eur(estimatedNet);
+
+    note.textContent =
+      'Stima provvisoria basata sul netto di riferimento. ' +
+      'Carica almeno un cedolino per una stima più precisa.';
+
+    return;
+  }
+
+  netBox.style.display = 'none';
+
+  note.textContent =
+    'Carica almeno una busta paga PDF per calcolare il netto stimato.';
 }
 
 /* ---------- settimane e avvisi ---------- */
