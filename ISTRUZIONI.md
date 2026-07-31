@@ -354,3 +354,60 @@ serviva ancora quelli in cache.
 Da qui in avanti la versione in fondo alla schermata toglie ogni dubbio:
 se non leggi `v3.2`, le correzioni non sono attive e qualsiasi numero
 vedi non dice nulla sulla bontà dei calcoli.
+
+
+---
+
+# v3.3 — L'app dice di che mese e la busta paga
+
+Era quello che chiedevi, e ora e esplicito in tre punti.
+
+## 1. Quando carichi il PDF
+
+Il dialog apre con un riquadro verde in cima:
+
+```
+Busta paga di Marzo 2026
+58h al 50% - 6h al 55%
+```
+
+Se avevi gia caricato un cedolino per quel mese lo dice, cosi sai che lo
+stai sostituendo. Se il mese non viene riconosciuto il riquadro diventa
+arancione e ti avverte che i valori finirebbero nel profilo generale.
+
+Il riconoscimento e ancorato alla dicitura "PERIODO DI RETRIBUZIONE": nel
+cedolino compaiono altre date (arretrati EPAR 12/25, addizionali 2025)
+che altrimenti darebbero il mese sbagliato.
+
+## 2. Nella schermata principale
+
+Sotto la data di oggi c'e una riga che dice se il mese che stai guardando
+ha un cedolino caricato:
+
+- verde: `Busta paga di Marzo 2026 caricata`
+- grigio: `Nessuna busta paga per questo mese`
+
+## 3. Archivio nelle impostazioni
+
+Sotto il pulsante di caricamento c'e l'elenco di tutti i cedolini, dal piu
+recente, con le ore lette e un pulsante *Vai* che porta a quel mese.
+
+```
+Maggio 2026     62h 50% - 8h 55%     [Vai]
+Marzo 2026      58h 50% - 6h 55%     [Vai]
+```
+
+## Sui dati ancora sbagliati
+
+Non li ho persi di vista, ma prima di continuare a inseguirli serve
+sapere quale codice sta girando. La versione ora e **v3.3** e compare in
+fondo alla schermata.
+
+Quando avrai caricato i due cedolini, i tre indicatori qui sopra ti dicono
+da soli se l'app ha capito il mese giusto. Se il riquadro dice "Marzo
+2026" con 58h e 6h, allora le competenze sono per forza giuste (3.012,40)
+e un eventuale scarto resta solo sulle trattenute, che e un problema molto
+piu piccolo e circoscritto.
+
+Se invece il riquadro non compare affatto, stai ancora vedendo una
+versione vecchia dell'app e nessuna delle correzioni e attiva.

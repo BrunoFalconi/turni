@@ -77,16 +77,31 @@ const PAYSLIP_MONTHS=['gennaio','febbraio','marzo','aprile','maggio','giugno',
   'luglio','agosto','settembre','ottobre','novembre','dicembre'];
 
 /* Il periodo sta sotto "PERIODO DI RETRIBUZIONE", scritto per esteso
-   (es. "Maggio 2026"). Serve per attribuire i valori al mese giusto
-   invece di sovrascrivere il profilo generale. */
+   (es. "Maggio 2026"). Si cerca prima vicino a quella dicitura, perché
+   altrove nel cedolino compaiono altre date (competenze arretrate,
+   scadenze) che darebbero il mese sbagliato. */
 function findPayslipPeriod(text){
-  const rx=new RegExp('\\b('+PAYSLIP_MONTHS.join('|')+')\\s+(20[0-9]{2})\\b','i');
-  const m=String(text||'').match(rx);
+  const body=String(text||'');
+  const monthRx='\\b('+PAYSLIP_MONTHS.join('|')+')\\s+(20[0-9]{2})\\b';
+
+  const anchored=body.match(
+    new RegExp('PERIODO[\\s\\S]{0,120}?'+monthRx,'i')
+  );
+  const loose=body.match(new RegExp(monthRx,'i'));
+  const m=anchored||loose;
   if(!m)return null;
-  const month=PAYSLIP_MONTHS.indexOf(m[1].toLowerCase());
-  const year=Number(m[2]);
+
+  /* Con l'ancora i gruppi restano 1 e 2 in entrambi i casi. */
+  const name=m[1],year=Number(m[2]);
+  const month=PAYSLIP_MONTHS.indexOf(name.toLowerCase());
   if(month<0||!Number.isFinite(year))return null;
-  return {year,month,label:`${m[1][0].toUpperCase()+m[1].slice(1).toLowerCase()} ${year}`};
+
+  return{
+    year,month,
+    key:`${year}-${String(month+1).padStart(2,'0')}`,
+    label:`${name[0].toUpperCase()+name.slice(1).toLowerCase()} ${year}`,
+    anchored:!!anchored
+  };
 }
 
 function findNameFromText(text){
@@ -515,12 +530,30 @@ function fillPayslipDialog(data,fileName){
   dialog.dataset.hours50=data.hours50||0;
   dialog.dataset.hours55=data.hours55||0;
 
-  const hoursNote=(data.hours50||data.hours55)
-    ? ` Ore lette: ${data.hours50||0}h al 50%, ${data.hours55||0}h al 55%.`
-    : '';
-  document.getElementById('payslipMessage').textContent=data.period
-    ? `${fileName} · periodo ${data.period.label}. Le voci variabili verranno salvate su quel mese.${hoursNote}`
-    : `${fileName} · periodo non riconosciuto: i valori andranno nel profilo generale. Controllali prima di salvare.`;
+  const banner=document.getElementById('payslipPeriodBanner');
+  if(banner){
+    if(data.period){
+      const known=(state.payslipRegistry||{})[data.period.key];
+      banner.className='period-banner ok';
+      banner.innerHTML=
+        `<div class="period-label">Busta paga di <b>${data.period.label}</b></div>`+
+        `<div class="period-sub">`+
+        (data.hours50||data.hours55
+          ? `${data.hours50||0}h al 50% · ${data.hours55||0}h al 55%`
+          : 'Ore con maggiorazione non riconosciute')+
+        (known?` · sostituisce quella caricata il ${new Date(known.importedAt).toLocaleDateString('it-IT')}`:'')+
+        `</div>`;
+    }else{
+      banner.className='period-banner warn';
+      banner.innerHTML=
+        '<div class="period-label">Mese non riconosciuto</div>'+
+        '<div class="period-sub">I valori finiranno nel profilo generale, '+
+        'valido per tutti i mesi. Controllali prima di salvare.</div>';
+    }
+  }
+
+  document.getElementById('payslipMessage').textContent=
+    `Analizzato in locale: ${fileName}`;
 
   dialog.showModal();
 }
@@ -610,8 +643,20 @@ document.getElementById('savePayslipProfile').onclick=()=>{
     }
 
     state.monthOverrides[key]=entry;
+
+    /* Archivio: tiene traccia di quale cedolino è stato caricato per
+       quale mese, così l'app può dirlo invece di lasciarlo indovinare. */
+    if(!state.payslipRegistry)state.payslipRegistry={};
+    state.payslipRegistry[key]={
+      label:period.label,
+      fileName:dialog.dataset.fileName||'Busta paga PDF',
+      importedAt:new Date().toISOString(),
+      hours50:h50||0,
+      hours55:h55||0
+    };
+
     document.getElementById('status').textContent=
-      `Cedolino applicato a ${period.label}.`;
+      `Cedolino di ${period.label} applicato.`;
   }else{
     for(const [key,id] of Object.entries(monthly)){
       const el=document.getElementById(id);

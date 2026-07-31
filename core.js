@@ -1,6 +1,6 @@
 'use strict';
 
-const APP_VERSION='3.2';
+const APP_VERSION='3.3';
 const STORAGE_KEY='turni-app-stabile-v1';
 const MONTHS=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const DAYS=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
@@ -17,6 +17,7 @@ const TYPES={
 const DEFAULT_STATE={
   shifts:{},
   monthOverrides:{},
+  payslipRegistry:{},
   settings:{
     profileName:'',
     excelName:'',
@@ -95,6 +96,7 @@ function normalizeState(raw){
     shifts:s.shifts&&typeof s.shifts==='object'?s.shifts:{},
     monthOverrides:(s.monthOverrides&&typeof s.monthOverrides==='object'?s.monthOverrides:null)
       ||(s.premiumOverrides&&typeof s.premiumOverrides==='object'?s.premiumOverrides:{}),
+    payslipRegistry:s.payslipRegistry&&typeof s.payslipRegistry==='object'?s.payslipRegistry:{},
     settings:{...DEFAULT_STATE.settings,...saved}
   };
 }
@@ -584,11 +586,19 @@ function render(){
   document.getElementById('totRest').textContent=rests;
   document.getElementById('status').textContent=
     `v${APP_VERSION} · salvato sul dispositivo · ${Object.keys(state.shifts).length} giorni`;
-  const payslipStatus=document.getElementById('payslipStatus');
-  if(payslipStatus){
-    payslipStatus.textContent=state.settings.payslipFileName
-      ? `Profilo ${state.settings.profileName||'personale'} · ${state.settings.payslipFileName}`
-      : 'Nessuna busta paga associata.';
+  renderPayslipArchive();
+
+  /* Badge sul mese in vista: dice se quel mese ha un cedolino caricato. */
+  const monthBadge=document.getElementById('payslipMonthBadge');
+  if(monthBadge){
+    const entry=(state.payslipRegistry||{})[`${y}-${pad(m+1)}`];
+    if(entry){
+      monthBadge.className='month-badge ok';
+      monthBadge.textContent=`Busta paga di ${entry.label} caricata`;
+    }else{
+      monthBadge.className='month-badge';
+      monthBadge.textContent='Nessuna busta paga per questo mese';
+    }
   }
 
   if(typeof renderStats==='function')renderStats(y,m);
@@ -685,3 +695,46 @@ document.getElementById('clearMonthBtn').onclick=()=>{
   Object.keys(state.shifts).forEach(k=>{const d=new Date(k+'T00:00:00');if(d.getFullYear()===y&&d.getMonth()===m)delete state.shifts[k]});
   saveState();render();
 };
+
+/* Elenco dei cedolini caricati, ordinato dal più recente. */
+function renderPayslipArchive(){
+  const box=document.getElementById('payslipArchive');
+  if(!box)return;
+
+  const entries=Object.entries(state.payslipRegistry||{})
+    .sort((a,b)=>b[0].localeCompare(a[0]));
+
+  const status=document.getElementById('payslipStatus');
+  if(status){
+    status.textContent=entries.length
+      ? `${entries.length} busta paga caricata${entries.length>1?'e':''}.`
+      : 'Nessuna busta paga caricata.';
+  }
+
+  if(!entries.length){
+    box.innerHTML='<div class="archive-empty">Carica un PDF: l\'app riconosce da sola il mese di competenza.</div>';
+    return;
+  }
+
+  box.innerHTML=entries.map(([key,e])=>{
+    const [yy,mm]=key.split('-').map(Number);
+    const hours=(e.hours50||e.hours55)
+      ? `${e.hours50||0}h 50% · ${e.hours55||0}h 55%`
+      : 'ore non lette';
+    return `<div class="archive-row" data-key="${key}">
+      <div>
+        <div class="archive-month">${MONTHS[mm-1]} ${yy}</div>
+        <div class="archive-sub">${hours}</div>
+      </div>
+      <button class="mini-btn archive-go" data-y="${yy}" data-m="${mm-1}">Vai</button>
+    </div>`;
+  }).join('');
+
+  box.querySelectorAll('.archive-go').forEach(btn=>{
+    btn.onclick=()=>{
+      view=new Date(Number(btn.dataset.y),Number(btn.dataset.m),1);
+      document.getElementById('settingsDialog').close();
+      render();
+    };
+  });
+}

@@ -130,3 +130,45 @@
 @media (min-width:1024px){
   #app{max-width:960px;margin:0 auto}
 }
+
+/* Riconoscimento del mese nel dialog cedolino */
+.period-banner{
+  border-radius:10px;
+  padding:10px 12px;
+  margin:8px 0 4px;
+  border:1px solid rgba(255,255,255,.12);
+}
+.period-banner:empty{display:none}
+.period-banner.ok{
+  background:rgba(80,200,140,.12);
+  border-color:rgba(80,200,140,.35);
+}
+.period-banner.warn{
+  background:rgba(255,180,60,.12);
+  border-color:rgba(255,180,60,.35);
+}
+.period-label{font-size:15px;margin-bottom:2px}
+.period-sub{font-size:12px;color:var(--muted)}
+
+/* Badge del mese in vista */
+.month-badge{
+  font-size:12px;
+  color:var(--muted);
+  padding:6px 0 2px;
+}
+.month-badge.ok{color:#5fd0a0}
+
+/* Archivio dei cedolini */
+.payslip-archive{margin-top:8px}
+.archive-empty{font-size:12px;color:var(--muted);padding:6px 0}
+.archive-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.archive-row:last-child{border-bottom:none}
+.archive-month{font-size:14px}
+.archive-sub{font-size:11px;color:var(--muted)}

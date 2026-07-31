@@ -39,6 +39,8 @@
       <div class="today-badge" id="todayBadge">—</div>
     </div>
 
+    <div id="payslipMonthBadge" class="month-badge">Nessuna busta paga per questo mese</div>
+
     <div class="dashboard-grid">
       <div class="dash-tile">
         <div class="k">Turno di oggi</div>
@@ -171,7 +173,8 @@
   <p class="notice">I dati vengono salvati con una sola chiave nel browser e restano dopo il refresh. Ogni dispositivo conserva la propria copia.</p>
   <div class="payslip-actions">
     <button class="btn" id="uploadPayslip">Carica busta paga PDF</button>
-    <div class="payslip-status" id="payslipStatus">Nessuna busta paga associata.</div>
+    <div class="payslip-status" id="payslipStatus">Nessuna busta paga caricata.</div>
+    <div id="payslipArchive" class="payslip-archive"></div>
   </div>
   <div class="backup">
     <button class="btn alt" id="exportBackup">Esporta backup</button>
@@ -270,6 +273,7 @@
 
 <dialog id="payslipDialog">
   <h3>Controlla il profilo estratto</h3>
+  <div id="payslipPeriodBanner" class="period-banner"></div>
   <p class="notice" id="payslipMessage">Il PDF viene letto localmente.</p>
   <div class="fields">
     <div class="wide"><label>Nome profilo</label><input id="psProfileName"></div>
