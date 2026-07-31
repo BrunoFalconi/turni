@@ -866,7 +866,13 @@ Object.entries(setMap).forEach(([id,[key,kind]])=>{
 document.getElementById('set-close').onclick=closeSheets;
 document.getElementById('wipe').onclick=async()=>{
   if(!confirm('Cancellare tutti i turni salvati? L\u2019operazione non si può annullare.'))return;
-  state={shifts:{},settings:{...DEFAULTS}};
+  state = {
+  shifts: {},
+  allShifts: {},
+  settings: {
+    ...DEFAULTS
+  }
+};
   try{await store.del(KEY)}catch(e){}
   closeSheets(); render(); toast('Dati cancellati');
 };
