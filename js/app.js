@@ -1,4 +1,4 @@
-(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['app']='3.3';
+(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['app']='3.4';
 window.addEventListener('storage',e=>{if(e.key===STORAGE_KEY){state=loadState();render()}});
 window.addEventListener('pagehide',saveState);
 

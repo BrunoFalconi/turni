@@ -1,7 +1,7 @@
-(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['core']='3.3';
+(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['core']='3.4';
 'use strict';
 
-const APP_VERSION='3.3';
+const APP_VERSION='3.4';
 const STORAGE_KEY='turni-app-stabile-v1';
 const MONTHS=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const DAYS=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
@@ -39,6 +39,8 @@ const DEFAULT_STATE={
     socialPct:9.49,
     /* Detrazione mensile aggiuntiva (F02801 nel cedolino Zucchetti). */
     additionalDeduction:0,
+    /* Mese di riferimento per i mesi privi di cedolino. */
+    baselineMonth:'',
     taxPct:0,
     fixedExtraDeductions:0,
     regionalInstallment:0,
@@ -196,11 +198,27 @@ function payroll(y,m){
 
   /* Alcune voci non sono costanti: gli arretrati EPAR compaiono solo in
      certi mesi, l'ulteriore detrazione varia con l'imponibile, le rate
-     delle addizionali si arrotondano diversamente. Se il mese ha un
-     valore proprio si usa quello, altrimenti vale il profilo generale. */
-  const pick=name=>override[name]!=null
-    ?Number(override[name])||0
-    :Number(state.settings[name])||0;
+     delle addizionali si arrotondano diversamente.
+     Ordine di precedenza:
+       1. il mese stesso, se ha un cedolino caricato;
+       2. il "mese tipo" scelto dall'utente, per i mesi senza cedolino;
+       3. il profilo generale.
+     Il mese tipo va scelto fra quelli normali: se si indica un mese con
+     arretrati, quegli importi verrebbero ripetuti ovunque. */
+  const baselineKey=state.settings.baselineMonth;
+  const baseline=(baselineKey&&baselineKey!==monthKey)
+    ?((state.monthOverrides||{})[baselineKey]||{})
+    :{};
+
+  const pick=name=>{
+    if(override[name]!=null)return Number(override[name])||0;
+    if(baseline[name]!=null)return Number(baseline[name])||0;
+    return Number(state.settings[name])||0;
+  };
+
+  /* Un mese è "verificato" solo se ha il proprio cedolino: le ore della
+     banca ore non sono deducibili dai turni, quindi altrove è una stima. */
+  const verified=!!(state.payslipRegistry||{})[monthKey];
 
   const baseGross=Number(state.settings.gross)||0;
   const divisor=Number(state.settings.divisor)||173;
@@ -275,7 +293,7 @@ function payroll(y,m){
 
   return{
     mins,amounts,premiums,otherEarnings,gross,hourly,
-    premiumBase,premiumDivisor,premiumHourly,netAdjustment,overridden,additionalDeduction,
+    premiumBase,premiumDivisor,premiumHourly,netAdjustment,overridden,verified,additionalDeduction,
     social,fixedExtra,ordinaryTaxable,
     annualProjected,annualIrpefGross,annualDeduction,
     tax,substituteTax,
@@ -588,6 +606,7 @@ function render(){
   document.getElementById('status').textContent=
     `v${APP_VERSION} · salvato sul dispositivo · ${Object.keys(state.shifts).length} giorni`;
   renderPayslipArchive();
+  renderBaselineSelect();
 
   /* Badge sul mese in vista: dice se quel mese ha un cedolino caricato. */
   const monthBadge=document.getElementById('payslipMonthBadge');
@@ -606,6 +625,22 @@ function render(){
   if(typeof renderDashboard==='function')renderDashboard();
 
   const p=payroll(y,m);
+
+  const payBadge=document.getElementById('payAccuracy');
+  if(payBadge){
+    if(p.verified){
+      payBadge.className='accuracy ok';
+      payBadge.textContent='Verificato sul cedolino di questo mese';
+    }else if(state.settings.baselineMonth){
+      const [by,bm]=state.settings.baselineMonth.split('-').map(Number);
+      payBadge.className='accuracy est';
+      payBadge.textContent=`Stima · trattenute da ${MONTHS[bm-1]} ${by}, ore dai turni`;
+    }else{
+      payBadge.className='accuracy est';
+      payBadge.textContent='Stima · nessun cedolino di riferimento';
+    }
+  }
+
   document.getElementById('pay').innerHTML=`
     <div class="pay-section-title">Competenze</div>
     <div class="payrow main"><span>Lordo fisso</span><span>${euro(state.settings.gross)}</span></div>
@@ -738,4 +773,26 @@ function renderPayslipArchive(){
       render();
     };
   });
+}
+
+/* Selettore del mese di riferimento, popolato dai cedolini caricati. */
+function renderBaselineSelect(){
+  const sel=document.getElementById('baselineMonth');
+  if(!sel)return;
+
+  const entries=Object.entries(state.payslipRegistry||{})
+    .sort((a,b)=>b[0].localeCompare(a[0]));
+
+  sel.innerHTML='<option value="">Nessuno (usa il profilo generale)</option>'+
+    entries.map(([key])=>{
+      const [yy,mm]=key.split('-').map(Number);
+      const sel_=key===state.settings.baselineMonth?' selected':'';
+      return `<option value="${key}"${sel_}>${MONTHS[mm-1]} ${yy}</option>`;
+    }).join('');
+
+  sel.onchange=()=>{
+    state.settings.baselineMonth=sel.value;
+    saveState();
+    render();
+  };
 }

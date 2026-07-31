@@ -1,4 +1,4 @@
-(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['stats']='3.3';
+(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['stats']='3.4';
 function monthlyStats(y,m){
   const counts={mattina:0,pomeriggio:0,notte:0,deas:0,riposo:0,ferie:0,malattia:0};
   let workedMinutes=0;
