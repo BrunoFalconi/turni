@@ -526,10 +526,11 @@
   pdf.save(filename);
 }
 
-document
-  .getElementById('exportAllPdfBtn')
-  ?.addEventListener(
-    'click',
-    exportAllShiftsPdf
-  );
+function connectAllPdfButton() {
+  const button = document.getElementById('exportAllPdfBtn');
+
+  if (!button) {
+    console.error('Pulsante exportAllPdfBtn non trovato');
+    return;
+  }
 })();
