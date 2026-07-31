@@ -107,3 +107,134 @@
     .payslip-actions .btn{width:100%}
     .payslip-status{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
     .offline-ready{color:var(--p)}
+
+/* Riga informativa nel riepilogo busta paga */
+.payrow.hint{
+  font-size:12px;
+  color:var(--muted);
+  border-bottom:none;
+  padding-top:0;
+}
+.payrow.hint span{opacity:.85}
+
+/* Etichette con nota fra parentesi nei dialog */
+.fields label small{
+  font-weight:400;
+  opacity:.6;
+}
+
+/* Tablet e desktop */
+@media (min-width:768px){
+  .dashboard-grid{grid-template-columns:repeat(4,1fr)}
+}
+@media (min-width:1024px){
+  #app{max-width:960px;margin:0 auto}
+}
+
+/* Riconoscimento del mese nel dialog cedolino */
+.period-banner{
+  border-radius:10px;
+  padding:10px 12px;
+  margin:8px 0 4px;
+  border:1px solid rgba(255,255,255,.12);
+}
+.period-banner:empty{display:none}
+.period-banner.ok{
+  background:rgba(80,200,140,.12);
+  border-color:rgba(80,200,140,.35);
+}
+.period-banner.warn{
+  background:rgba(255,180,60,.12);
+  border-color:rgba(255,180,60,.35);
+}
+.period-label{font-size:15px;margin-bottom:2px}
+.period-sub{font-size:12px;color:var(--muted)}
+
+/* Badge del mese in vista */
+.month-badge{
+  font-size:12px;
+  color:var(--muted);
+  padding:6px 0 2px;
+}
+.month-badge.ok{color:#5fd0a0}
+
+/* Archivio dei cedolini */
+.payslip-archive{margin-top:8px}
+.archive-empty{font-size:12px;color:var(--muted);padding:6px 0}
+.archive-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.archive-row:last-child{border-bottom:none}
+.archive-month{font-size:14px}
+.archive-sub{font-size:11px;color:var(--muted)}
+
+/* Avviso di file non allineati */
+.version-warning{
+  background:#7a2230;
+  color:#fff;
+  padding:12px 14px;
+  font-size:13px;
+  line-height:1.45;
+  position:sticky;
+  top:0;
+  z-index:99;
+}
+.version-warning b{color:#ffd9df}
+.version-warning button{
+  display:block;
+  margin-top:10px;
+  padding:8px 14px;
+  border:none;
+  border-radius:8px;
+  background:#fff;
+  color:#7a2230;
+  font-size:13px;
+  font-weight:600;
+}
+
+/* Indicatore stima / verificato */
+.accuracy{
+  font-size:11.5px;
+  padding:5px 9px;
+  border-radius:7px;
+  display:inline-block;
+  margin-bottom:10px;
+}
+.accuracy:empty{display:none}
+.accuracy.ok{
+  background:rgba(80,200,140,.15);
+  color:#5fd0a0;
+}
+.accuracy.est{
+  background:rgba(255,255,255,.06);
+  color:var(--muted);
+}
+
+/* Selettore del mese di riferimento */
+.baseline-box{margin-top:14px}
+.baseline-box label{
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+.baseline-box select{
+  width:100%;
+  padding:9px 10px;
+  border-radius:9px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.05);
+  color:inherit;
+  font-size:14px;
+}
+.baseline-hint{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:6px;
+  line-height:1.45;
+}
