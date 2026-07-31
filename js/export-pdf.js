@@ -330,14 +330,7 @@
     button.addEventListener('click', exportPdf);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener(
-      'DOMContentLoaded',
-      connectPdfButton
-    );
-  } else {
-    connectPdfButton();
-  }
+
   function exportAllShiftsPdf() {
   if (!window.jspdf?.jsPDF) {
     alert('La libreria PDF non è disponibile.');
