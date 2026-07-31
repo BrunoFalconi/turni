@@ -1,5 +1,6 @@
 'use strict';
 
+const APP_VERSION='3.2';
 const STORAGE_KEY='turni-app-stabile-v1';
 const MONTHS=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const DAYS=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
@@ -111,7 +112,9 @@ function saveState(){
     const payload=JSON.stringify(state);
     localStorage.setItem(STORAGE_KEY,payload);
     const ok=localStorage.getItem(STORAGE_KEY)===payload;
-    document.getElementById('status').textContent=ok?`Salvato sul dispositivo · ${Object.keys(state.shifts).length} giorni`:'Salvataggio non riuscito.';
+    document.getElementById('status').textContent=ok
+      ?`v${APP_VERSION} · salvato sul dispositivo · ${Object.keys(state.shifts).length} giorni`
+      :'Salvataggio non riuscito.';
     return ok;
   }catch(e){
     console.error('Errore salvataggio',e);
@@ -579,7 +582,8 @@ function render(){
   document.getElementById('totHours').textContent=fmtMin(total);
   document.getElementById('totNight').textContent=fmtMin(night);
   document.getElementById('totRest').textContent=rests;
-  document.getElementById('status').textContent=`Salvato sul dispositivo · ${Object.keys(state.shifts).length} giorni`;
+  document.getElementById('status').textContent=
+    `v${APP_VERSION} · salvato sul dispositivo · ${Object.keys(state.shifts).length} giorni`;
   const payslipStatus=document.getElementById('payslipStatus');
   if(payslipStatus){
     payslipStatus.textContent=state.settings.payslipFileName

@@ -5,7 +5,7 @@
 // 3. Migliore gestione degli errori
 // 4. Pulizia cache obsolete
 
-const VERSION = '3.1'; // Incrementare quando deploy
+const VERSION = '3.2'; // Incrementare quando deploy
 const CACHE_NAME = `turni-app-v${VERSION}`;
 const CORE_ASSETS = [
   './',

@@ -218,3 +218,71 @@ ore dai turni, che nel tuo contratto non corrispondono a quelle pagate.
 Dopo aver inserito i valori qui sopra, se il numero resta lontano dimmi
 che **lordo** mostra l'app per marzo: da lì si capisce subito se il
 problema è sulle competenze o sulle trattenute.
+
+
+---
+
+# Se marzo continua a dare 2.046
+
+Ho fatto la ricerca inversa: quel numero esce da due situazioni diverse,
+e il **lordo** le distingue subito.
+
+| Situazione | Ore contate | Lordo mostrato | Netto |
+|---|---:|---:|---:|
+| A — codice vecchio ancora attivo | ~41h | ~2.887 | ~2.046 |
+| B — codice nuovo, override non applicato | ~30h | ~2.807 | ~2.045 |
+| Corretto — override applicato | 58h + 6h | **3.012,40** | **2.150** |
+
+## L'indizio che punta ad A
+
+Hai scritto "ancora 2046", cioè il numero **non è cambiato**. Ma le
+correzioni toccano contributi (9,59 → 9,49%), imponibile IRPEF (quota
+deducibile → quota lavoratore) e aggiungono l'ulteriore detrazione: a
+parità di ore il netto **deve** spostarsi di una quarantina di euro.
+
+Se è rimasto identico al centesimo, il codice nuovo non sta girando. La
+causa quasi certa è il service worker, che continua a servire i file
+vecchi dalla cache anche dopo il deploy — è il classico problema delle
+PWA su GitHub Pages.
+
+## Come verificarlo in due secondi
+
+Ho aggiunto la versione nella barra di stato in fondo alla schermata:
+
+- se leggi **`v3.2 · salvato sul dispositivo · … giorni`** → codice nuovo attivo
+- se leggi **`Salvato sul dispositivo · … giorni`** senza `v3.2` → stai
+  ancora usando il codice vecchio, e nessuna correzione è in funzione
+
+## Come forzare l'aggiornamento
+
+In Impostazioni c'è un pulsante **Forza aggiornamento**: elimina il
+service worker e tutte le cache, poi ricarica. I turni non si toccano,
+stanno in localStorage e non nella cache.
+
+Se il pulsante non c'è (perché stai vedendo la pagina vecchia), fallo a
+mano dalla console del browser:
+
+```js
+navigator.serviceWorker.getRegistrations()
+  .then(r => Promise.all(r.map(x => x.unregister())))
+  .then(() => caches.keys())
+  .then(k => Promise.all(k.map(x => caches.delete(x))))
+  .then(() => location.reload());
+```
+
+Su iPhone, se la usi come app dalla home: rimuovi l'icona, apri il sito in
+Safari, ricarica, e reinstallala. Il service worker di una PWA installata
+può sopravvivere a un semplice refresh.
+
+## Se invece leggi già v3.2
+
+Allora sei nella situazione B: il codice è aggiornato ma marzo non ha
+l'override. Vai su marzo, apri *Dati del mese* e inserisci i valori della
+tabella qui sopra. Il campo "Dai turni" ti dirà quante ore sta contando
+l'app: se dice ~30 invece di 58, è la conferma.
+
+## In ogni caso, dimmi il lordo
+
+Se dopo tutto questo il numero resta lontano, il dato che risolve la
+questione in un colpo è il **lordo che l'app mostra per marzo**. Sopra i
+3.000 il problema è sulle trattenute, sotto i 2.900 è sulle ore.
