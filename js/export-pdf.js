@@ -530,7 +530,21 @@ function connectAllPdfButton() {
   const button = document.getElementById('exportAllPdfBtn');
 
   if (!button) {
-    console.error('Pulsante exportAllPdfBtn non trovato');
+    console.warn('Pulsante exportAllPdfBtn non trovato');
     return;
   }
+
+  button.addEventListener('click', exportAllShiftsPdf);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    connectPdfButton();
+    connectAllPdfButton();
+  });
+} else {
+  connectPdfButton();
+  connectAllPdfButton();
+}
+
 })();
