@@ -73,6 +73,22 @@ function findCometaLineAmount(text,{employer=false}={}){
   return null;
 }
 
+const PAYSLIP_MONTHS=['gennaio','febbraio','marzo','aprile','maggio','giugno',
+  'luglio','agosto','settembre','ottobre','novembre','dicembre'];
+
+/* Il periodo sta sotto "PERIODO DI RETRIBUZIONE", scritto per esteso
+   (es. "Maggio 2026"). Serve per attribuire i valori al mese giusto
+   invece di sovrascrivere il profilo generale. */
+function findPayslipPeriod(text){
+  const rx=new RegExp('\\b('+PAYSLIP_MONTHS.join('|')+')\\s+(20[0-9]{2})\\b','i');
+  const m=String(text||'').match(rx);
+  if(!m)return null;
+  const month=PAYSLIP_MONTHS.indexOf(m[1].toLowerCase());
+  const year=Number(m[2]);
+  if(month<0||!Number.isFinite(year))return null;
+  return {year,month,label:`${m[1][0].toUpperCase()+m[1].slice(1).toLowerCase()} ${year}`};
+}
+
 function findNameFromText(text){
   const patterns=[
     /COGNOME\s*E?\s*NOME[\s:;-]*([A-ZÀ-Ü' ]{5,60})/i,
@@ -178,7 +194,10 @@ function columnValuesFromPdf(pdfData){
     municipalAdvanceInstallment:null,
     fixedExtraDeductions:null,
     additionalDeduction:null,
-    socialPct:null
+    socialPct:null,
+    hours50:null,
+    hours55:null,
+    period:null
   };
 
   let localTaxes=0;
@@ -270,12 +289,29 @@ function columnValuesFromPdf(pdfData){
       if(value!=null)result.municipalAdvanceInstallment=Math.abs(value);
     }
 
-    const eparRow=findRowByCode(page.rows,'003005',{contains:'Contributo\s+EPAR'});
-    if(eparRow){
-      const value=valueInNamedColumn(eparRow,centers,'trattenute');
-      if(value!=null)result.fixedExtraDeductions=Math.abs(value);
+    /* Le righe EPAR possono essere più di una: quando l'azienda recupera
+       arretrati compaiono più mensilità nello stesso cedolino (a marzo
+       2026 erano cinque). Vanno sommate tutte, non presa la prima. */
+    let eparTotal=0,eparFound=false;
+    for(const row of page.rows){
+      if(!/003005/.test(row.text))continue;
+      if(!/Contributo\s+EPAR/i.test(row.text))continue;
+      const value=valueInNamedColumn(row,centers,'trattenute');
+      if(value!=null){eparTotal+=Math.abs(value);eparFound=true}
     }
-  }
+    if(eparFound)result.fixedExtraDeductions=Number(eparTotal.toFixed(2));
+
+    /* Ore con maggiorazione: stanno nelle righe Z12050 (50%) e Z12055
+       (55%) come "58,00000 ORE". Leggerle dal cedolino è più affidabile
+       che dedurle dai turni, perché con la banca ore non coincidono. */
+    for(const row of page.rows){
+      const m=row.text.match(/Z120(5[0-9])[\s\S]*?([0-9]+(?:,[0-9]+)?)\s*ORE/i);
+      if(!m)continue;
+      const hours=moneyNumber(m[2]);
+      if(hours==null||hours<=0)continue;
+      if(/\b50\s*%/.test(row.text))result.hours50=(result.hours50||0)+hours;
+      else if(/\b55\s*%/.test(row.text))result.hours55=(result.hours55||0)+hours;
+    }
 
     /* F02801: ulteriore detrazione mensile (L.207/24). Sta nella
        colonna IMPORTO BASE, non fra le trattenute. */
@@ -299,6 +335,7 @@ function columnValuesFromPdf(pdfData){
       }
     }
     if(socialFound)result.socialPct=Number(socialSum.toFixed(2));
+  }
 
   /* Il totale deducibile è la somma delle due quote.
      Se la riga azienda non è stata trovata ma le altre due sì,
@@ -332,6 +369,9 @@ function parsePayslipData(pdfData){
   if(columns.fixedExtraDeductions!=null)detected.fixedExtraDeductions=columns.fixedExtraDeductions;
   if(columns.additionalDeduction!=null)detected.additionalDeduction=columns.additionalDeduction;
   if(columns.socialPct!=null)detected.socialPct=columns.socialPct;
+  if(columns.hours50!=null)detected.hours50=columns.hours50;
+  if(columns.hours55!=null)detected.hours55=columns.hours55;
+  detected.period=findPayslipPeriod(pdfData.text);
 
   return detected;
 }
@@ -453,15 +493,36 @@ function fillPayslipDialog(data,fileName){
     psCometaEmployee:data.cometaEmployee??current.cometaEmployee,
     psCometaEmployer:data.cometaEmployer??current.cometaEmployer,
     psCometaDeductible:data.cometaDeductible??current.cometaDeductible,
+    psAdditionalDeduction:data.additionalDeduction??current.additionalDeduction,
     psNightPct:data.nightPct??current.nightPct,
     psHolidayPct:data.holidayPct??current.holidayPct,
     psHolidayNightPct:data.holidayNightPct??current.holidayNightPct
   };
-  Object.entries(values).forEach(([id,value])=>document.getElementById(id).value=value??0);
-  document.getElementById('payslipMessage').textContent=
-    `File analizzato localmente: ${fileName}. Controlla i valori prima di salvarli.`;
-  document.getElementById('payslipDialog').dataset.fileName=fileName;
-  document.getElementById('payslipDialog').showModal();
+  Object.entries(values).forEach(([id,value])=>{
+    const el=document.getElementById(id);
+    if(el)el.value=value??0;
+  });
+
+  const dialog=document.getElementById('payslipDialog');
+  dialog.dataset.fileName=fileName;
+
+  /* Il periodo decide dove finiranno i valori variabili. */
+  if(data.period){
+    dialog.dataset.period=JSON.stringify(data.period);
+  }else{
+    delete dialog.dataset.period;
+  }
+  dialog.dataset.hours50=data.hours50||0;
+  dialog.dataset.hours55=data.hours55||0;
+
+  const hoursNote=(data.hours50||data.hours55)
+    ? ` Ore lette: ${data.hours50||0}h al 50%, ${data.hours55||0}h al 55%.`
+    : '';
+  document.getElementById('payslipMessage').textContent=data.period
+    ? `${fileName} · periodo ${data.period.label}. Le voci variabili verranno salvate su quel mese.${hoursNote}`
+    : `${fileName} · periodo non riconosciuto: i valori andranno nel profilo generale. Controllali prima di salvare.`;
+
+  dialog.showModal();
 }
 
 document.getElementById('uploadPayslip').onclick=()=>{
@@ -493,15 +554,12 @@ document.getElementById('payslipInput').addEventListener('change',async event=>{
 });
 
 document.getElementById('savePayslipProfile').onclick=()=>{
-  const map={
+  /* Valori stabili: appartengono al contratto e valgono per tutti i mesi. */
+  const stable={
     profileName:'psProfileName',
     gross:'psGross',
     divisor:'psDivisor',
     socialPct:'psSocialPct',
-    fixedExtraDeductions:'psFixedExtraDeductions',
-    regionalInstallment:'psRegionalInstallment',
-    municipalBalanceInstallment:'psMunicipalBalanceInstallment',
-    municipalAdvanceInstallment:'psMunicipalAdvanceInstallment',
     cometaEmployee:'psCometaEmployee',
     cometaEmployer:'psCometaEmployer',
     cometaDeductible:'psCometaDeductible',
@@ -510,19 +568,65 @@ document.getElementById('savePayslipProfile').onclick=()=>{
     holidayNightPct:'psHolidayNightPct'
   };
 
-  for(const [key,id] of Object.entries(map)){
+  /* Valori che cambiano da un cedolino all'altro: arretrati EPAR,
+     ulteriore detrazione, rate delle addizionali. Se il cedolino dichiara
+     il proprio periodo finiscono lì, altrimenti nel profilo generale. */
+  const monthly={
+    fixedExtraDeductions:'psFixedExtraDeductions',
+    additionalDeduction:'psAdditionalDeduction',
+    regionalInstallment:'psRegionalInstallment',
+    municipalBalanceInstallment:'psMunicipalBalanceInstallment',
+    municipalAdvanceInstallment:'psMunicipalAdvanceInstallment'
+  };
+
+  for(const [key,id] of Object.entries(stable)){
+    const el=document.getElementById(id);
+    if(!el)continue;
     state.settings[key]=key==='profileName'
-      ? document.getElementById(id).value.trim()
-      : Number(document.getElementById(id).value)||0;
+      ? el.value.trim()
+      : Number(el.value)||0;
   }
 
-  state.settings.payslipFileName=
-    document.getElementById('payslipDialog').dataset.fileName||'Busta paga PDF';
+  const dialog=document.getElementById('payslipDialog');
+  const period=dialog.dataset.period?JSON.parse(dialog.dataset.period):null;
+
+  if(period){
+    if(!state.monthOverrides)state.monthOverrides={};
+    const key=`${period.year}-${String(period.month+1).padStart(2,'0')}`;
+    const entry={...(state.monthOverrides[key]||{})};
+
+    for(const [name,id] of Object.entries(monthly)){
+      const el=document.getElementById(id);
+      if(el)entry[name]=Number(el.value)||0;
+    }
+
+    /* Le ore lette dalle voci Z12050/Z12055 sono quelle davvero pagate. */
+    const h50=Number(dialog.dataset.hours50||0);
+    const h55=Number(dialog.dataset.hours55||0);
+    if(h50||h55){
+      entry.night=h50;
+      entry.holiday=0;
+      entry.holidayNight=h55;
+    }
+
+    state.monthOverrides[key]=entry;
+    document.getElementById('status').textContent=
+      `Cedolino applicato a ${period.label}.`;
+  }else{
+    for(const [key,id] of Object.entries(monthly)){
+      const el=document.getElementById(id);
+      if(el)state.settings[key]=Number(el.value)||0;
+    }
+    document.getElementById('status').textContent=
+      'Periodo non riconosciuto: valori salvati nel profilo generale.';
+  }
+
+  state.settings.payslipFileName=dialog.dataset.fileName||'Busta paga PDF';
   state.settings.payslipImportedAt=new Date().toISOString();
 
   saveState();
   render();
-  document.getElementById('payslipDialog').close();
+  dialog.close();
 };
 
 document.getElementById('closePayslipDialog').onclick=()=>{

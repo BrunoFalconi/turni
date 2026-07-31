@@ -286,3 +286,71 @@ l'app: se dice ~30 invece di 58, è la conferma.
 Se dopo tutto questo il numero resta lontano, il dato che risolve la
 questione in un colpo è il **lordo che l'app mostra per marzo**. Sopra i
 3.000 il problema è sulle trattenute, sotto i 2.900 è sulle ore.
+
+
+---
+
+# v3.3 — Il cedolino ora si applica al suo mese
+
+## Il difetto che avevi trovato
+
+"I dati cambiano in base alla busta paga che gli carico" era la
+descrizione esatta di un mio errore di progettazione: il caricamento del
+PDF scriveva **tutto** in `state.settings`, il profilo generale valido per
+ogni mese. Quindi caricavi marzo e maggio si rompeva, caricavi maggio e si
+rompeva marzo. Le due buste paga si sovrascrivevano a vicenda.
+
+Il difetto esisteva anche prima delle mie modifiche, ma è diventato
+evidente solo ora che sappiamo quali voci variano di mese in mese.
+
+## Cosa fa adesso
+
+Il parser legge il **periodo di retribuzione** dal PDF ("Marzo 2026",
+"Maggio 2026") e divide i valori in due gruppi:
+
+**Nel profilo generale** (valgono per tutti i mesi): lordo fisso,
+divisore, aliquota contributiva, quote COMETA, percentuali di
+maggiorazione.
+
+**Nel mese del cedolino**: EPAR e trattenute fisse, ulteriore detrazione,
+le tre addizionali, e le ore con maggiorazione.
+
+Se il periodo non viene riconosciuto il comportamento resta quello di
+prima, ma il dialog te lo dice esplicitamente.
+
+## Le ore si leggono dal cedolino
+
+Non serve più inserirle a mano. Il parser legge le righe `Z12050` e
+`Z12055`:
+
+```
+Z12050 Magg. banca ore 50%  7,33659  58,00000 ORE  425,52  ->  58h
+Z12055 Magg. banca ore 55%  8,07025   6,00000 ORE   48,42  ->   6h
+```
+
+Verificato su entrambi i cedolini: marzo 58/6, maggio 62/8.
+
+## EPAR: somma di tutte le righe
+
+Prima ne leggeva una sola. A marzo ce ne sono cinque per via degli
+arretrati, e il totale è 11,18 invece di 2,54. Ora le somma tutte.
+
+## Procedura
+
+1. Sostituisci i file e ricarica.
+2. Controlla che in fondo alla schermata compaia **`v3.2`**.
+3. Carica il cedolino di marzo → il dialog dirà "periodo Marzo 2026".
+4. Salva. Marzo è configurato.
+5. Ripeti con maggio. I due mesi non si disturbano più.
+
+## Sul pulsante che non trovavi
+
+"Forza aggiornamento" l'ho aggiunto nel messaggio precedente, quindi non
+può esserci nei file che avevi in quel momento. Ma il fatto che tu non lo
+veda è anche la conferma che stavi guardando una versione vecchia
+dell'app: o i file non erano stati sostituiti, o il service worker
+serviva ancora quelli in cache.
+
+Da qui in avanti la versione in fondo alla schermata toglie ogni dubbio:
+se non leggi `v3.2`, le correzioni non sono attive e qualsiasi numero
+vedi non dice nulla sulla bontà dei calcoli.
