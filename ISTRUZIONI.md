@@ -548,3 +548,58 @@ Carica i cedolini che hai (quelli sono esatti), imposta maggio come mese
 di riferimento, e i mesi mancanti diventano stime ragionevoli. Man mano
 che arrivano le buste paga nuove, caricale: ogni mese caricato passa da
 stima a verificato.
+
+
+---
+
+# v3.5 — Il mese di riferimento si sceglie da solo
+
+I 60 euro che mancavano ad aprile erano **l'ulteriore detrazione**
+(61,85). Il conto lo dimostra: togliendo quella voce da un mese tipo lo
+scarto e 61,85 euro, mentre EPAR pesa 1,43 e le addizionali 76,72. Nessuna
+delle altre produce ~60.
+
+Il motivo: la detrazione viene salvata nel mese del cedolino, non nel
+profilo generale. Aprile, che un cedolino non ce l'ha, la trovava a zero.
+
+La v3.4 aveva gia la soluzione (il menu "mese di riferimento") ma
+richiedeva di sapere che andava impostato. Ora l'app lo sceglie da sola.
+
+## Come sceglie
+
+Fra i cedolini caricati preferisce quello con le **trattenute fisse piu
+basse**, cioe il mese senza arretrati. Con marzo (EPAR 11,18) e maggio
+(EPAR 2,54) in archivio, sceglie maggio. A parita di importo vince il piu
+recente.
+
+E la stessa scelta che ti avrei suggerito a mano, ma non devi farla tu.
+
+## Puoi sempre sovrascrivere
+
+Il menu nelle impostazioni resta. La prima voce ora dice quale mese
+verrebbe scelto in automatico:
+
+```
+Mese di riferimento per i mesi senza cedolino
+[ Automatico (Maggio 2026) ▾ ]
+```
+
+Se preferisci fissarne uno diverso, selezionalo e resta quello.
+
+## L'etichetta dice cosa sta usando
+
+Nella scheda della busta paga:
+
+```
+Stima · trattenute da Maggio 2026 (scelto in automatico), ore dai turni
+```
+
+Cosi sai sempre da dove arrivano i numeri di un mese stimato.
+
+## Cosa resta inevitabilmente approssimato
+
+Le **ore**. Senza cedolino vengono dai turni, e con la banca ore non
+coincidono con quelle pagate. Ad aprile la stima migliora di ~60 euro con
+questa versione, ma se le ore accantonate sono diverse da quelle
+notturne lavorate lo scarto restante viene da li e si chiude solo
+caricando la busta paga di aprile.
