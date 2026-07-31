@@ -1,3 +1,4 @@
+(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['payslip']='3.3';
 /* Importazione locale di buste paga PDF.
    Il file resta sul dispositivo: viene estratto soltanto il testo necessario. */
 

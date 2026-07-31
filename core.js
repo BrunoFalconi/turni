@@ -1,3 +1,4 @@
+(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['core']='3.3';
 'use strict';
 
 const APP_VERSION='3.3';

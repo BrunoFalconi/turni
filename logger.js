@@ -1,3 +1,4 @@
+(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['logger']='3.3';
 /**
  * Logger Module - TurniApp
  * 

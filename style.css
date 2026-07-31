@@ -172,3 +172,27 @@
 .archive-row:last-child{border-bottom:none}
 .archive-month{font-size:14px}
 .archive-sub{font-size:11px;color:var(--muted)}
+
+/* Avviso di file non allineati */
+.version-warning{
+  background:#7a2230;
+  color:#fff;
+  padding:12px 14px;
+  font-size:13px;
+  line-height:1.45;
+  position:sticky;
+  top:0;
+  z-index:99;
+}
+.version-warning b{color:#ffd9df}
+.version-warning button{
+  display:block;
+  margin-top:10px;
+  padding:8px 14px;
+  border:none;
+  border-radius:8px;
+  background:#fff;
+  color:#7a2230;
+  font-size:13px;
+  font-weight:600;
+}

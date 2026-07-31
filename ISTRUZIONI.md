@@ -411,3 +411,70 @@ piu piccolo e circoscritto.
 
 Se invece il riquadro non compare affatto, stai ancora vedendo una
 versione vecchia dell'app e nessuna delle correzioni e attiva.
+
+
+---
+
+# La causa vera: file misti
+
+Lo screenshot che mi hai mandato contiene la prova. Due dettagli
+incompatibili fra loro:
+
+1. Il campo **"Ulteriore detrazione €"** c'e. Quel campo l'ho aggiunto io,
+   quindi il tuo `index.html` e aggiornato.
+
+2. Ma il campo e **vuoto**, e il messaggio in alto dice *"File analizzato
+   localmente: ... Controlla i valori prima di salvarli."* Quel testo
+   esiste solo nella versione **vecchia** di `js/payslip.js`. Nella nuova
+   dice "Analizzato in locale".
+
+Conferme secondarie: Cometa azienda a 0 (la versione nuova la ricava per
+differenza, 75,46 - 28,30 = 47,16), EPAR a 0 (la nuova somma tutte le
+righe), contributi 9,59% (il default vecchio).
+
+**Quindi: `index.html` nuovo, `js/payslip.js` vecchio.** L'app girava a
+meta, ed e il motivo per cui i numeri restavano sbagliati e il mese non
+veniva riconosciuto: tutto il codice che riconosce il periodo sta in
+`payslip.js`, che non e mai stato caricato.
+
+## Perche succede
+
+O la cartella `js/` non e stata sostituita insieme a `index.html`, oppure
+il service worker continuava a servire i vecchi `.js` dalla cache mentre
+`index.html` veniva ricaricato. E il classico problema delle PWA: l'HTML
+si aggiorna, gli script no.
+
+## Come l'ho reso impossibile
+
+**1. Cache-busting.** Gli script sono richiamati con la versione nell'URL:
+
+```html
+<script src="./js/payslip.js?v=3.3"></script>
+```
+
+Cambiando l'URL, browser e service worker sono costretti a scaricare il
+file nuovo: non possono servire il vecchio, perche a quell'indirizzo non
+esiste.
+
+**2. Controllo automatico all'avvio.** Ogni modulo dichiara la propria
+versione. Se anche uno solo non corrisponde, in cima alla schermata
+compare una fascia rossa:
+
+```
+File non aggiornati
+L'app e alla versione 3.3, ma questi moduli sono vecchi o mancanti: payslip.
+I calcoli non sono affidabili finche non li sostituisci.
+[Svuota cache e ricarica]
+```
+
+Il pulsante elimina service worker e cache e ricarica. I turni non si
+toccano: stanno in localStorage.
+
+## Cosa fare adesso
+
+Sostituisci **tutti** i file, non solo `index.html`. In particolare la
+cartella `js/` intera, che contiene sette file.
+
+Poi ricarica. Se compare la fascia rossa, premi il pulsante. Se non
+compare e in fondo leggi `v3.3`, sei allineato e il caricamento del
+cedolino ti dira finalmente di che mese e.
