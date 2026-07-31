@@ -1,128 +1,3 @@
-/
-Claude ha terminato la risposta
-Identificato problema di importazione multi-foglio Excel
-
-Quindici fogli, uno per mese. Il mio lettore ne guarda solo il primo — questo da solo lo farebbe fallire. Vediamo com'è fatto dentro.
-Architettò strategia per parsare fogli mensili e unificare dati temporali
-
-Ora ho il file vero, e cambia diverse cose. Prima di toccare il codice guardo bene com'è fatto.
-Architettato parser robusto per fogli di turni mensili ricorrenti
-
-Ora capisco tutto. Il file è fatto così:
-
-    Riga dei mesi con le date vere, ma le celle sono unite e disallineate rispetto ai giorni
-    Riga dei giorni: 26 27 28 29 30 31 1 2 … 31 1 2 3 4 5 6 — cioè dal 26 luglio al 6 settembre
-    Riga dei giorni della settimana, che contiene delle M e verrebbe scambiata per una persona
-    Sei nomi, e sotto altre due tabelle di conteggi che vanno ignorate
-
-E la tua riga, Lo Prete, inizia con R N M M P P R — esattamente la stringa che mi avevi dato. Il periodo parte davvero dal 26.
-
-Controllo se i fogli vecchi sono fatti uguale, altrimenti il lettore si rompe su quelli.
-Architettato sistema per inferire date mancanti tra fogli mensili
-
-La struttura è costante su tutti e quindici i fogli. Prima di scrivere il lettore controllo quali codici usate davvero, perché uno sconosciuto mi manderebbe fuori un giorno intero.
-Architettato parser robusto per fogli Excel mensili aggiornati
-
-Ci sono più codici di quelli che pensavo, e alcuni sono importanti: M 08 - 20 è un turno di dodici ore, non di otto. Se lo leggo come una mattina normale ti perdo quattro ore di paga. Scrivo il lettore tenendone conto e lo collaudo sul file vero.
-Architettato sistema di validazione per correggere errori di parsing nelle date
-
-Tredici fogli su quindici tornano perfetti. Tre no, e vale la pena capire perché prima di correggere alla cieca.
-Diagnosticato inconsistenze nei dati e architettato soluzione robusta
-
-Ora capisco: i fogli non sono tutti tagliati allo stesso modo. Agosto parte dal 26 luglio, Febbraio e Marzo partono dal 1°, Dicembre ha un errore di battitura (un "31" dove novembre ha 30 giorni). E Giugno, il più vecchio, non ha nessuna data dentro: solo numeri.
-
-La conseguenza importante: il file non può dirmi qual è il periodo di paga. Le finestre dei fogli sono incoerenti fra loro, quindi quella domanda resta aperta e la deve risolvere l'ufficio paghe.
-
-Per le date invece uso l'unico riferimento affidabile: il nome del foglio, incrociato con i giorni della settimana.
-Diagnosticato errore nei giorni della settimana e pianificato consolidamento dati
-
-Quattordici fogli su quindici tornano al 100%. Marzo si ferma al 74%: le date sono giuste (il mese corrisponde al nome), ma le lettere dei giorni non tornano. Controllo se l'errore è vostro o mio.
-Diagnosticato disallineamento dati e validato integrità foglio
-
-Le lettere sbagliate sono nel vostro file, non nel mio calcolo: sono le ultime 11 colonne del foglio Marzo, dove qualcuno ha copiato la riga dei giorni della settimana da un altro mese e non l'ha aggiornata. I numeri dei giorni sono giusti, e comunque quel pezzo viene sovrascritto dal foglio Aprile, che per aprile è quello buono.
-
-Ora unisco tutti i fogli e verifico la tua storia completa.
-Architettato sistema di importazione con gestione errori e navigazione intelligente
-
-Quindici fogli letti, 455 giorni per te, dal 3 giugno 2025 al 31 agosto 2026. E la prova che cercavo: 37 codici su 37 coincidono con la stringa che mi avevi dato a mano. La catena regge dall'inizio alla fine.
-
-Ora porto il lettore dentro l'app.
-Eseguiti 2 comandi
-
-ho provato a usare chatgpt ma mi ha fatto un casino, puoi accedere ai file e sistemarli pls? https://github.com/Kumatetsu78/turni/tree/main
-Architettato piano per recuperare file e fornire versione corretta
-
-Posso leggere il repository — GitHub è raggiungibile da qui. Scrivere no: non ho accesso al tuo account, quindi il file corretto te lo do io e lo carichi tu. Vediamo cosa c'è dentro.
-Diagnosticato disallineamento file e possibili conflitti cache
-
-ChatGPT ha spezzato l'unico file in più file — HTML, CSS e JavaScript separati — e ha aggiunto un service worker. Vediamo se i pezzi ci sono tutti.
-Individuato il collegamento mancante tra HTML e JavaScript
-
-Ecco il guasto principale, ed è netto: l'index.html non carica il JavaScript. Nei riferimenti ci sono solo le librerie esterne — il file js/app.js esiste nel repository ma nessuno lo richiama. L'app è morta in partenza, e infatti resta acceso l'avviso rosso che avevamo messo apposta.
-
-E c'è di peggio: quel file pesa 4,6 KB contro i 35 del nostro. Guardo cosa è rimasto dentro.
-Diagnosticato disastro architetturale e pianificato ricostruzione completa
-
-Quadro completo del guasto. ChatGPT ha progettato un'app a moduli — core.js, excel.js, payslip.js, stats.js — ma nel repository ne è finito uno solo, e per giunta è il pezzo di coda: registra il service worker e chiama render(), una funzione che non esiste da nessuna parte. L'index.html poi non carica nemmeno quel frammento.
-
-Non c'è niente da riparare lì dentro: è un'impalcatura senza edificio. Rimetto la nostra versione, che è un file solo e l'ho appena collaudata sul tuo Excel vero. Prima finisco il collegamento del lettore che stavo scrivendo.
-Architettato cleanup service worker e test harness robusto
-
-Ora una bonifica importante: se sul tuo telefono il service worker di ChatGPT si è registrato anche una sola volta, continuerebbe a servirti la versione rotta anche dopo che carichi quella nuova. Aggiungo la rimozione automatica.
-Identificato bug mancante e pianificato reinserimento codice
-
-Il collaudo ha subito trovato un errore vero: sostituendo il vecchio lettore ho cancellato anche turnoDa, la funzione che costruisce un turno dal codice — e la usano sia l'Excel sia l'inserimento da stringa. Senza il test sarebbe finita online così.
-Architettato workaround per esporre variabili di stato nel contesto VM
-
-Il lettore funziona dentro l'app: 15 fogli, 10 persone, e stavolta zero celle non interpretate. Ora provo la catena completa fino al netto.
-Verificato modello di calcolo ore straordinarie con dati effettivi
-
-Fermati un attimo su maggio: 70 ore maggiorate. La tua busta di maggio dice 62 ore al 50% più 8 al 55%, che fanno esattamente 70. Se anche la ripartizione coincide, l'intero modello è confermato dai fatti.
-Identificato errore di calcolo straordinari e implementato toggle configurabile
-
-Coincidenza esatta, al centesimo:
-	Calcolato	Sulla busta
-Ore al 50%	62,00	62,00
-Ore al 55%	8,00	8,00
-Maggiorazione 50%	454,87 €	454,87 €
-Maggiorazione 55%	64,56 €	64,56 €
-
-Questo risolve anche le due domande rimaste aperte: il periodo di paga è il mese solare (1–31 maggio, non 26–25) e le maggiorazioni sono dello stesso mese. Non è più un'ipotesi.
-
-Resta uno scarto di 44,02 € sul lordo, e ho capito da dove viene: sono 3 ore oltre le 173 che io conteggiavo come straordinario. La tua busta non le paga a parte, perché ha già dentro la voce Straord Forfett 200,00 nel fisso. Lo rendo opzionale.
-Verificato calcoli, preparato file HTML e pianificato pulizia repository
-
-Lordo calcolato: 3.057,89 €. Competenze sulla tua busta: 3.057,89 €. L'app ora ricostruisce la tua busta di maggio al centesimo, partendo dal file Excel.
-Eseguito un comando, file letto
-Cosa fare sul repository
-
-1. Sostituisci index.html. Su GitHub aprilo, icona della matita, seleziona tutto, incolla il nuovo, Commit changes. Oppure Add file → Upload files e sovrascrivi.
-
-2. Cancella i file di troppo: sw.js, la cartella css e la cartella js. Su GitHub: apri il file → i tre puntini in alto a destra → Delete file → Commit. Non servono più: siamo tornati a un file solo.
-
-Il sw.js in particolare toglilo. È un service worker: serve a far funzionare l'app offline, ma tiene i file in una cache e li ripropone anche dopo che li aggiorni. È la causa più comune del "ho caricato la modifica e non cambia niente". Ho comunque messo nell'app una bonifica che al primo avvio rimuove eventuali service worker e cache rimasti, quindi anche se sul telefono se n'era registrato uno, si ripulisce da solo.
-Cosa devi impostare in ⚙
-
-Sono i valori confermati dalla tua busta di maggio:
-Campo	Valore
-Lordo fisso mensile	2538.46
-Ore contrattuali	173
-Periodo di paga dal giorno	1
-Ore oltre il monte ore	già nel fisso (forfait)
-Netto del mese	2174.00
-Totale competenze	3057.89
-Imponibile IRPEF	2736.85
-Maggiorazioni in questa busta	519.43
-
-Poi ⚙ → Importa da Excel e dai il turnario intero. Riconosce i 15 fogli, ti chiede chi sei fra le 10 persone trovate, e carica i tuoi 455 giorni dal giugno 2025 all'agosto 2026.
-
-Due cose emerse dal collaudo che ti riguardano come dati, non come codice. Nel foglio Dicembre c'è un giorno 31 dove novembre ne ha 30, e nel foglio Marzo le ultime undici lettere dei giorni della settimana sono copiate da un altro mese. L'app scarta la prima e ignora le seconde, ma tanto vale sistemarle nel file originale.
-Index
-Codice · HTML 
-
-
-Claude è un'AI e può commettere errori. Verifica le risposte.
-Index · HTML
 <meta charset="utf-8">
 <title>Turni</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -134,7 +9,7 @@ Index · HTML
 <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACOUlEQVR42u3dsU3EQBCGUd+KmIgQJCpAohsiJEoguxLIKAGJiG6QaAEKISAl8vy27PH7CtjA+zS2daf16fLqdpL+a7gEgkNwCA7BITgEh+AQHIJDcEhwCA7BITgEh+AQHIJDXbtILfTzduNqbqfrp+/6Iqf6H4yx6EpkkNG44u4MMvjI4yCjvQ9vK0rjMDaOMDxMDsEhOASH4BAcgkNwCA7BITgkOASH4BAcgkNwCA7BITgEhwSH4BAcgkNwaNc4ImeDaLXm7ZfJoQVwGB69x0Z1cvDRWEbgtsJHVxlT5MC4v5zY0YlFGIc8kAoOCQ7BITgEh+AQHIJDcAgOHaDYZ7zu319cze30+XiuLxL44Q2LrkQGGY0r7s4gg488DjLa+/C2ojQOY+MIw8PkEByCQ3AIDsEhOASH4BAcgkOCQ3AIDsEhOASH4BAcgkNwSHAIDsEhOASHdo0jcjaIVmvefpkcWgCH4dF7bFQnBx+NZQRuK3x0lTEFv9TkxI5OLMI45IFUcEhwCA7BITgEh+AQHIJDcOgAxT7j9fzw5Wpup9ePu/oigR/esOhKZJDRuOLuDDL4yOMgo70PbytK4zA2jjA8TA7BITgEh+AQHIJDcAgOwSE4JDgEh+AQHIJDcAgOwSE4BIcEh+AQHIJDcGjXOCJng2i15u2XyaEFcBgevcdGdXLw0VhG4LbCR1cZU/BLTU7s6MQijEMeSAWHBIfgEByCQ3AIDsEhOASH4BAcEhyCQ3AIDsGhrfULL31m+dq5K6UAAAAASUVORK5CYII=">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
- 
+
 :root{
   color-scheme:dark;
   --bg:#0E1420;
@@ -185,7 +60,7 @@ input::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.55}
 input[type=number]{-moz-appearance:textfield}
 textarea{font-family:var(--mono);line-height:1.7;resize:vertical;letter-spacing:.05em;text-transform:uppercase}
 input[type=time]{font-family:var(--mono)}
- 
+
 /* ---- intestazione mese ---- */
 .month-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .month-name{font-family:var(--display);font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1}
@@ -193,7 +68,7 @@ input[type=time]{font-family:var(--mono)}
 .nav-btn{width:38px;height:38px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-size:18px;color:var(--muted);transition:background .15s}
 .nav-btn:active{background:var(--surface-2)}
 .icon-btn{width:38px;height:38px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-size:16px}
- 
+
 /* ---- riepilogo ---- */
 .summary{background:var(--surface);border-radius:18px;padding:18px 18px 16px;margin-bottom:18px}
 .totals{display:flex;gap:22px;align-items:flex-end}
@@ -209,7 +84,7 @@ input[type=time]{font-family:var(--mono)}
 .bar-note{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:7px}
 .chips-legend{display:flex;gap:14px;margin-top:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 .chips-legend b{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:1px}
- 
+
 /* ---- calendario ---- */
 .week-head{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px}
 .week-head div{text-align:center;font-size:11px;color:var(--muted);letter-spacing:.06em}
@@ -226,7 +101,7 @@ input[type=time]{font-family:var(--mono)}
 .strip i{position:absolute;top:0;bottom:0;border-radius:3px}
 .tag{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--muted);margin-top:auto;padding-bottom:2px}
 .hrs{font-family:var(--mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
- 
+
 /* ---- elenco turni ---- */
 .list-title{font-family:var(--display);font-size:16px;font-weight:600;margin:26px 0 10px}
 .row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border-radius:12px;margin-bottom:6px;width:100%;text-align:left}
@@ -236,7 +111,7 @@ input[type=time]{font-family:var(--mono)}
 .row .t em{font-style:normal;color:var(--muted);font-family:var(--mono);font-size:12px;display:block;margin-top:2px}
 .row .h{font-family:var(--mono);font-size:14px;font-variant-numeric:tabular-nums}
 .empty-state{background:var(--surface);border-radius:14px;padding:22px;text-align:center;color:var(--muted);font-size:14px;line-height:1.5}
- 
+
 /* ---- pannello ---- */
 .scrim{position:fixed;inset:0;background:#0007;backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
 .scrim.on{opacity:1;pointer-events:auto}
@@ -299,7 +174,7 @@ input[type=time]{font-family:var(--mono)}
 .calc .issue{color:var(--extra);display:block;margin-top:6px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
- 
+
 <div id="app">
   <div id="boot" style="background:#FF7A6B1a;border:1px solid #FF7A6B4d;border-radius:12px;padding:13px 15px;margin-bottom:16px;font-size:13px;line-height:1.5;color:#E9EDF6;font-family:system-ui,-apple-system,sans-serif">
     <b style="color:#FF7A6B">L'app non è partita.</b><br>
@@ -313,7 +188,7 @@ input[type=time]{font-family:var(--mono)}
       <button class="nav-btn" id="next" aria-label="Mese successivo">›</button>
     </div>
   </div>
- 
+
   <div class="summary">
     <div class="totals">
       <div class="tot-main">
@@ -346,24 +221,24 @@ input[type=time]{font-family:var(--mono)}
       <button class="pay-btn" id="buste">Prossime buste paga</button>
     </div>
   </div>
- 
+
   <div id="nudge"></div>
- 
+
   <div class="week-head"><div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div></div>
   <div class="grid" id="grid"></div>
   <div class="weeks" id="weeks"></div>
- 
+
   <div id="alerts" style="margin-top:22px"></div>
- 
+
   <div class="list-title">Turni del mese</div>
   <div id="list"></div>
- 
+
   <button class="fab" id="fab">Aggiungi turno</button>
   <div class="toast" id="toast"></div>
 </div>
- 
+
 <div class="scrim" id="scrim"></div>
- 
+
 <div class="sheet" id="sheet">
   <h2 id="sheet-title"></h2>
   <div class="types" id="types"></div>
@@ -392,7 +267,7 @@ input[type=time]{font-family:var(--mono)}
     <button class="btn ghost danger" id="del">Elimina</button>
   </div>
 </div>
- 
+
 <div class="sheet" id="sheet-set">
   <h2>Impostazioni</h2>
   <div class="set-row"><span>Ore contrattuali a settimana</span><div class="in"><input type="number" id="s-week" min="0" step="0.5" inputmode="decimal"></div></div>
@@ -446,7 +321,7 @@ input[type=time]{font-family:var(--mono)}
   <button class="btn danger" style="width:100%" id="wipe">Cancella tutti i dati</button>
   <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
 </div>
- 
+
 <div class="sheet" id="sheet-pers">
   <h2>Chi sei?</h2>
   <div class="calc" id="pers-info" style="margin-bottom:12px"></div>
@@ -454,14 +329,14 @@ input[type=time]{font-family:var(--mono)}
   <div id="pers-list" style="max-height:44vh;overflow-y:auto;margin-bottom:14px"></div>
   <div class="actions"><button class="btn ghost" style="flex:1" id="pers-cancel">Annulla</button></div>
 </div>
- 
+
 <div class="sheet" id="sheet-buste">
   <h2>Prossime buste</h2>
   <div id="buste-list"></div>
   <div class="pay-note" id="buste-note"></div>
   <div class="actions" style="margin-top:16px"><button class="btn" id="buste-close">Chiudi</button></div>
 </div>
- 
+
 <div class="sheet" id="sheet-seq">
   <h2>Incolla la sequenza</h2>
   <div class="field" style="margin-bottom:12px">
@@ -478,7 +353,7 @@ input[type=time]{font-family:var(--mono)}
     <button class="btn ghost" id="q-cancel">Annulla</button>
   </div>
 </div>
- 
+
 <div class="sheet" id="sheet-imp">
   <h2>Anteprima importazione</h2>
   <div class="calc" id="imp-sum"></div>
@@ -492,11 +367,11 @@ input[type=time]{font-family:var(--mono)}
     <button class="btn ghost" id="imp-cancel">Annulla</button>
   </div>
 </div>
- 
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const KEY='turni:v1';
- 
+
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
    Lo rimuovo insieme alle sue cache. I turni non sono lì dentro. */
@@ -506,7 +381,7 @@ if(typeof navigator!=='undefined'&&navigator.serviceWorker){
   if(typeof caches!=='undefined')
     caches.keys().then(ks=>ks.forEach(k=>caches.delete(k))).catch(()=>{});
 }
- 
+
 /* L'archivio: dentro Claude usa window.storage, sul telefono la memoria del browser,
    e in mancanza di entrambi tiene i dati solo per la sessione. */
 const mem={};
@@ -544,7 +419,7 @@ const TYPES=[
 const BEFORE_NIGHT=['notte','deas'];
 const MESI=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const GIORNI=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
- 
+
 const DEFAULTS={
   weekHours:40, dayThreshold:8, night1:'22:00', night2:'06:00', defaultBreak:0, presetsV:3,
   workDays:5, restDays:2,
@@ -553,19 +428,19 @@ const DEFAULTS={
   bpNetto:0, bpComp:0, bpImpIrpef:0, bpMagg:0, bpScaglione:0, ritardo:0, giornoBusta:10, giornoTurni:15, periodoDa:1, payV:2, nome:'',
   presets:{mattina:['08:00','16:00'],pomeriggio:['16:00','00:00'],notte:['00:00','08:00'],deas:['09:00','18:00']}
 };
- 
+
 let state={shifts:{},settings:{...DEFAULTS}};
 let view=new Date(); view.setDate(1);
 let editing=null;   // stringa data 'YYYY-MM-DD'
 let draft=null;
- 
+
 /* ---------- utilità ---------- */
 const pad=n=>String(n).padStart(2,'0');
 const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const toMin=t=>{const[h,m]=t.split(':').map(Number);return h*60+m};
 const fmt=m=>{if(!m)return'0<small>h</small>';const h=Math.floor(m/60),r=m%60;return r?`${h}<small>h</small>${pad(r)}`:`${h}<small>h</small>`};
 const fmtPlain=m=>{const h=Math.floor(m/60),r=m%60;return r?`${h}h ${pad(r)}`:`${h}h`};
- 
+
 function span(s){ // minuti lordi e confini in minuti dall'inizio del giorno
   let a=toMin(s.start), b=toMin(s.end);
   if(b<=a) b+=1440;
@@ -596,7 +471,7 @@ function presetOf(id){
   const p=state.settings.presets[id];
   return (Array.isArray(p)&&p[0]&&p[1])?p:(DEFAULTS.presets[id]||['08:00','16:00']);
 }
- 
+
 /* ---------- regole del ciclo ---------- */
 function dayAdd(key,n){const d=new Date(key+'T00:00:00');d.setDate(d.getDate()+n);return ymd(d)}
 /* prima di una notte può esserci solo un'altra notte o un riposo */
@@ -628,7 +503,7 @@ function weekStats(start){
   }
   return {days,work,rest,mins,complete:filled===7};
 }
- 
+
 /* ---------- archivio ---------- */
 async function load(){
   try{
@@ -673,19 +548,19 @@ function save(){
   },250);
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1900)}
- 
+
 /* ---------- calendario ---------- */
 function render(){
   const y=view.getFullYear(), m=view.getMonth();
   document.getElementById('mname').innerHTML=`${MESI[m]} <span>${y}</span>`;
- 
+
   const first=new Date(y,m,1), days=new Date(y,m+1,0).getDate();
   const offset=(first.getDay()+6)%7;
   const grid=document.getElementById('grid'); grid.innerHTML='';
   const todayS=ymd(new Date());
- 
+
   for(let i=0;i<offset;i++){const e=document.createElement('div');e.className='cell empty';grid.appendChild(e)}
- 
+
   for(let d=1;d<=days;d++){
     const key=`${y}-${pad(m+1)}-${pad(d)}`;
     const s=state.shifts[key];
@@ -707,7 +582,7 @@ function render(){
     cell.onclick=()=>openEditor(key);
     grid.appendChild(cell);
   }
- 
+
   /* riepilogo */
   let tot=0,ex=0,nt=0,worked_days=0,rest_days=0;
   const rows=[];
@@ -721,7 +596,7 @@ function render(){
   document.getElementById('tot-h').innerHTML=fmt(tot);
   document.getElementById('tot-x').innerHTML=fmt(ex);
   document.getElementById('tot-n').innerHTML=fmt(nt);
- 
+
   const target=Math.round(state.settings.weekHours*60*days/7);
   const base=Math.min(tot,target), over=Math.max(0,tot-target);
   document.getElementById('bar-1').style.width=(target?base/target*100:0)+'%';
@@ -729,7 +604,7 @@ function render(){
   document.getElementById('bar-left').textContent=`${worked_days} lavorati · ${rest_days} riposi`;
   document.getElementById('bar-right').textContent=`obiettivo ${fmtPlain(target)}`;
   renderPay(y,m); renderWeeks(y,m); renderAlerts(y,m); renderNudge();
- 
+
   const list=document.getElementById('list'); list.innerHTML='';
   if(!rows.length){
     list.innerHTML=`<div class="empty-state">Nessun turno registrato in ${MESI[m].toLowerCase()}.<br>Tocca un giorno del calendario per iniziare.</div>`;
@@ -747,7 +622,7 @@ function render(){
     });
   }
 }
- 
+
 function renderPay(y,m){
   const box=document.getElementById('pay'), P=paga(y,m);
   if(!P){box.style.display='none';return}
@@ -768,7 +643,7 @@ function renderPay(y,m){
   document.getElementById('pay-note').textContent=
     `Base ${eur(P.ph)} l'ora (${eur(P.lordo)} ÷ ${S.oreContratto}h). Stima al lordo: non sostituisce la busta paga.`;
 }
- 
+
 /* ---------- settimane e avvisi ---------- */
 function eachWeek(y,m,fn){
   const last=new Date(y,m+1,0);
@@ -819,7 +694,7 @@ function renderAlerts(y,m){
     box.appendChild(b);
   });
 }
- 
+
 /* ---------- festivi e compenso ---------- */
 /* Pasqua con l'algoritmo di Gauss, il lunedì dopo è Pasquetta */
 function easterMonday(y){
@@ -842,7 +717,7 @@ function isFest(key){
   return festOf(+key.slice(0,4)).has(key) || new Date(key+'T00:00:00').getDay()===0;
 }
 const eur=v=>'€ '+(Math.round(v*100)/100).toFixed(2).replace('.',',');
- 
+
 /* Divide un turno in quattro fasce di retribuzione. Ogni minuto finisce in una
    sola fascia, perché le maggiorazioni non si sommano fra loro: quella festiva
    notturna (55%) sostituisce le altre due, non si aggiunge. */
@@ -907,7 +782,7 @@ function paga(y,m){
   return {ph,lordo,B,compilati,days,da:F.da,a:F.a,magNott,magFest,magFN,oreStra,stra,
           totale:lordo+magNott+magFest+magFN+stra};
 }
- 
+
 /* Ricava il profilo fiscale personale dai soli importi della busta.
    Nessuna percentuale da interpretare: le aliquote escono dai numeri. */
 function profilo(){
@@ -937,7 +812,7 @@ function renderProfilo(){
   }
   el.innerHTML=txt;
 }
- 
+
 /* ---------- editor ---------- */
 function openEditor(key){
   editing=key;
@@ -1006,7 +881,7 @@ document.getElementById('save').onclick=()=>{
   toast(n>1?`${n} turni salvati`:'Turno salvato');
 };
 document.getElementById('del').onclick=()=>{delete state.shifts[editing];save();closeSheets();render();toast('Turno eliminato')};
- 
+
 /* ---------- pannelli ---------- */
 function showSheet(id){document.getElementById(id).classList.add('on');document.getElementById('scrim').classList.add('on')}
 function closeSheets(){document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on'));document.getElementById('scrim').classList.remove('on')}
@@ -1018,7 +893,7 @@ document.getElementById('fab').onclick=()=>{
 };
 document.getElementById('prev').onclick=()=>{view.setMonth(view.getMonth()-1);render()};
 document.getElementById('next').onclick=()=>{view.setMonth(view.getMonth()+1);render()};
- 
+
 /* ---------- impostazioni ---------- */
 const setMap={'s-week':['weekHours','num'],'s-day':['dayThreshold','num'],'s-n1':['night1','str'],'s-n2':['night2','str'],'s-break':['defaultBreak','num'],'s-wd':['workDays','num'],'s-rd':['restDays','num'],'s-lordo':['lordoFisso','num'],'s-orec':['oreContratto','num'],'s-pn':['pctNotturno','num'],'s-pf':['pctFestivo','num'],'s-pfn':['pctFestNott','num'],'s-ps':['pctStraord','num'],'s-sa':['straordAparte','num'],'s-pat':['patrono','str'],'s-bn':['bpNetto','num'],'s-bc':['bpComp','num'],'s-bi':['bpImpIrpef','num'],'s-bm':['bpMagg','num'],'s-bs':['bpScaglione','num'],'s-rit':['ritardo','num'],'s-gb':['giornoBusta','num'],'s-gt':['giornoTurni','num'],'s-pd':['periodoDa','num']};
 document.getElementById('settings').onclick=()=>{
@@ -1096,7 +971,7 @@ document.getElementById('copy').onclick=async()=>{
   const txt=`${MESI[m]} ${y}\n${lines.join('\n')}\n\nTotale ${fmtPlain(tot)} · straordinari ${fmtPlain(ex)} · notturne ${fmtPlain(nt)}`;
   try{await navigator.clipboard.writeText(txt);toast('Riepilogo copiato')}catch(e){toast('Copia non riuscita')}
 };
- 
+
 /* ---------- importazione da Excel ---------- */
 const norm=s=>String(s??'').trim().toLowerCase()
   .replace(/[àáâ]/g,'a').replace(/[èé]/g,'e').replace(/[ìí]/g,'i').replace(/[òó]/g,'o').replace(/[ùú]/g,'u');
@@ -1274,19 +1149,19 @@ document.getElementById('tpl').onclick=()=>{
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa),'Turni');
   XLSX.writeFile(wb,'modello-turni.xlsx');
 };
- 
+
 /* Costruisce il turno a partire dal tipo, con gli orari predefiniti. */
 function turnoDa(t){
   if(!typeOf(t).work) return {type:t,start:'',end:'',break:0,note:''};
   const pr=presetOf(t);
   return {type:t,start:pr[0],end:pr[1],break:typeOf(t).brk??state.settings.defaultBreak??0,note:''};
 }
- 
+
 /* ---------- turnario collettivo (un foglio per mese, nomi in riga) ---------- */
 const GG_LET='DLMMGVS';
 const MESI_N={gennaio:0,febbraio:1,marzo:2,aprile:3,maggio:4,giugno:5,
               luglio:6,agosto:7,settembre:8,ottobre:9,novembre:10,dicembre:11};
- 
+
 function leggiFoglio(rows,nomeFoglio,annoIpotesi){
   /* 1. la riga dei giorni è quella con più interi fra 1 e 31 */
   let dr=-1,cols=null;
@@ -1371,7 +1246,7 @@ function leggiFoglio(rows,nomeFoglio,annoIpotesi){
   }
   return persone.length?{date:scelta.date,persone,rows,co:scelta.co}:null;
 }
- 
+
 /* Unisce tutti i fogli: i più recenti sovrascrivono i giorni ripetuti. */
 function leggiCartella(wb){
   const per={}; let fogli=0, ignorati={};
@@ -1400,7 +1275,7 @@ function leggiCartella(wb){
   }).sort((a,b)=>b.giorni-a.giorni);
   return persone.length?{persone,fogli,ignorati}:null;
 }
- 
+
 let cartella=null;
 function apriPersone(){
   const box=document.getElementById('pers-list'), f=norm(document.getElementById('pf').value);
@@ -1420,7 +1295,7 @@ function scegliPersona(i){
   pending=Object.keys(p.turni).sort().map(k=>({key:k,shift:p.turni[k]}));
   openPreview(p.nome,Object.values(cartella.ignorati).reduce((a,b)=>a+b,0));
 }
- 
+
 /* ---------- inserimento da sequenza ---------- */
 function lastKey(){const k=Object.keys(state.shifts).sort();return k.length?k[k.length-1]:null}
 function parseSeq(startKey,text){
@@ -1459,7 +1334,7 @@ document.getElementById('q-go').onclick=()=>{
   pending=r.out;
   openPreview('sequenza incollata',r.bad.length);
 };
- 
+
 /* I turni escono entro il giorno impostato: da lì in poi il mese dopo è già noto. */
 function renderNudge(){
   const box=document.getElementById('nudge'); box.innerHTML='';
@@ -1475,7 +1350,7 @@ function renderNudge(){
   b.onclick=()=>apriSequenza(ymd(new Date(n.getFullYear(),n.getMonth(),compilati+1)));
   box.appendChild(b);
 }
- 
+
 /* ---------- previsione delle buste ---------- */
 /* La busta di un mese paga le maggiorazioni maturate <ritardo> mesi prima. */
 function renderBuste(){
@@ -1500,7 +1375,7 @@ function renderBuste(){
   const certi=righe.filter(r=>r.stato==='certo');
   const mediaMag=certi.length?certi.reduce((a,r)=>a+r.mag,0)/certi.length:null;
   const mediaOre=certi.length?certi.reduce((a,r)=>a+r.ore,0)/certi.length:0;
- 
+
   righe.forEach(r=>{
     let mag=r.mag, ore=r.ore, nota='', stimato=false;
     if(r.stato==='vuoto'){
@@ -1526,7 +1401,7 @@ function renderBuste(){
       (nota?`<br>${nota}`:'')+`</div>`;
     box.appendChild(el);
   });
- 
+
   document.getElementById('buste-note').innerHTML=
     (PR?'Importi al netto, stimati sul tuo profilo. ':'Importi al lordo: compila i dati della busta paga per vedere il netto. ')+
     `${certi.length} mesi su 6 hanno i turni completi`+
@@ -1535,8 +1410,6 @@ function renderBuste(){
 }
 document.getElementById('buste').onclick=()=>{renderBuste();showSheet('sheet-buste')};
 document.getElementById('buste-close').onclick=closeSheets;
- 
+
 load();
 </script>
- 
-
