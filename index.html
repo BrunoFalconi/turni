@@ -146,13 +146,14 @@ input[type=time]{font-family:var(--mono)}
   #stampa,#stampa *{visibility:visible}
   #stampa{display:block;position:absolute;left:0;top:0;width:100%;
     background:#fff;color:#000;font-family:Helvetica,Arial,sans-serif}
-  #stampa h1{font-size:15pt;margin:0 0 8pt;font-weight:700}
-  #stampa table{width:100%;border-collapse:collapse;font-size:9pt}
-  #stampa th,#stampa td{border:0.5pt solid #666;padding:3pt 5pt;text-align:left}
-  #stampa th{background:#eee;font-weight:700}
+  #stampa h1{font-size:23pt;font-weight:700;text-align:center;margin:0 0 16pt;letter-spacing:-.2pt}
+  #stampa table{width:100%;border-collapse:collapse;font-size:10.5pt}
+  #stampa th{background:#111;color:#fff;font-weight:700;text-align:center;
+    padding:7pt 4pt;border:.5pt solid #111}
+  #stampa td{text-align:center;padding:6.5pt 4pt;border:.5pt solid #d2d2d2}
+  #stampa tbody tr:nth-child(even) td{background:#f2f2f2}
   #stampa td.g{font-variant-numeric:tabular-nums;white-space:nowrap}
-  #stampa .io{font-weight:700}
-  @page{margin:12mm}
+  @page{margin:14mm}
 }
 .pay{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
 .pay-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
@@ -414,6 +415,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const KEY='turni:v1';
+const VERSIONE='13 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -997,7 +999,7 @@ document.getElementById('settings').onclick=()=>{
     document.getElementById('p-'+k+'1').value=pr[0];
     document.getElementById('p-'+k+'2').value=pr[1];
   });
-  document.getElementById('store-info').innerHTML={
+  document.getElementById('store-info').innerHTML=`<b>Versione ${VERSIONE}</b><br>`+{
     claude:'Archivio: <b>Claude</b><br>I turni ti seguono su tutti i dispositivi.',
     browser:'Archivio: <b>questo telefono</b><br>I turni restano qui, non si sincronizzano.',
     memoria:'Archivio: <b class="x">nessuno</b><span class="issue">I turni spariranno alla chiusura. Apri l\'app da un indirizzo web o dall\'app Claude.</span>'
@@ -1442,7 +1444,7 @@ function tabellaMese(y,m){
     const key=`${y}-${pad(m+1)}-${pad(d)}`;
     const celle=COLONNE.map(t=>{
       const chi=nomi.filter(n=>state.roster[n][key]===t);
-      return chi.map(n=>n===state.settings.nome?`<span class="io">${n}</span>`:n).join(', ');
+      return chi.join(', ');
     });
     if(!celle.some(Boolean)) vuoti++;
     righe+=`<tr><td class="g">${pad(d)}/${pad(m+1)}</td>`+
@@ -1464,11 +1466,12 @@ function apriPdf(){
     info.innerHTML='<span class="issue">Non ho il turnario di reparto. Importa il file Excel collettivo: da lì l\'app tiene i turni di tutti, non solo i tuoi.</span>';
   }else{
     document.getElementById('pdf-prev').innerHTML=
-      `<div style="background:#fff;color:#111;padding:10px;border-radius:8px;font-size:11px;overflow:auto">
-         <style>#pdf-prev table{width:100%;border-collapse:collapse}
-                #pdf-prev th,#pdf-prev td{border:1px solid #bbb;padding:3px 5px;text-align:left;white-space:nowrap}
-                #pdf-prev th{background:#eee}#pdf-prev h1{font-size:13px;margin:0 0 6px}
-                #pdf-prev .io{font-weight:700}</style>${T.html}</div>`;
+      `<div style="background:#fff;color:#111;padding:12px;border-radius:8px;overflow:auto;font-family:Helvetica,Arial,sans-serif">
+         <style>#pdf-prev table{width:100%;border-collapse:collapse;font-size:11px}
+                #pdf-prev th{background:#111;color:#fff;font-weight:700;text-align:center;padding:6px 4px;border:1px solid #111;white-space:nowrap}
+                #pdf-prev td{text-align:center;padding:5px 4px;border:1px solid #d2d2d2;white-space:nowrap}
+                #pdf-prev tbody tr:nth-child(even) td{background:#f2f2f2}
+                #pdf-prev h1{font-size:15px;margin:0 0 10px;text-align:center;font-weight:700}</style>${T.html}</div>`;
     info.innerHTML=`<b>${T.nomi}</b> persone · <b>${T.days-T.vuoti}</b> giorni coperti su ${T.days}`+
       (T.vuoti?`<span class="issue">${T.vuoti} giorni senza nessun turno: probabilmente il mese non è nel file importato.</span>`:'');
   }
