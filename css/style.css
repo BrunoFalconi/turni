@@ -238,3 +238,60 @@
   margin-top:6px;
   line-height:1.45;
 }
+
+/* ---- Navigazione a schede ---- */
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+.tabbar{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  max-width:960px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:2px;
+  padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+  background:rgba(14,20,32,.92);
+  backdrop-filter:blur(12px);
+  border-top:1px solid rgba(255,255,255,.08);
+  z-index:50;
+}
+.tabbar .tab{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+  padding:7px 2px;
+  border:none;
+  border-radius:10px;
+  background:transparent;
+  color:var(--muted);
+  font-size:10.5px;
+  line-height:1;
+}
+.tabbar .tab .tab-ico{font-size:17px;line-height:1}
+.tabbar .tab.active{
+  color:#fff;
+  background:rgba(255,255,255,.08);
+}
+
+/* Spazio per non finire sotto la barra */
+#app{padding-bottom:86px}
+
+/* Il pulsante flottante sale sopra la barra */
+.fab{bottom:calc(80px + env(safe-area-inset-bottom))}
+
+@media (min-width:768px){
+  .tabbar{
+    position:sticky;
+    top:0;bottom:auto;
+    border-top:none;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    margin-bottom:12px;
+    border-radius:0 0 12px 12px;
+  }
+  .tabbar .tab{flex-direction:row;gap:7px;font-size:13px}
+  #app{padding-bottom:24px}
+  .fab{bottom:24px}
+}
