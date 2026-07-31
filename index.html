@@ -332,6 +332,7 @@ input[type=time]{font-family:var(--mono)}
     <button class="btn ghost" style="flex:1" id="imp">Importa da Excel</button>
     <button class="btn ghost" style="flex:1" id="tpl">Scarica modello</button>
   </div>
+  <button class="btn ghost" style="width:100%;margin-bottom:10px" id="ics">Invia al calendario iPhone</button>
   <button class="btn ghost" style="width:100%;margin-bottom:10px" id="pdf">Turnario del mese in PDF</button>
   <div class="actions">
     <button class="btn" id="set-close">Fatto</button>
@@ -417,7 +418,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='14 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='16 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -1431,6 +1432,59 @@ function renderNudge(){
   box.appendChild(b);
 }
 
+/* ---------- esportazione nel calendario ---------- */
+/* Genero un file .ics: i turni di lavoro come eventi a orario, le assenze
+   come eventi giornata intera. Gli orari sono locali (niente fuso), così
+   un turno 00:00-08:00 resta tale ovunque. */
+function icsData(){
+  const oggi=ymd(new Date());
+  const chiavi=Object.keys(state.shifts).filter(k=>k>=oggi).sort();
+  if(!chiavi.length) return null;
+  /* nel formato ics vanno protetti backslash, punto e virgola e virgola */
+  const esc=t=>String(t||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
+  const stampo=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  const dt=(key,ora)=>key.replace(/-/g,'')+'T'+ora.replace(':','')+'00';
+  const righe=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Turni//IT','CALSCALE:GREGORIAN',
+               'METHOD:PUBLISH','X-WR-CALNAME:Turni'];
+  let conOra=0, interi=0;
+  chiavi.forEach(key=>{
+    const s=state.shifts[key], t=typeOf(s.type);
+    /* un identificatore stabile: reimportando, iOS aggiorna invece di duplicare */
+    const uid=`turno-${key}-${s.type}@turni.app`;
+    righe.push('BEGIN:VEVENT',`UID:${uid}`,`DTSTAMP:${stampo}`,
+               `SUMMARY:${esc(t.label)}${s.note?' · '+esc(s.note):''}`);
+    if(isWork(s)&&s.start&&s.end){
+      const {gross}=span(s);
+      const fine=new Date(new Date(key+'T'+s.start+':00').getTime()+gross*60000);
+      righe.push(`DTSTART:${dt(key,s.start)}`,`DTEND:${dt(ymd(fine),pad(fine.getHours())+':'+pad(fine.getMinutes()))}`);
+      const ore=worked(s)/60;
+      righe.push(`DESCRIPTION:${esc(`${s.start}-${s.end} · ${ore.toFixed(2)} ore`+(s.break?` · pausa ${s.break} min`:''))}`);
+      conOra++;
+    }else{
+      const dom=new Date(key+'T00:00:00'); dom.setDate(dom.getDate()+1);
+      righe.push(`DTSTART;VALUE=DATE:${key.replace(/-/g,'')}`,
+                 `DTEND;VALUE=DATE:${ymd(dom).replace(/-/g,'')}`,'TRANSP:TRANSPARENT');
+      interi++;
+    }
+    righe.push('END:VEVENT');
+  });
+  righe.push('END:VCALENDAR');
+  return {testo:righe.join('\r\n')+'\r\n', n:chiavi.length, conOra, interi,
+          da:chiavi[0], a:chiavi[chiavi.length-1]};
+}
+document.getElementById('ics').onclick=()=>{
+  const I=icsData();
+  if(!I){toast('Nessun turno da oggi in avanti');return}
+  const blob=new Blob([I.testo],{type:'text/calendar;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`turni-${I.da}.ics`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+  const f=k=>`${k.slice(8)}/${k.slice(5,7)}`;
+  toast(`${I.n} turni dal ${f(I.da)} al ${f(I.a)}`);
+};
+
 /* ---------- turnario di reparto in PDF ---------- */
 /* Le tre colonne sono i turni che coprono le 24 ore, nell'ordine del vostro
    modello: notte, mattina, pomeriggio. Chi è a riposo, in ferie o in DEAS
@@ -1466,11 +1520,11 @@ function apriPdf(){
   }else{
     document.getElementById('pdf-prev').innerHTML=
       `<div style="background:#fff;color:#111;padding:12px;border-radius:8px;overflow:auto;font-family:Helvetica,Arial,sans-serif">
-         <style>#pdf-prev table{width:100%;border-collapse:collapse;font-size:11px}
-                #pdf-prev th{background:#111;color:#fff;font-weight:700;text-align:center;padding:6px 4px;border:1px solid #111;white-space:nowrap}
-                #pdf-prev td{text-align:center;padding:5px 4px;border:1px solid #d2d2d2;white-space:nowrap}
+         <style>#pdf-prev table{width:100%;border-collapse:collapse;font-size:11px;background:#fff}
+                #pdf-prev th{background:#111;color:#fff!important;-webkit-text-fill-color:#fff;font-weight:700;text-align:center;padding:6px 4px;border:1px solid #111;white-space:nowrap}
+                #pdf-prev td{background:#fff;color:#111!important;-webkit-text-fill-color:#111;text-align:center;padding:5px 4px;border:1px solid #d2d2d2;white-space:nowrap}
                 #pdf-prev tbody tr:nth-child(even) td{background:#f2f2f2}
-                #pdf-prev h1{font-size:15px;margin:0 0 10px;text-align:center;font-weight:700}</style>${T.html}</div>`;
+                #pdf-prev h1{font-size:15px;margin:0 0 10px;text-align:center;font-weight:700;color:#111!important;-webkit-text-fill-color:#111}</style>${T.html}</div>`;
     info.innerHTML=`<b>${T.nomi}</b> persone · <b>${T.days-T.vuoti}</b> giorni coperti su ${T.days}`+
       (T.vuoti?`<span class="issue">${T.vuoti} giorni senza nessun turno: probabilmente il mese non è nel file importato.</span>`:'');
   }
