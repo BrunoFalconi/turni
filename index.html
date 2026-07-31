@@ -2492,6 +2492,451 @@ document.getElementById('q-go').onclick=()=>{
   pending=r.out;
   openPreview('sequenza incollata',r.bad.length);
 };
+/* ---------- importazione busta paga PDF ---------- */
 
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+function parseItalianMoney(value) {
+  if (value == null) {
+    return null;
+  }
+
+  const cleaned = String(value)
+    .replace(/\s/g, '')
+    .replace(/\.(?=\d{3}(?:\D|$))/g, '')
+    .replace(',', '.')
+    .replace(/[^\d.-]/g, '');
+
+  const number = Number(cleaned);
+
+  return Number.isFinite(number)
+    ? number
+    : null;
+}
+
+function findPayslipAmount(text, regex) {
+  const match = text.match(regex);
+
+  if (!match) {
+    return null;
+  }
+
+  return parseItalianMoney(match[1]);
+}
+
+function detectPayslipPeriod(text) {
+  const months = {
+    gennaio: 1,
+    febbraio: 2,
+    marzo: 3,
+    aprile: 4,
+    maggio: 5,
+    giugno: 6,
+    luglio: 7,
+    agosto: 8,
+    settembre: 9,
+    ottobre: 10,
+    novembre: 11,
+    dicembre: 12
+  };
+
+  const match = text.match(
+    /\b(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\s+(20\d{2})\b/i
+  );
+
+  if (!match) {
+    return null;
+  }
+
+  const monthName = match[1].toLowerCase();
+  const month = months[monthName];
+  const year = Number(match[2]);
+
+  return {
+    year,
+    month,
+
+    key:
+      `${year}-` +
+      `${String(month).padStart(2, '0')}`,
+
+    label:
+      `${match[1][0].toUpperCase()}` +
+      `${match[1].slice(1).toLowerCase()} ` +
+      `${year}`
+  };
+}
+
+async function extractPdfText(file) {
+  if (!window.pdfjsLib) {
+    throw new Error(
+      'La libreria PDF.js non è disponibile'
+    );
+  }
+
+  const bytes =
+    new Uint8Array(
+      await file.arrayBuffer()
+    );
+
+  const pdf =
+    await pdfjsLib
+      .getDocument({
+        data: bytes
+      })
+      .promise;
+
+  const pages = [];
+
+  for (
+    let pageNumber = 1;
+    pageNumber <= pdf.numPages;
+    pageNumber++
+  ) {
+    const page =
+      await pdf.getPage(pageNumber);
+
+    const content =
+      await page.getTextContent();
+
+    const text =
+      content.items
+        .map(item => item.str)
+        .join(' ');
+
+    pages.push(text);
+  }
+
+  return pages.join('\n');
+}
+
+function parsePayslipText(text) {
+  const normalized = String(text || '')
+    .replace(/\u00a0/g, ' ')
+    .replace(/\s+/g, ' ');
+
+  const period =
+    detectPayslipPeriod(normalized);
+
+  /*
+   * Lordo fisso.
+   * Nel cedolino di maggio è 2.538,46.
+   */
+  const grossBase =
+    findPayslipAmount(
+      normalized,
+      /ELEMENTI\s+DELLA\s+RETRIBUZIONE[\s\S]{0,500}?TOTALE[\s\S]{0,40}?([0-9.]+,[0-9]{2,5})/i
+    ) ??
+    findPayslipAmount(
+      normalized,
+      /\b2\.538,46000\b/i
+    );
+
+  const hours50 =
+    findPayslipAmount(
+      normalized,
+      /Magg\.\s*banca\s*ore\s*50%[\s\S]{0,80}?([0-9]+,[0-9]{2,5})\s*ORE/i
+    );
+
+  const addition50 =
+    findPayslipAmount(
+      normalized,
+      /Magg\.\s*banca\s*ore\s*50%[\s\S]{0,130}?ORE\s+([0-9.]+,[0-9]{2})/i
+    );
+
+  const hours55 =
+    findPayslipAmount(
+      normalized,
+      /Magg\.\s*banca\s*ore\s*55%[\s\S]{0,80}?([0-9]+,[0-9]{2,5})\s*ORE/i
+    );
+
+  const addition55 =
+    findPayslipAmount(
+      normalized,
+      /Magg\.\s*banca\s*ore\s*55%[\s\S]{0,130}?ORE\s+([0-9.]+,[0-9]{2})/i
+    );
+
+  const socialIvs =
+    findPayslipAmount(
+      normalized,
+      /Contributo\s+IVS[\s\S]{0,100}?([0-9.]+,[0-9]{2})/i
+    );
+
+  const socialCigs =
+    findPayslipAmount(
+      normalized,
+      /Contributo\s+CIGS[\s\S]{0,100}?([0-9.]+,[0-9]{2})/i
+    );
+
+  const epar =
+    findPayslipAmount(
+      normalized,
+      /Contributo\s+EPAR[\s\S]{0,100}?([0-9.]+,[0-9]{2})/i
+    );
+
+  const cometaEmployee =
+    findPayslipAmount(
+      normalized,
+      /Contributo\s+base\s+COMETA(?!\s+C\/Ditta)[\s\S]{0,100}?([0-9.]+,[0-9]{2})/i
+    );
+
+  const taxableIrpef =
+    findPayslipAmount(
+      normalized,
+      /Imponibile\s+IRPEF\s+([0-9.]+,[0-9]{2})/i
+    );
+
+  const grossIrpef =
+    findPayslipAmount(
+      normalized,
+      /IRPEF\s+lorda\s+([0-9.]+,[0-9]{2})/i
+    );
+
+  const employeeDeduction =
+    findPayslipAmount(
+      normalized,
+      /Detrazioni\s+lav\.?\s*dip\.?\s+([0-9.]+,[0-9]{2})/i
+    );
+
+  const additionalDeduction =
+    findPayslipAmount(
+      normalized,
+      /Ulteriore\s+detrazione[\s\S]{0,40}?([0-9.]+,[0-9]{2})/i
+    );
+
+  const irpefWithheld =
+    findPayslipAmount(
+      normalized,
+      /Ritenute\s+IRPEF\s+([0-9.]+,[0-9]{2})/i
+    );
+
+  const regionalTax =
+    findPayslipAmount(
+      normalized,
+      /Addizionale\s+regionale[\s\S]{0,100}?([0-9.]+,[0-9]{2})/i
+    );
+
+  const municipalTax =
+    findPayslipAmount(
+      normalized,
+      /Addizionale\s+comunale[\s\S]{0,100}?([0-9.]+,[0-9]{2})/i
+    );
+
+  const municipalAdvance =
+    findPayslipAmount(
+      normalized,
+      /Acconto\s+addiz\.\s+comunale[\s\S]{0,100}?([0-9.]+,[0-9]{2})/i
+    );
+
+  const totalDeductions =
+    findPayslipAmount(
+      normalized,
+      /TOTALE\s+TRATTENUTE[\s\S]{0,80}?([0-9.]+,[0-9]{2})/i
+    );
+
+  const grossTotal =
+    findPayslipAmount(
+      normalized,
+      /TOTALE\s+COMPETENZE[\s\S]{0,80}?([0-9.]+,[0-9]{2})/i
+    );
+
+  const netPay =
+    findPayslipAmount(
+      normalized,
+      /NETTO\s+DEL\s+MESE[\s\S]{0,80}?([0-9.]+,[0-9]{2})/i
+    );
+
+  const localTaxes =
+    (regionalTax || 0) +
+    (municipalTax || 0) +
+    (municipalAdvance || 0);
+
+  const socialContributions =
+    (socialIvs || 0) +
+    (socialCigs || 0);
+
+  return {
+    period,
+
+    grossBase,
+    grossTotal,
+
+    hours50,
+    hours55,
+
+    addition50,
+    addition55,
+
+    socialIvs,
+    socialCigs,
+    socialContributions,
+
+    epar,
+    cometaEmployee,
+
+    taxableIrpef,
+    grossIrpef,
+
+    employeeDeduction,
+    additionalDeduction,
+    irpefWithheld,
+
+    regionalTax,
+    municipalTax,
+    municipalAdvance,
+    localTaxes,
+
+    totalDeductions,
+    netPay
+  };
+}
+
+function renderPayslipInfo() {
+  const box =
+    document.getElementById(
+      'payslip-info'
+    );
+
+  if (!box) {
+    return;
+  }
+
+  const payslips =
+    Object.values(
+      state.payslips || {}
+    )
+      .filter(item => item?.period?.key)
+      .sort((a, b) =>
+        a.period.key.localeCompare(
+          b.period.key
+        )
+      );
+
+  if (!payslips.length) {
+    box.style.display = 'none';
+    return;
+  }
+
+  const latest =
+    payslips.at(-1);
+
+  box.style.display = '';
+
+  box.innerHTML =
+    `<b>${payslips.length}</b> ` +
+    `${payslips.length === 1 ? 'cedolino caricato' : 'cedolini caricati'}` +
+    `<br>` +
+    `Ultimo: <b>${latest.period.label}</b>` +
+    (
+      latest.netPay != null
+        ? `<br>Netto reale: <b>${eur(latest.netPay)}</b>`
+        : ''
+    );
+}
+
+const uploadPayslipButton =
+  document.getElementById(
+    'upload-payslip'
+  );
+
+const payslipFileInput =
+  document.getElementById(
+    'payslip-file'
+  );
+
+if (
+  uploadPayslipButton &&
+  payslipFileInput
+) {
+  uploadPayslipButton.onclick = () => {
+    payslipFileInput.click();
+  };
+
+  payslipFileInput.addEventListener(
+    'change',
+    async event => {
+      const file =
+        event.target.files[0];
+
+      event.target.value = '';
+
+      if (!file) {
+        return;
+      }
+
+      try {
+        toast(
+          'Lettura cedolino in corso…'
+        );
+
+        const text =
+          await extractPdfText(file);
+
+        const data =
+          parsePayslipText(text);
+
+        if (!data.period) {
+          toast(
+            'Mese del cedolino non riconosciuto'
+          );
+
+          console.log(
+            'Testo cedolino:',
+            text
+          );
+
+          return;
+        }
+
+        state.payslips[
+          data.period.key
+        ] = {
+          ...data,
+          fileName: file.name,
+          importedAt:
+            new Date().toISOString()
+        };
+
+        /*
+         * Aggiorna automaticamente
+         * i principali valori del profilo.
+         */
+        if (data.grossBase) {
+          state.settings.lordoFisso =
+            data.grossBase;
+        }
+
+        if (
+          data.socialContributions &&
+          data.grossTotal
+        ) {
+          state.settings.aliqContrib =
+            data.socialContributions /
+            data.grossTotal *
+            100;
+        }
+
+        save();
+        renderPayslipInfo();
+
+        toast(
+          `Cedolino ${data.period.label} salvato`
+        );
+
+        console.table(data);
+
+      } catch (error) {
+        console.error(error);
+
+        toast(
+          'Cedolino PDF non leggibile'
+        );
+      }
+    }
+  );
+}
 load();
 </script>  
