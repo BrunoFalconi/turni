@@ -459,7 +459,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='20 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='21 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -1046,7 +1046,7 @@ document.getElementById('settings').onclick=()=>{
   });
   document.getElementById('store-info').innerHTML=`<b>Versione ${VERSIONE}</b><br>`+{
     claude:'Archivio: <b>Claude</b><br>I turni ti seguono su tutti i dispositivi.',
-    browser:'Archivio: <b>questo telefono</b><br>I turni restano qui, non si sincronizzano.',
+    browser:`Archivio: <b>${nomeDispositivo()}</b><br>I turni restano su questo dispositivo, non si sincronizzano con gli altri.`,
     memoria:'Archivio: <b class="x">nessuno</b><span class="issue">I turni spariranno alla chiusura. Apri l\'app da un indirizzo web o dall\'app Claude.</span>'
   }[store.mode];
   showSheet('sheet-set');
@@ -1472,6 +1472,19 @@ function renderNudge(){
               :`I turni di ${MESI[n.getMonth()].toLowerCase()} sono usciti entro il ${g}. Tocca per incollarli.`);
   b.onclick=()=>apriSequenza(ymd(new Date(n.getFullYear(),n.getMonth(),compilati+1)));
   box.appendChild(b);
+}
+
+/* Solo per dirlo con la parola giusta: i dati stanno nel browser di questo
+   dispositivo, che sia telefono, tablet o computer. */
+function nomeDispositivo(){
+  const u=navigator.userAgent||'';
+  if(/iPad/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1)) return 'questo iPad';
+  if(/iPhone|iPod/.test(u)) return 'questo iPhone';
+  if(/Android/.test(u)) return /Mobile/.test(u)?'questo telefono':'questo tablet';
+  if(/Macintosh|Mac OS/.test(u)) return 'questo Mac';
+  if(/Windows/.test(u)) return 'questo PC';
+  if(/Linux|CrOS/.test(u)) return 'questo computer';
+  return 'questo dispositivo';
 }
 
 /* ---------- aggiornamenti ---------- */
