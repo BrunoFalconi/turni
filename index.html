@@ -596,7 +596,7 @@ function render(){
   document.getElementById('bar-2').style.width=(target?Math.min(over/target*100,100-base/target*100):0)+'%';
   document.getElementById('bar-left').textContent=`${worked_days} lavorati · ${rest_days} riposi`;
   document.getElementById('bar-right').textContent=`obiettivo ${fmtPlain(target)}`;
-  renderPay(y,m); renderWeeks(y,m); renderAlerts(y,m);
+  renderPay(y,m); renderWeeks(y,m); renderAlerts(y,m);renderPayslipInfo();
 
   const list=document.getElementById('list'); list.innerHTML='';
   if(!rows.length){
