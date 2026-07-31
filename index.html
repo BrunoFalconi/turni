@@ -411,6 +411,13 @@ const DEFAULTS={
 let state = {
   shifts: {},
   allShifts: {},
+
+  /*
+   * Archivio dei cedolini.
+   * La chiave sarà nel formato YYYY-MM.
+   */
+  payslips: {},
+
   settings: {
     ...DEFAULTS
   }
@@ -498,6 +505,8 @@ async function load(){
       const saved=d.settings||{};
 state.shifts = d.shifts || {};
 state.allShifts = d.allShifts || {};
+state.payslips = d.payslips || {};
+
 state.settings = {
   ...DEFAULTS,
   ...saved
