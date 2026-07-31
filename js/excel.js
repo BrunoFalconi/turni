@@ -65,7 +65,7 @@ function parseGridSheet(rows,period,wanted){
   }
   return out;
 }
-
+let pendingAllShifts = {};
 document.getElementById('importBtn').onclick=()=>{
   if(!state.settings.excelName){document.getElementById('settings').click();return}
   document.getElementById('fileInput').click();
