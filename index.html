@@ -895,9 +895,11 @@ Object.entries(setMap).forEach(([id,[key,kind]])=>{
 document.getElementById('set-close').onclick=closeSheets;
 document.getElementById('wipe').onclick=async()=>{
   if(!confirm('Cancellare tutti i turni salvati? L\u2019operazione non si può annullare.'))return;
-  state = {
+state = {
   shifts: {},
   allShifts: {},
+  payslips: {},
+
   settings: {
     ...DEFAULTS
   }
