@@ -347,7 +347,7 @@ input[type=time]{font-family:var(--mono)}
   <div class="calc" id="pdf-info" style="margin-bottom:12px"></div>
   <div id="pdf-prev" style="max-height:46vh;overflow:auto;margin-bottom:14px"></div>
   <div class="actions">
-    <button class="btn" id="pdf-go">Stampa o salva in PDF</button>
+    <button class="btn" id="pdf-go">Scarica PDF</button>
     <button class="btn ghost" id="pdf-close">Chiudi</button>
   </div>
 </div>
@@ -413,9 +413,11 @@ input[type=time]{font-family:var(--mono)}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='13 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='14 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -1439,22 +1441,19 @@ function tabellaMese(y,m){
   if(!nomi.length) return null;
   const days=new Date(y,m+1,0).getDate();
   const ore=t=>{const p=presetOf(t); return `${p[0]}-${p[1]==='00:00'?'24:00':p[1]}`};
-  let righe='', vuoti=0;
+  const testa=['Data',...COLONNE.map((t,i)=>`TURNO ${i+1} (${ore(t)})`)];
+  const corpo=[]; let vuoti=0;
   for(let d=1;d<=days;d++){
     const key=`${y}-${pad(m+1)}-${pad(d)}`;
-    const celle=COLONNE.map(t=>{
-      const chi=nomi.filter(n=>state.roster[n][key]===t);
-      return chi.join(', ');
-    });
+    const celle=COLONNE.map(t=>nomi.filter(n=>state.roster[n][key]===t).join(', '));
     if(!celle.some(Boolean)) vuoti++;
-    righe+=`<tr><td class="g">${pad(d)}/${pad(m+1)}</td>`+
-           celle.map(c=>`<td>${c||'—'}</td>`).join('')+`</tr>`;
+    corpo.push([`${pad(d)}/${pad(m+1)}`,...celle.map(c=>c||'—')]);
   }
-  const html=`<h1>Turni ${MESI[m]} ${y}</h1><table>
-    <thead><tr><th>Data</th>`+
-    COLONNE.map((t,i)=>`<th>TURNO ${i+1} (${ore(t)})</th>`).join('')+
-    `</tr></thead><tbody>${righe}</tbody></table>`;
-  return {html,vuoti,days,nomi:nomi.length};
+  const html=`<h1>Turni ${MESI[m]} ${y}</h1><table><thead><tr>`+
+    testa.map(t=>`<th>${t}</th>`).join('')+`</tr></thead><tbody>`+
+    corpo.map(r=>`<tr>${r.map((c,i)=>`<td${i?'':' class="g"'}>${c}</td>`).join('')}</tr>`).join('')+
+    `</tbody></table>`;
+  return {html,testa,corpo,titolo:`Turni ${MESI[m]} ${y}`,vuoti,days,nomi:nomi.length};
 }
 function apriPdf(){
   const y=view.getFullYear(), m=view.getMonth();
@@ -1482,10 +1481,36 @@ document.getElementById('pdf-close').onclick=closeSheets;
 document.getElementById('pdf-go').onclick=()=>{
   const y=view.getFullYear(), m=view.getMonth(), T=tabellaMese(y,m);
   if(!T){toast('Manca il turnario di reparto');return}
-  document.getElementById('stampa').innerHTML=T.html;
-  const t=document.title;
-  document.title=`Turni ${MESI[m]} ${y}`;      /* diventa il nome del file PDF */
-  setTimeout(()=>{window.print(); document.title=t;},80);
+  const lib=window.jspdf&&window.jspdf.jsPDF;
+  if(!lib){                                   /* senza rete resta la stampa come ripiego */
+    document.getElementById('stampa').innerHTML=T.html;
+    const t=document.title; document.title=T.titolo;
+    toast('Libreria PDF non caricata: apro la stampa');
+    setTimeout(()=>{window.print(); document.title=t;},80);
+    return;
+  }
+  const doc=new lib({unit:'mm',format:'a4'});
+  /* la libreria cambia interfaccia fra le versioni: le accetto entrambe */
+  const auto=typeof doc.autoTable==='function' ? o=>doc.autoTable(o)
+           : typeof window.autoTable==='function' ? o=>window.autoTable(doc,o)
+           : (window.jspdf&&typeof window.jspdf.autoTable==='function') ? o=>window.jspdf.autoTable(doc,o)
+           : null;
+  if(!auto){toast('Componente tabelle del PDF non caricato');return}
+  const L=doc.internal.pageSize.getWidth();
+  doc.setFont('helvetica','bold'); doc.setFontSize(20);
+  doc.text(T.titolo,L/2,20,{align:'center'});
+  auto({
+    startY:28, head:[T.testa], body:T.corpo, theme:'grid',
+    styles:{halign:'center',valign:'middle',fontSize:9,cellPadding:2,
+            lineColor:[210,210,210],lineWidth:0.2,textColor:[20,20,20]},
+    headStyles:{fillColor:[17,17,17],textColor:255,fontStyle:'bold',
+                lineColor:[17,17,17],cellPadding:2.6},
+    alternateRowStyles:{fillColor:[242,242,242]},
+    columnStyles:{0:{cellWidth:22}},
+    margin:{left:14,right:14,top:14,bottom:14}
+  });
+  doc.save(T.titolo+'.pdf');
+  toast('PDF scaricato');
 };
 
 /* ---------- il netto misurato sui cedolini ---------- */
