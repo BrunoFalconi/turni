@@ -176,7 +176,9 @@ function columnValuesFromPdf(pdfData){
     regionalInstallment:null,
     municipalBalanceInstallment:null,
     municipalAdvanceInstallment:null,
-    fixedExtraDeductions:null
+    fixedExtraDeductions:null,
+    additionalDeduction:null,
+    socialPct:null
   };
 
   let localTaxes=0;
@@ -275,6 +277,29 @@ function columnValuesFromPdf(pdfData){
     }
   }
 
+    /* F02801: ulteriore detrazione mensile (L.207/24). Sta nella
+       colonna IMPORTO BASE, non fra le trattenute. */
+    const extraDeductionRow=findRowByCode(page.rows,'F02801');
+    if(extraDeductionRow){
+      const amounts=numericItems(extraDeductionRow)
+        .map(entry=>entry.value)
+        .filter(v=>v>0&&v<5000);
+      if(amounts.length)result.additionalDeduction=amounts.at(-1);
+    }
+
+    /* Aliquote contributive a carico del dipendente: si sommano le
+       percentuali delle righe IVS e CIGS, invece di usare un valore fisso. */
+    let socialSum=0,socialFound=false;
+    for(const row of page.rows){
+      if(!/Contributo\s+(IVS|CIGS)/i.test(row.text))continue;
+      const pct=row.text.match(/([0-9]{1,2},[0-9]{1,5})\s*%/);
+      if(pct){
+        const value=moneyNumber(pct[1]);
+        if(value!=null&&value>0&&value<30){socialSum+=value;socialFound=true}
+      }
+    }
+    if(socialFound)result.socialPct=Number(socialSum.toFixed(2));
+
   /* Il totale deducibile è la somma delle due quote.
      Se la riga azienda non è stata trovata ma le altre due sì,
      la quota azienda si ricava per differenza. */
@@ -305,6 +330,8 @@ function parsePayslipData(pdfData){
   if(columns.municipalBalanceInstallment!=null)detected.municipalBalanceInstallment=columns.municipalBalanceInstallment;
   if(columns.municipalAdvanceInstallment!=null)detected.municipalAdvanceInstallment=columns.municipalAdvanceInstallment;
   if(columns.fixedExtraDeductions!=null)detected.fixedExtraDeductions=columns.fixedExtraDeductions;
+  if(columns.additionalDeduction!=null)detected.additionalDeduction=columns.additionalDeduction;
+  if(columns.socialPct!=null)detected.socialPct=columns.socialPct;
 
   return detected;
 }

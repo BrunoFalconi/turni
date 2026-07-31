@@ -1,98 +1,124 @@
-# Turni — file sistemati
+# Turni — correzioni verificate sul cedolino di Maggio 2026
 
-Rispetto al repository originale sono cambiati 6 file, più `js/logger.js` che è nuovo.
+## Prima di tutto: la mia diagnosi precedente era sbagliata
 
-## Il problema del lordo sbagliato
-
-L'app calcolava le maggiorazioni sul **lordo fisso completo** (2538,46 €):
-
-```
-oraria = 2538,46 / 173 = 14,6732 €/h
-60h notturne × 14,6732 × 50%  = 440,20
-22h festive  × 14,6732 × 50%  = 161,40
- 2h fest.not.× 14,6732 × 55%  =  16,14
-                       lordo   = 3156,20   ← sbagliato
-```
-
-In busta paga le maggiorazioni non si calcolano sul lordo fisso, ma su
-**paga base + contingenza + EDR**, che esclude superminimo e indennità.
-Con i tuoi numeri quella base vale circa **2134,47 €** (oraria 12,3380 €/h):
+Avevo detto che la base oraria delle maggiorazioni era troppo alta e che
+andava abbassata a ~2134 €. **Non è vero.** Il cedolino lo dimostra:
 
 ```
-60h × 12,3380 × 50%  = 370,14
-22h × 12,3380 × 50%  = 135,72
- 2h × 12,3380 × 55%  =  13,57
-              lordo   = 3057,89   ← corretto
+Z12050 Magg. banca ore 50%   7,33659 €/ora  ->  7,33659 / 0,50 = 14,6732
+Z12055 Magg. banca ore 55%   8,07025 €/ora  ->  8,07025 / 0,55 = 14,6732
+2538,46 / 173                              =              14,6732
 ```
 
-## Cosa è cambiato
+La base oraria dell'app era già esatta. Se avevi lanciato la calibrazione
+che ti avevo fatto, **rimetti "Base maggiorazioni" a 0** nel profilo
+fiscale, altrimenti falsa tutti i mesi.
 
-### `js/core.js`
-- Nuove impostazioni `premiumBase` e `premiumDivisor`: la base oraria delle
-  maggiorazioni è ora separata dal lordo fisso. Se lasciate a 0 il calcolo
-  resta identico a prima, quindi i profili esistenti non cambiano risultato.
-- Nuova impostazione `netAdjustment`: scarto costante fra netto reale e stimato.
-- `payroll()` usa `premiumHourly` al posto di `hourly` per le maggiorazioni.
-- Due funzioni di calibrazione che invertono la formula:
-  `calibratePremiumBase()` ricava la base dal lordo reale,
-  `calibrateNetAdjustment()` ricava lo scarto dal netto reale.
+Il vero errore erano le **ore**, e altre tre cose sul lato trattenute.
 
-### `index.html`
-- Tre campi nuovi nel profilo fiscale: base maggiorazioni, divisore
-  maggiorazioni, correzione netto.
-- Pulsante **Calibra da cedolino** e relativo dialog.
-- Meta description e Open Graph, preconnect al CDN.
+## I quattro errori veri
 
-### `js/payslip.js`
-- Cometa azienda: la ricerca provava un solo pattern (`C/DITTA`). Ora prova
-  quattro varianti, poi cerca una riga COMETA che non sia quella del
-  lavoratore, e se la colonna COMPETENZE è vuota ripiega sull'ultimo importo
-  della riga.
-- Se la riga azienda non si trova ma ci sono deducibile e lavoratore, la quota
-  azienda si ricava per differenza (`deducibile − lavoratore`).
-
-### `js/logger.js` (nuovo)
-Logging su console e localStorage, ultimi 50 eventi, export JSON/CSV.
-Da console: `Logger.getLogs()`, `Logger.downloadLogs('csv')`.
-
-### `sw.js`
-Versione della cache in una costante (`VERSION = '3.1'`), pulizia automatica
-delle cache vecchie, cache-first sugli asset.
-
-### `manifest.webmanifest`
-Description, categorie, orientamento, shortcut.
-
-### `css/style.css`
-Stile per la riga "base oraria" e due media query per tablet e desktop.
-
-## Come calibrare
-
-1. Vai su un mese di cui hai già la busta paga e i turni completi in app.
-2. Impostazioni → profilo fiscale → **Calibra da cedolino**.
-3. Inserisci lordo reale (3057,89) e netto reale (2174,00).
-4. **Calcola e salva**.
-
-L'app scrive `premiumBase = 2134,47` e `netAdjustment = 41,90`, e da quel
-momento tutti i mesi usano quella base.
-
-## Sul residuo di 41,90 €
-
-Dopo aver corretto il lordo il netto stimato è 2132,10 contro 2174,00 reali.
-Lo scarto viene quasi tutto dall'IRPEF: l'app proietta l'imponibile del mese
-× 12 per stimare il reddito annuo, ma un mese con 84 ore di maggiorazione non
-è rappresentativo, quindi l'aliquota risulta più alta del vero.
-
-`netAdjustment` copre lo scarto come costante. Se vuoi qualcosa di più solido,
-compila **Reddito annuo aggiuntivo** nel profilo fiscale con il tuo imponibile
-annuo effettivo e rimetti la correzione a 0: la proiezione diventa più
-realistica e lo scarto si riduce da solo.
-
-## Verifica
+### 1. Ore contate male (era questo il buco da 98 €)
 
 ```
-node --check js/core.js     # sintassi
-python3 -m http.server 8000 # prova locale
+App      : 60h notturne + 22h festive + 2h festive notturne  =  84h
+Cedolino : 62h al 50% + 8h al 55%                            =  70h
 ```
 
-In console dopo il caricamento di un cedolino: `Logger.getLogs()` mostra
-l'esito del parsing riga per riga.
+Le 70 ore coincidono con "Ore straordinarie 70,00" in testata. Le voci si
+chiamano **"Magg. banca ore"**: la maggiorazione si applica alle ore
+accantonate nella banca ore, non a ogni ora notturna o festiva lavorata.
+Il tuo contratto ha una regola che dai turni non è ricostruibile.
+
+**Soluzione:** nuovo dialog *Ore con maggiorazione* dove copi le ore dal
+cedolino, salvate per singolo mese. I mesi senza override continuano a
+usare il calcolo automatico.
+
+### 2. Imponibile IRPEF: sottraeva la quota sbagliata
+
+```
+App      : lordo − contributi − cometa DEDUCIBILE (75,46) = 2689,69
+Cedolino : F02000 Imponibile IRPEF                        = 2736,85
+Corretto : lordo − contributi − cometa LAVORATORE (28,30) = 2736,85
+```
+
+La quota azienda (47,16) non è mai entrata nel lordo — è fra parentesi,
+figurativa. Sottrarla era uno sconto doppio. Il totale deducibile F01998
+serve alla dichiarazione annuale, non al cedolino mensile.
+
+### 3. Mancava l'ulteriore detrazione L.207/24
+
+Il cedolino ha `F02801 Ulteriore detrazione L.207/24 = 61,85`, che l'app
+non conosceva. Da sola valeva ~62 € di IRPEF in più al mese.
+
+### 4. Aliquota contributiva sbagliata
+
+```
+App      : 9,59% forfettario
+Cedolino : IVS 9,19% + CIGS 0,30% = 9,49%,  più EPAR 0,10% su 2538,46
+```
+
+Il default passa a 9,49% e il parser ora legge le percentuali vere dalle
+righe IVS e CIGS invece di usare un valore fisso.
+
+## Risultato
+
+| Voce | Stima app | Cedolino | Scarto |
+|---|---:|---:|---:|
+| Lordo finale | 3.057,89 | 3.057,89 | 0,00 |
+| Contributi | 292,73 | 292,74 | 0,01 |
+| Imponibile IRPEF | 2.736,86 | 2.736,85 | 0,01 |
+| IRPEF | 486,50 | 485,78 | 0,72 |
+| Addizionali | 76,72 | 76,72 | 0,00 |
+| Cometa lavoratore | 28,30 | 28,30 | 0,00 |
+| Cometa azienda | 47,16 | 47,16 | 0,00 |
+| **Netto** | **2.173,64** | **2.174,00** | **0,36** |
+
+I 72 centesimi sull'IRPEF restano perché il cedolino usa il conguaglio
+progressivo sul cumulato dell'anno (Imp. IRPEF 12.278,57 da gennaio),
+mentre l'app proietta il mese × 12. Su un mese medio la differenza è
+minima; su un mese anomalo cresce. Se vuoi azzerarla, compila
+**Reddito annuo aggiuntivo** con l'imponibile annuo effettivo.
+
+## Configurazione da inserire
+
+Impostazioni → profilo fiscale:
+
+| Campo | Valore |
+|---|---|
+| Lordo fisso mensile | 2538,46 |
+| Divisore mensile | 173 |
+| Base maggiorazioni | **0** (non toccare) |
+| Contributi dipendente % | 9,49 |
+| Trattenute fisse extra | 2,54 (EPAR) |
+| Ulteriore detrazione mensile | 61,85 |
+| Addizionale regionale | 51,84 |
+| Comunale saldo | 17,18 |
+| Comunale acconto | 7,70 |
+| Cometa lavoratore | 28,30 |
+| Cometa azienda | 47,16 |
+| Cometa deducibile | 75,46 |
+
+Poi *Ore con maggiorazione* → 62 / 0 / 8 → Applica.
+
+## Cometa azienda
+
+Nel cedolino sta su `Z20010 Contributo base COMETA C/Ditta ... ( 47,16 )`.
+Il parser cercava un solo pattern e la colonna COMPETENZE. Ora prova
+quattro varianti di scrittura, ripiega sull'ultimo importo della riga, e
+se la riga proprio manca ricava la quota per differenza
+(deducibile 75,46 − lavoratore 28,30 = 47,16).
+
+## Altri file
+
+- `js/logger.js` (nuovo) — log su console e localStorage, `Logger.getLogs()`
+- `sw.js` — versione cache in costante, pulizia automatica
+- `manifest.webmanifest` — description, categorie, shortcut
+- `css/style.css` — riga base oraria, media query tablet/desktop
+
+## Una nota sulla privacy
+
+Il PDF che hai caricato contiene nome, codice fiscale, IBAN e matricola.
+L'app li tiene in locale, ma per condividere un cedolino conviene
+oscurarli.

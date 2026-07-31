@@ -15,6 +15,7 @@ const TYPES={
 };
 const DEFAULT_STATE={
   shifts:{},
+  premiumOverrides:{},
   settings:{
     profileName:'',
     excelName:'',
@@ -32,7 +33,9 @@ const DEFAULT_STATE={
     holidayPct:50,
     holidayNightPct:55,
     deductionPct:31.34,
-    socialPct:9.59,
+    socialPct:9.49,
+    /* Detrazione mensile aggiuntiva (F02801 nel cedolino Zucchetti). */
+    additionalDeduction:0,
     taxPct:0,
     fixedExtraDeductions:0,
     regionalInstallment:0,
@@ -89,6 +92,7 @@ function normalizeState(raw){
 
   return {
     shifts:s.shifts&&typeof s.shifts==='object'?s.shifts:{},
+    premiumOverrides:s.premiumOverrides&&typeof s.premiumOverrides==='object'?s.premiumOverrides:{},
     settings:{...DEFAULT_STATE.settings,...saved}
   };
 }
@@ -172,6 +176,18 @@ function payroll(y,m){
     const b=minuteBuckets(key,s);Object.keys(mins).forEach(k=>mins[k]+=b[k]);
   }
 
+  /* Le ore contate dai turni non sempre coincidono con quelle pagate.
+     Con la banca ore la maggiorazione si applica alle ore accantonate,
+     non a ogni ora notturna o festiva lavorata. Quando il mese ha un
+     override, le ore inserite a mano hanno la precedenza. */
+  const override=(state.premiumOverrides||{})[`${y}-${pad(m+1)}`];
+  const overridden=!!override;
+  if(overridden){
+    if(override.night!=null)mins.night=Math.round(Number(override.night)*60)||0;
+    if(override.holiday!=null)mins.holiday=Math.round(Number(override.holiday)*60)||0;
+    if(override.holidayNight!=null)mins.holidayNight=Math.round(Number(override.holidayNight)*60)||0;
+  }
+
   const baseGross=Number(state.settings.gross)||0;
   const divisor=Number(state.settings.divisor)||173;
   const hourly=baseGross/divisor;
@@ -199,7 +215,11 @@ function payroll(y,m){
   const cometaEmployer=Number(state.settings.cometaEmployer)||0;
   const cometaDeductible=Number(state.settings.cometaDeductible)||0;
 
-  const ordinaryTaxable=Math.max(0,gross-social-fixedExtra-cometaDeductible);
+  /* L'imponibile IRPEF si riduce solo della quota COMETA a carico del
+     lavoratore. La quota azienda non è mai entrata nel lordo, quindi
+     sottrarla sarebbe un doppio sconto. Il totale deducibile (F01998)
+     serve alla dichiarazione annuale, non al cedolino mensile. */
+  const ordinaryTaxable=Math.max(0,gross-social-fixedExtra-cometaEmployee);
   const annualProjected=ordinaryTaxable*12+(Number(state.settings.otherAnnualIncome)||0);
   const annualIrpefGross=annualGrossIrpef(annualProjected);
   const annualDeduction=employeeAnnualDeduction(
@@ -223,7 +243,10 @@ function payroll(y,m){
     annualProjectedAdjusted,
     Number(state.settings.workingDaysAnnual)||365
   );
-  const tax=Math.max(0,(annualIrpefAdjusted-annualDeductionAdjusted)/12);
+  /* Detrazione aggiuntiva mensile (in Zucchetti: F02801, L.207/24).
+     È già un importo mensile, non va diviso per 12. */
+  const additionalDeduction=Number(state.settings.additionalDeduction)||0;
+  const tax=Math.max(0,(annualIrpefAdjusted-annualDeductionAdjusted)/12-additionalDeduction);
 
   const regional=Number(state.settings.regionalInstallment)||0;
   const municipalBalance=Number(state.settings.municipalBalanceInstallment)||0;
@@ -238,7 +261,7 @@ function payroll(y,m){
 
   return{
     mins,amounts,premiums,otherEarnings,gross,hourly,
-    premiumBase,premiumDivisor,premiumHourly,netAdjustment,
+    premiumBase,premiumDivisor,premiumHourly,netAdjustment,overridden,additionalDeduction,
     social,fixedExtra,ordinaryTaxable,
     annualProjected,annualIrpefGross,annualDeduction,
     tax,substituteTax,
@@ -377,13 +400,13 @@ function renderDashboard(){
 
 function openPayrollDialog(){
   const ids=[
-    'gross','divisor','premiumBase','premiumDivisor','netAdjustment','socialPct','fixedExtraDeductions',
+    'gross','divisor','premiumBase','premiumDivisor','netAdjustment','additionalDeduction','socialPct','fixedExtraDeductions',
     'regionalInstallment','municipalBalanceInstallment','municipalAdvanceInstallment',
     'cometaEmployee','cometaEmployer','cometaDeductible',
     'otherEarnings','otherDeductions','workingDaysAnnual',
     'otherAnnualIncome','substituteAnnualLimit','substituteUsedYtd'
   ];
-  const fieldIds={gross:'pfGross',divisor:'pfDivisor',premiumBase:'pfPremiumBase',premiumDivisor:'pfPremiumDivisor',netAdjustment:'pfNetAdjustment',socialPct:'pfSocialPct',fixedExtraDeductions:'pfFixedExtraDeductions',regionalInstallment:'pfRegionalInstallment',municipalBalanceInstallment:'pfMunicipalBalanceInstallment',municipalAdvanceInstallment:'pfMunicipalAdvanceInstallment',cometaEmployee:'pfCometaEmployee',cometaEmployer:'pfCometaEmployer',cometaDeductible:'pfCometaDeductible',otherEarnings:'pfOtherEarnings',otherDeductions:'pfOtherDeductions',workingDaysAnnual:'pfWorkingDaysAnnual',otherAnnualIncome:'pfOtherAnnualIncome',substituteAnnualLimit:'pfSubstituteAnnualLimit',substituteUsedYtd:'pfSubstituteUsedYtd'};
+  const fieldIds={gross:'pfGross',divisor:'pfDivisor',premiumBase:'pfPremiumBase',premiumDivisor:'pfPremiumDivisor',netAdjustment:'pfNetAdjustment',additionalDeduction:'pfAdditionalDeduction',socialPct:'pfSocialPct',fixedExtraDeductions:'pfFixedExtraDeductions',regionalInstallment:'pfRegionalInstallment',municipalBalanceInstallment:'pfMunicipalBalanceInstallment',municipalAdvanceInstallment:'pfMunicipalAdvanceInstallment',cometaEmployee:'pfCometaEmployee',cometaEmployer:'pfCometaEmployer',cometaDeductible:'pfCometaDeductible',otherEarnings:'pfOtherEarnings',otherDeductions:'pfOtherDeductions',workingDaysAnnual:'pfWorkingDaysAnnual',otherAnnualIncome:'pfOtherAnnualIncome',substituteAnnualLimit:'pfSubstituteAnnualLimit',substituteUsedYtd:'pfSubstituteUsedYtd'};
   ids.forEach(id=>document.getElementById(fieldIds[id]).value=state.settings[id]??0);
   document.getElementById('pfUseSubstituteTax').checked=!!state.settings.useSubstituteTax;
   document.getElementById('payrollDialog').showModal();
@@ -391,13 +414,13 @@ function openPayrollDialog(){
 
 document.getElementById('savePayrollSettings').onclick=()=>{
   const ids=[
-    'gross','divisor','premiumBase','premiumDivisor','netAdjustment','socialPct','fixedExtraDeductions',
+    'gross','divisor','premiumBase','premiumDivisor','netAdjustment','additionalDeduction','socialPct','fixedExtraDeductions',
     'regionalInstallment','municipalBalanceInstallment','municipalAdvanceInstallment',
     'cometaEmployee','cometaEmployer','cometaDeductible',
     'otherEarnings','otherDeductions','workingDaysAnnual',
     'otherAnnualIncome','substituteAnnualLimit','substituteUsedYtd'
   ];
-  const fieldIds={gross:'pfGross',divisor:'pfDivisor',premiumBase:'pfPremiumBase',premiumDivisor:'pfPremiumDivisor',netAdjustment:'pfNetAdjustment',socialPct:'pfSocialPct',fixedExtraDeductions:'pfFixedExtraDeductions',regionalInstallment:'pfRegionalInstallment',municipalBalanceInstallment:'pfMunicipalBalanceInstallment',municipalAdvanceInstallment:'pfMunicipalAdvanceInstallment',cometaEmployee:'pfCometaEmployee',cometaEmployer:'pfCometaEmployer',cometaDeductible:'pfCometaDeductible',otherEarnings:'pfOtherEarnings',otherDeductions:'pfOtherDeductions',workingDaysAnnual:'pfWorkingDaysAnnual',otherAnnualIncome:'pfOtherAnnualIncome',substituteAnnualLimit:'pfSubstituteAnnualLimit',substituteUsedYtd:'pfSubstituteUsedYtd'};
+  const fieldIds={gross:'pfGross',divisor:'pfDivisor',premiumBase:'pfPremiumBase',premiumDivisor:'pfPremiumDivisor',netAdjustment:'pfNetAdjustment',additionalDeduction:'pfAdditionalDeduction',socialPct:'pfSocialPct',fixedExtraDeductions:'pfFixedExtraDeductions',regionalInstallment:'pfRegionalInstallment',municipalBalanceInstallment:'pfMunicipalBalanceInstallment',municipalAdvanceInstallment:'pfMunicipalAdvanceInstallment',cometaEmployee:'pfCometaEmployee',cometaEmployer:'pfCometaEmployer',cometaDeductible:'pfCometaDeductible',otherEarnings:'pfOtherEarnings',otherDeductions:'pfOtherDeductions',workingDaysAnnual:'pfWorkingDaysAnnual',otherAnnualIncome:'pfOtherAnnualIncome',substituteAnnualLimit:'pfSubstituteAnnualLimit',substituteUsedYtd:'pfSubstituteUsedYtd'};
   ids.forEach(id=>state.settings[id]=Number(document.getElementById(fieldIds[id]).value)||0);
   state.settings.useSubstituteTax=document.getElementById('pfUseSubstituteTax').checked;
   saveState();render();document.getElementById('payrollDialog').close();
@@ -407,56 +430,56 @@ document.getElementById('closePayrollSettings').onclick=()=>{
   document.getElementById('payrollDialog').close();
 };
 
-/* ---------- Calibrazione da cedolino reale ---------- */
+/* ---------- Ore con maggiorazione: override manuale ---------- */
+
+function monthOverrideKey(y,m){return `${y}-${pad(m+1)}`}
 
 function openCalibrationDialog(){
   const y=view.getFullYear(),m=view.getMonth();
   const p=payroll(y,m);
+  const key=monthOverrideKey(y,m);
+  const saved=(state.premiumOverrides||{})[key];
+
   document.getElementById('calMonth').textContent=`${MONTHS[m]} ${y}`;
-  document.getElementById('calEstimated').textContent=
-    `Stima attuale: lordo ${euro(p.gross)} · netto ${euro(p.net)}`;
-  document.getElementById('calRealGross').value='';
-  document.getElementById('calRealNet').value='';
-  document.getElementById('calResult').textContent='';
+  document.getElementById('calComputed').textContent=
+    `Calcolate dai turni: ${(p.mins.night/60).toFixed(2)}h notturne · `+
+    `${(p.mins.holiday/60).toFixed(2)}h festive · `+
+    `${(p.mins.holidayNight/60).toFixed(2)}h festive notturne`;
+
+  document.getElementById('calNightH').value=saved?.night??(p.mins.night/60).toFixed(2);
+  document.getElementById('calHolidayH').value=saved?.holiday??(p.mins.holiday/60).toFixed(2);
+  document.getElementById('calHolidayNightH').value=saved?.holidayNight??(p.mins.holidayNight/60).toFixed(2);
+
+  document.getElementById('calResult').textContent=saved
+    ? 'Questo mese usa ore inserite a mano.'
+    : 'Questo mese usa le ore calcolate dai turni.';
+
   document.getElementById('calibrationDialog').showModal();
 }
 
-const calibrateBtn=document.getElementById('runCalibration');
-if(calibrateBtn){
-  calibrateBtn.onclick=()=>{
+const applyHoursBtn=document.getElementById('applyPremiumHours');
+if(applyHoursBtn){
+  applyHoursBtn.onclick=()=>{
     const y=view.getFullYear(),m=view.getMonth();
-    const realGross=Number(document.getElementById('calRealGross').value);
-    const realNet=Number(document.getElementById('calRealNet').value);
-    const out=document.getElementById('calResult');
+    if(!state.premiumOverrides)state.premiumOverrides={};
+    state.premiumOverrides[monthOverrideKey(y,m)]={
+      night:Number(document.getElementById('calNightH').value)||0,
+      holiday:Number(document.getElementById('calHolidayH').value)||0,
+      holidayNight:Number(document.getElementById('calHolidayNightH').value)||0
+    };
+    saveState();render();
+    const p=payroll(y,m);
+    document.getElementById('calResult').textContent=
+      `Lordo ${euro(p.gross)} · netto ${euro(p.net)}`;
+  };
+}
 
-    if(!realGross){
-      out.textContent='Inserisci almeno il lordo reale del mese.';
-      return;
-    }
-
-    const res=calibratePremiumBase(y,m,realGross);
-    if(!res.ok){
-      out.textContent=res.reason;
-      return;
-    }
-
-    state.settings.premiumBase=Number(res.premiumBase.toFixed(2));
-    state.settings.premiumDivisor=res.premiumDivisor;
-
-    let msg=`Base maggiorazioni: ${euro(res.premiumBase)} · oraria ${euro(res.hourly)}/h`;
-
-    if(realNet){
-      state.settings.netAdjustment=0;
-      const netRes=calibrateNetAdjustment(y,m,realNet);
-      if(netRes.ok){
-        state.settings.netAdjustment=Number(netRes.delta.toFixed(2));
-        msg+=`\nCorrezione netto: ${euro(netRes.delta)}`;
-      }
-    }
-
-    saveState();
-    render();
-    out.textContent=msg;
+const clearHoursBtn=document.getElementById('clearPremiumHours');
+if(clearHoursBtn){
+  clearHoursBtn.onclick=()=>{
+    const y=view.getFullYear(),m=view.getMonth();
+    if(state.premiumOverrides)delete state.premiumOverrides[monthOverrideKey(y,m)];
+    saveState();render();openCalibrationDialog();
   };
 }
 

@@ -203,6 +203,7 @@
     <div><label>Base maggiorazioni € <small>(0 = lordo fisso)</small></label><input id="pfPremiumBase" type="number" step="0.01"></div>
     <div><label>Divisore maggiorazioni <small>(0 = come sopra)</small></label><input id="pfPremiumDivisor" type="number" step="1"></div>
     <div><label>Correzione netto €</label><input id="pfNetAdjustment" type="number" step="0.01"></div>
+    <div><label>Ulteriore detrazione mensile €</label><input id="pfAdditionalDeduction" type="number" step="0.01"></div>
     <div><label>Contributi dipendente %</label><input id="pfSocialPct" type="number" step="0.01"></div>
     <div><label>Trattenute fisse extra €</label><input id="pfFixedExtraDeductions" type="number" step="0.01"></div>
     <div><label>Addizionale regionale €</label><input id="pfRegionalInstallment" type="number" step="0.01"></div>
@@ -223,28 +224,31 @@
   <p class="notice">Le maggiorazioni in busta paga si calcolano su paga base + contingenza + EDR, non sul lordo fisso completo. Se la stima non torna, usa la calibrazione.</p>
   <div class="dialog-actions">
     <button class="btn" id="savePayrollSettings">Salva</button>
-    <button class="btn alt" id="openCalibration">Calibra da cedolino</button>
+    <button class="btn alt" id="openCalibration">Ore con maggiorazione</button>
     <button class="btn alt" id="closePayrollSettings">Chiudi</button>
   </div>
 </dialog>
 
 
 <dialog id="calibrationDialog">
-  <h3>Calibra sul cedolino reale</h3>
+  <h3>Ore con maggiorazione</h3>
   <p class="notice">
-    Scegli un mese di cui hai già la busta paga e i turni completi in app,
-    poi inserisci lordo e netto veri. L'app ricava da sola la base delle
-    maggiorazioni e lo scarto residuo.
+    Le ore contate dai turni non sempre coincidono con quelle pagate.
+    Con la banca ore la maggiorazione si applica alle ore accantonate,
+    non a ogni ora notturna o festiva lavorata. Se la stima non torna,
+    copia qui le ore dalle voci di maggiorazione del cedolino.
   </p>
-  <div class="notice">Mese in calibrazione: <b id="calMonth">—</b></div>
-  <div class="notice" id="calEstimated">—</div>
+  <div class="notice">Mese: <b id="calMonth">&mdash;</b></div>
+  <div class="notice" id="calComputed">&mdash;</div>
   <div class="fields">
-    <div><label>Lordo reale €</label><input id="calRealGross" type="number" step="0.01"></div>
-    <div><label>Netto reale €</label><input id="calRealNet" type="number" step="0.01"></div>
+    <div><label>Ore al 50% (notturne)</label><input id="calNightH" type="number" step="0.01"></div>
+    <div><label>Ore al 50% (festive)</label><input id="calHolidayH" type="number" step="0.01"></div>
+    <div><label>Ore al 55% (festive notturne)</label><input id="calHolidayNightH" type="number" step="0.01"></div>
   </div>
   <div class="notice" id="calResult" style="white-space:pre-line"></div>
   <div class="dialog-actions">
-    <button class="btn" id="runCalibration">Calcola e salva</button>
+    <button class="btn" id="applyPremiumHours">Applica a questo mese</button>
+    <button class="btn alt" id="clearPremiumHours">Torna al calcolo automatico</button>
     <button class="btn alt" id="closeCalibration">Chiudi</button>
   </div>
 </dialog>
