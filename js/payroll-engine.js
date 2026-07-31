@@ -192,17 +192,16 @@ const monthlyIrpef = Math.max(
       profile.municipalBalanceInstallment +
       profile.municipalAdvanceInstallment;
 
-    const totalDeductions =
-      socialContributions +
-      profile.cometaEmployee +
-      profile.fixedExtraDeductions +
-      monthlyIrpef +
-      localTaxes;
+const totalDeductions =
+  socialContributions +
+  profile.cometaEmployee +
+  profile.fixedExtraDeductions +
+  monthlyIrpef +
+  localTaxes;
 
-    const estimatedNet =
-      grossTotal -
-      totalDeductions +
-      profile.additionalDeduction;
+const estimatedNet =
+  grossTotal -
+  totalDeductions;
 
     return {
       grossBase: profile.gross,
