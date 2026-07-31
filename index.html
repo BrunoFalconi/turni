@@ -291,31 +291,15 @@ input[type=time]{font-family:var(--mono)}
     Esporta turni di tutti
   </button>
 </div>
+  <div class="actions" style="margin-bottom:10px">
+    <button type="button" class="btn ghost" style="flex:1" id="upload-payslip">Carica busta paga PDF</button>
+  </div>
+  <div class="calc" id="payslip-info" style="display:none;margin-bottom:10px"></div>
+  <input type="file" id="payslip-file" accept="application/pdf,.pdf" style="display:none">
   <div class="actions">
     <button class="btn" id="set-close">Fatto</button>
     <button class="btn ghost" id="copy">Copia riepilogo</button>
   </div>
-  <div class="actions" style="margin-bottom:10px">
-  <button
-    type="button"
-    class="btn ghost"
-    style="flex:1"
-    id="upload-payslip"
-  >
-    Carica busta paga PDF
-  </button>
-</div>
-<div
-  class="calc"
-  id="payslip-info"
-  style="display:none;margin-bottom:10px"
-></div>
-<input
-  type="file"
-  id="payslip-file"
-  accept="application/pdf,.pdf"
-  style="display:none"
->
   <div style="height:10px"></div>
   <button class="btn danger" style="width:100%" id="wipe">Cancella tutti i dati</button>
   <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
@@ -353,12 +337,9 @@ input[type=time]{font-family:var(--mono)}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
-
 <script>
 const KEY='turni:v1';
 
@@ -411,13 +392,7 @@ const DEFAULTS={
 let state = {
   shifts: {},
   allShifts: {},
-
-  /*
-   * Archivio dei cedolini.
-   * La chiave sarà nel formato YYYY-MM.
-   */
   payslips: {},
-
   settings: {
     ...DEFAULTS
   }
@@ -506,7 +481,6 @@ async function load(){
 state.shifts = d.shifts || {};
 state.allShifts = d.allShifts || {};
 state.payslips = d.payslips || {};
-
 state.settings = {
   ...DEFAULTS,
   ...saved
@@ -530,6 +504,7 @@ state.settings = {
     }
   }catch(e){/* prima apertura: nessun dato salvato */}
   render();
+  renderPayslipInfo();
   const b=document.getElementById('boot'); if(b) b.remove();
 }
 let saveTimer;
@@ -596,7 +571,7 @@ function render(){
   document.getElementById('bar-2').style.width=(target?Math.min(over/target*100,100-base/target*100):0)+'%';
   document.getElementById('bar-left').textContent=`${worked_days} lavorati · ${rest_days} riposi`;
   document.getElementById('bar-right').textContent=`obiettivo ${fmtPlain(target)}`;
-  renderPay(y,m); renderWeeks(y,m); renderAlerts(y,m);renderPayslipInfo();
+  renderPay(y,m); renderWeeks(y,m); renderAlerts(y,m);
 
   const list=document.getElementById('list'); list.innerHTML='';
   if(!rows.length){
@@ -616,373 +591,79 @@ function render(){
   }
 }
 
-/* ---------- stima del netto dai cedolini precedenti ---------- */
-
 function averageNumbers(values){
-  const valid = values.filter(value =>
-    Number.isFinite(value)
-  );
-
-  if(!valid.length){
-    return 0;
-  }
-
-  return valid.reduce(
-    (sum, value) => sum + value,
-    0
-  ) / valid.length;
+  const valid=values.filter(Number.isFinite);
+  return valid.length?valid.reduce((a,b)=>a+b,0)/valid.length:0;
 }
 
 function estimateNetFromPayslips(grossTotal){
-  const payslips = Object.values(
-    state.payslips || {}
-  )
-    .filter(item =>
-      item &&
-      Number(item.grossTotal) > 0 &&
-      Number(item.netPay) > 0
-    )
-    .sort((a, b) =>
-      String(a.period?.key || '')
-        .localeCompare(
-          String(b.period?.key || '')
-        )
-    )
-    /*
-     * Usa al massimo gli ultimi sei cedolini.
-     */
+  const payslips=Object.values(state.payslips||{})
+    .filter(p=>p&&Number(p.grossTotal)>0&&Number(p.netPay)>0)
+    .sort((a,b)=>String(a.period?.key||'').localeCompare(String(b.period?.key||'')))
     .slice(-6);
+  if(!payslips.length)return null;
 
-  if(!payslips.length){
-    return null;
-  }
+  const socialPct=averageNumbers(payslips.map(p=>{
+    const g=Number(p.grossTotal)||0;
+    return g>0?(Number(p.socialContributions)||0)/g:NaN;
+  }));
+  const effectiveIrpefPct=averageNumbers(payslips.map(p=>{
+    const taxable=Number(p.taxableIrpef)||0;
+    return taxable>0?(Number(p.irpefWithheld)||0)/taxable:NaN;
+  }));
+  const epar=averageNumbers(payslips.map(p=>Number(p.epar)||0));
+  const cometaEmployee=averageNumbers(payslips.map(p=>Number(p.cometaEmployee)||0));
+  const localTaxes=averageNumbers(payslips.map(p=>Number(p.localTaxes)||0));
 
-  /*
-   * Percentuale media dei contributi IVS + CIGS.
-   */
-  const socialPct = averageNumbers(
-    payslips.map(item => {
-      const gross =
-        Number(item.grossTotal) || 0;
+  const socialContributions=grossTotal*socialPct;
+  const taxableIrpef=Math.max(0,grossTotal-socialContributions-epar-cometaEmployee);
+  const irpefWithheld=taxableIrpef*effectiveIrpefPct;
+  const totalDeductions=socialContributions+epar+cometaEmployee+irpefWithheld+localTaxes;
+  const estimatedNet=grossTotal-totalDeductions;
 
-      const contributions =
-        Number(
-          item.socialContributions
-        ) || 0;
-
-      return gross > 0
-        ? contributions / gross
-        : NaN;
-    })
-  );
-
-  /*
-   * Aliquota IRPEF effettivamente trattenuta.
-   *
-   * Questa percentuale incorpora già:
-   * - detrazione lavoro dipendente;
-   * - ulteriore detrazione;
-   * - andamento fiscale dei cedolini reali.
-   */
-  const effectiveIrpefPct = averageNumbers(
-    payslips.map(item => {
-      const taxable =
-        Number(item.taxableIrpef) || 0;
-
-      const withheld =
-        Number(item.irpefWithheld) || 0;
-
-      return taxable > 0
-        ? withheld / taxable
-        : NaN;
-    })
-  );
-
-  /*
-   * Voci mensili ricorrenti.
-   */
-  const epar = averageNumbers(
-    payslips.map(item =>
-      Number(item.epar) || 0
-    )
-  );
-
-  const cometaEmployee = averageNumbers(
-    payslips.map(item =>
-      Number(item.cometaEmployee) || 0
-    )
-  );
-
-  const localTaxes = averageNumbers(
-    payslips.map(item =>
-      Number(item.localTaxes) || 0
-    )
-  );
-
-  /*
-   * Calcolo del nuovo cedolino.
-   */
-  const socialContributions =
-    grossTotal * socialPct;
-
-  const taxableIrpef = Math.max(
-    0,
-    grossTotal -
-    socialContributions -
-    epar -
-    cometaEmployee
-  );
-
-  const irpefWithheld =
-    taxableIrpef *
-    effectiveIrpefPct;
-
-let totalDeductions = null;
-
-const totalsMatch = normalized.match(
-  /([0-9.]+,[0-9]{2})\s+([0-9.]+,[0-9]{2})\s+Maturato\s+Goduto\s+Residuo/i
-);
-
-if(totalsMatch){
-  totalDeductions =
-    parseItalianMoney(totalsMatch[1]);
-
-  if(grossTotal == null){
-    grossTotal =
-      parseItalianMoney(totalsMatch[2]);
-  }
-}
-
-  const estimatedNet =
-    grossTotal -
-    totalDeductions;
-
-  /*
-   * Calcola lo scostamento medio del modello
-   * sui cedolini già caricati.
-   */
-  const historicalErrors = payslips.map(item => {
-    const historicalGross =
-      Number(item.grossTotal) || 0;
-
-    const historicalSocial =
-      historicalGross * socialPct;
-
-    const historicalTaxable = Math.max(
-      0,
-      historicalGross -
-      historicalSocial -
-      epar -
-      cometaEmployee
-    );
-
-    const historicalIrpef =
-      historicalTaxable *
-      effectiveIrpefPct;
-
-    const predicted =
-      historicalGross -
-      historicalSocial -
-      epar -
-      cometaEmployee -
-      historicalIrpef -
-      localTaxes;
-
-    return Math.abs(
-      predicted -
-      Number(item.netPay)
-    );
+  const historicalErrors=payslips.map(p=>{
+    const g=Number(p.grossTotal)||0;
+    const social=g*socialPct;
+    const taxable=Math.max(0,g-social-epar-cometaEmployee);
+    const predicted=g-social-epar-cometaEmployee-taxable*effectiveIrpefPct-localTaxes;
+    return Math.abs(predicted-(Number(p.netPay)||0));
   });
+  const averageError=averageNumbers(historicalErrors);
+  const margin=Math.max(averageError,10);
 
-  const averageError =
-    averageNumbers(historicalErrors);
-
-  return {
-    estimatedNet,
-    grossTotal,
-
-    socialContributions,
-    taxableIrpef,
-    irpefWithheld,
-
-    epar,
-    cometaEmployee,
-    localTaxes,
-    totalDeductions,
-
-    payslipCount:
-      payslips.length,
-
-    averageError,
-
-    minimum:
-      estimatedNet -
-      Math.max(averageError, 10),
-
-    maximum:
-      estimatedNet +
-      Math.max(averageError, 10)
-  };
+  return {estimatedNet,grossTotal,socialContributions,taxableIrpef,irpefWithheld,epar,cometaEmployee,localTaxes,totalDeductions,payslipCount:payslips.length,averageError,minimum:estimatedNet-margin,maximum:estimatedNet+margin};
 }
-
-/* ---------- riepilogo economico del mese ---------- */
 
 function renderPay(y,m){
-  const box =
-    document.getElementById('pay');
+  const box=document.getElementById('pay'),P=paga(y,m);
+  if(!P){box.style.display='none';return}
+  box.style.display='';
+  document.getElementById('pay-tot').textContent=eur(P.totale);
+  const S=state.settings,r=[['Lordo fisso',eur(P.lordo)]];
+  if(P.B.nott)r.push([`Notturne ${fmtPlain(P.B.nott)} · +${S.pctNotturno}%`,eur(P.magNott)]);
+  if(P.B.fest)r.push([`Festive ${fmtPlain(P.B.fest)} · +${S.pctFestivo}%`,eur(P.magFest)]);
+  if(P.B.festNott)r.push([`Festive notturne ${fmtPlain(P.B.festNott)} · +${S.pctFestNott}%`,eur(P.magFN)]);
+  if(P.oreStra>0.02)r.push([`Straordinario ${P.oreStra.toFixed(1)}h`,eur(P.stra)]);
+  document.getElementById('pay-rows').innerHTML=r.map(([a,b])=>`<div>${a}<i>${b}</i></div>`).join('');
 
-  const P = paga(y,m);
-
-  if(!P){
-    box.style.display = 'none';
-    return;
-  }
-
-  box.style.display = '';
-
-  document
-    .getElementById('pay-tot')
-    .textContent =
-      eur(P.totale);
-
-  const S = state.settings;
-
-  const rows = [
-    [
-      'Lordo fisso',
-      eur(P.lordo)
-    ]
-  ];
-
-  if(P.B.nott){
-    rows.push([
-      `Notturne ${fmtPlain(P.B.nott)} · +${S.pctNotturno}%`,
-      eur(P.magNott)
-    ]);
-  }
-
-  if(P.B.fest){
-    rows.push([
-      `Festive ${fmtPlain(P.B.fest)} · +${S.pctFestivo}%`,
-      eur(P.magFest)
-    ]);
-  }
-
-  if(P.B.festNott){
-    rows.push([
-      `Festive notturne ${fmtPlain(P.B.festNott)} · +${S.pctFestNott}%`,
-      eur(P.magFN)
-    ]);
-  }
-
-  if(P.oreStra > 0.02){
-    rows.push([
-      `Straordinario ${P.oreStra.toFixed(1)}h`,
-      eur(P.stra)
-    ]);
-  }
-
-  document
-    .getElementById('pay-rows')
-    .innerHTML =
-      rows
-        .map(([label, amount]) =>
-          `<div>${label}<i>${amount}</i></div>`
-        )
-        .join('');
-
-  const netBox =
-    document.getElementById('pay-net');
-
-  const netValue =
-    document.getElementById('pay-net-v');
-
-  const note =
-    document.getElementById('pay-note');
-
-  const estimate =
-    estimateNetFromPayslips(
-      P.totale
-    );
-
+  const netBox=document.getElementById('pay-net'),netValue=document.getElementById('pay-net-v'),note=document.getElementById('pay-note');
+  const estimate=estimateNetFromPayslips(P.totale);
   if(estimate){
-    netBox.style.display = '';
-
-    netValue.textContent =
-      eur(estimate.estimatedNet);
-
-    note.innerHTML =
-      `Base oraria <b>${eur(P.ph)}</b> ` +
-      `(${eur(P.lordo)} ÷ ${S.oreContratto}h).<br>` +
-
-      `Stima basata su ` +
-      `<b>${estimate.payslipCount}</b> ` +
-      `${
-        estimate.payslipCount === 1
-          ? 'cedolino'
-          : 'cedolini'
-      } caricati.<br>` +
-
-      `Intervallo stimato: ` +
-      `<b>${eur(estimate.minimum)}</b> – ` +
-      `<b>${eur(estimate.maximum)}</b>.`;
-
-    /*
-     * Dettaglio del calcolo nella Console.
-     */
-    console.log(
-      `Stima cedolino ${MESI[m]} ${y}`,
-      estimate
-    );
-
+    netBox.style.display='';
+    netValue.textContent=eur(estimate.estimatedNet);
+    note.innerHTML=`Base ${eur(P.ph)} l'ora (${eur(P.lordo)} ÷ ${S.oreContratto}h).<br>Stima basata su <b>${estimate.payslipCount}</b> ${estimate.payslipCount===1?'cedolino':'cedolini'}. Intervallo: <b>${eur(estimate.minimum)}</b> – <b>${eur(estimate.maximum)}</b>.`;
     return;
   }
-
-  /*
-   * Vecchio metodo di riserva:
-   * viene usato soltanto se non è stato
-   * ancora caricato alcun cedolino.
-   */
-  const referenceNet =
-    Number(S.nettoRif) || 0;
-
-  if(referenceNet > 0){
-    const additions =
-      P.magNott +
-      P.magFest +
-      P.magFN +
-      P.stra;
-
-    const contributionRate =
-      (Number(S.aliqContrib) || 0) /
-      100;
-
-    const irpefRate =
-      (Number(S.aliqIrpef) || 0) /
-      100;
-
-    const estimatedNet =
-      referenceNet +
-      additions *
-      (1 - contributionRate) *
-      (1 - irpefRate);
-
-    netBox.style.display = '';
-
-    netValue.textContent =
-      eur(estimatedNet);
-
-    note.textContent =
-      'Stima provvisoria basata sul netto di riferimento. ' +
-      'Carica almeno un cedolino per una stima più precisa.';
-
-    return;
+  const nr=Number(S.nettoRif)||0;
+  if(nr>0){
+    const mag=P.magNott+P.magFest+P.magFN+P.stra,c=(Number(S.aliqContrib)||0)/100,i=(Number(S.aliqIrpef)||0)/100;
+    netBox.style.display='';
+    netValue.textContent=eur(nr+mag*(1-c)*(1-i));
+    note.textContent='Stima provvisoria basata sul netto di riferimento. Carica un cedolino PDF per una stima storica.';
+  }else{
+    netBox.style.display='none';
+    note.textContent='Carica almeno una busta paga PDF per calcolare il netto stimato.';
   }
-
-  netBox.style.display = 'none';
-
-  note.textContent =
-    'Carica almeno una busta paga PDF per calcolare il netto stimato.';
 }
 
 /* ---------- settimane e avvisi ---------- */
@@ -1221,6 +902,7 @@ document.getElementById('settings').onclick=()=>{
     browser:'Archivio: <b>questo telefono</b><br>I turni restano qui, non si sincronizzano.',
     memoria:'Archivio: <b class="x">nessuno</b><span class="issue">I turni spariranno alla chiusura. Apri l\'app da un indirizzo web o dall\'app Claude.</span>'
   }[store.mode];
+  renderPayslipInfo();
   showSheet('sheet-set');
 };
 Object.entries(setMap).forEach(([id,[key,kind]])=>{
@@ -1242,11 +924,10 @@ Object.entries(setMap).forEach(([id,[key,kind]])=>{
 document.getElementById('set-close').onclick=closeSheets;
 document.getElementById('wipe').onclick=async()=>{
   if(!confirm('Cancellare tutti i turni salvati? L\u2019operazione non si può annullare.'))return;
-state = {
+  state = {
   shifts: {},
   allShifts: {},
   payslips: {},
-
   settings: {
     ...DEFAULTS
   }
@@ -2839,581 +2520,118 @@ document.getElementById('q-go').onclick=()=>{
   pending=r.out;
   openPreview('sequenza incollata',r.bad.length);
 };
-/* ---------- importazione busta paga PDF ---------- */
 
-if (window.pdfjsLib) {
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+/* ---------- archivio e lettura buste paga PDF ---------- */
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 
-function parseItalianMoney(value) {
-  if (value == null) {
-    return null;
-  }
-
-  const cleaned = String(value)
-    .replace(/\s/g, '')
-    .replace(/\.(?=\d{3}(?:\D|$))/g, '')
-    .replace(',', '.')
-    .replace(/[^\d.-]/g, '');
-
-  const number = Number(cleaned);
-
-  return Number.isFinite(number)
-    ? number
-    : null;
+function parseItalianMoney(value){
+  if(value==null)return null;
+  const cleaned=String(value).replace(/\s/g,'').replace(/\.(?=\d{3}(?:\D|$))/g,'').replace(',','.').replace(/[^\d.-]/g,'');
+  const n=Number(cleaned);
+  return Number.isFinite(n)?n:null;
 }
 
-function findPayslipAmount(text, regex) {
-  const match = text.match(regex);
-
-  if (!match) {
-    return null;
-  }
-
-  return parseItalianMoney(match[1]);
+function detectPayslipPeriod(text){
+  const months={gennaio:1,febbraio:2,marzo:3,aprile:4,maggio:5,giugno:6,luglio:7,agosto:8,settembre:9,ottobre:10,novembre:11,dicembre:12};
+  const m=String(text||'').match(/\b(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\s+(20\d{2})\b/i);
+  if(!m)return null;
+  const month=months[m[1].toLowerCase()],year=Number(m[2]);
+  return {year,month,key:`${year}-${String(month).padStart(2,'0')}`,label:`${m[1][0].toUpperCase()}${m[1].slice(1).toLowerCase()} ${year}`};
 }
 
-function detectPayslipPeriod(text) {
-  const months = {
-    gennaio: 1,
-    febbraio: 2,
-    marzo: 3,
-    aprile: 4,
-    maggio: 5,
-    giugno: 6,
-    luglio: 7,
-    agosto: 8,
-    settembre: 9,
-    ottobre: 10,
-    novembre: 11,
-    dicembre: 12
-  };
-
-  const match = text.match(
-    /\b(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\s+(20\d{2})\b/i
-  );
-
-  if (!match) {
-    return null;
+async function extractPdfText(file){
+  if(!window.pdfjsLib)throw new Error('PDF.js non disponibile');
+  const pdf=await pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;
+  const pages=[];
+  for(let n=1;n<=pdf.numPages;n++){
+    const page=await pdf.getPage(n),content=await page.getTextContent();
+    pages.push(content.items.map(x=>x.str).join(' '));
   }
-
-  const monthName = match[1].toLowerCase();
-  const month = months[monthName];
-  const year = Number(match[2]);
-
-  return {
-    year,
-    month,
-
-    key:
-      `${year}-` +
-      `${String(month).padStart(2, '0')}`,
-
-    label:
-      `${match[1][0].toUpperCase()}` +
-      `${match[1].slice(1).toLowerCase()} ` +
-      `${year}`
-  };
-}
-
-async function extractPdfText(file) {
-  if (!window.pdfjsLib) {
-    throw new Error(
-      'La libreria PDF.js non è disponibile'
-    );
-  }
-
-  const bytes =
-    new Uint8Array(
-      await file.arrayBuffer()
-    );
-
-  const pdf =
-    await pdfjsLib
-      .getDocument({
-        data: bytes
-      })
-      .promise;
-
-  const pages = [];
-
-  for (
-    let pageNumber = 1;
-    pageNumber <= pdf.numPages;
-    pageNumber++
-  ) {
-    const page =
-      await pdf.getPage(pageNumber);
-
-    const content =
-      await page.getTextContent();
-
-    const text =
-      content.items
-        .map(item => item.str)
-        .join(' ');
-
-    pages.push(text);
-  }
-
   return pages.join('\n');
 }
 
-function parsePayslipText(text) {
-  const normalized = String(text || '')
-    .replace(/\u00a0/g, ' ')
-    .replace(/[ \t]+/g, ' ')
-    .replace(/\r/g, '');
-
-  const period = detectPayslipPeriod(normalized);
-
-  /*
-   * Restituisce tutti gli importi presenti dopo una voce.
-   */
-  function amountsAfter(label, maxLength = 180) {
-    const match = normalized.match(
-      new RegExp(
-        label + '[\\s\\S]{0,' + maxLength + '}',
-        'i'
-      )
-    );
-
-    if (!match) return [];
-
-    return [
-      ...match[0].matchAll(
-        /\b\d{1,3}(?:\.\d{3})*,\d{2,5}\b/g
-      )
-    ]
-      .map(item => parseItalianMoney(item[0]))
-      .filter(Number.isFinite);
-  }
-
-  /*
-   * Nelle righe contributive:
-   *
-   * Contributo IVS 3.058,00 9,19000 % 281,03
-   *
-   * l'importo trattenuto è l'ultimo numero.
-   */
-  function lastAmountAfter(label, maxLength = 180) {
-    const values = amountsAfter(label, maxLength);
-    return values.length ? values.at(-1) : null;
-  }
-
-  /*
-   * Lordo fisso: utilizza la retribuzione utile TFR,
-   * che nel tuo modello coincide con il fisso mensile.
-   */
-/*
- * Lordo fisso: prende il valore totale della sezione
- * MINIMO + Straordinario forfettario + SUP.ASS.
- *
- * Non usa lastAmountAfter("Retribuzione utile T.F.R."),
- * perché nell'estrazione PDF può catturare la voce SUP.ASS. 180,20.
- */
-let grossBase = null;
-
-const salarySectionMatch = normalized.match(
-  /MINIMO([\s\S]{0,600}?)Zucchetti/i
-);
-
-if (salarySectionMatch) {
-  const salaryAmounts = [
-    ...salarySectionMatch[1].matchAll(
-      /\b\d{1,3}(?:\.\d{3})*,\d{2,5}\b/g
-    )
-  ]
-    .map(match => parseItalianMoney(match[0]))
-    .filter(value =>
-      Number.isFinite(value) &&
-      value >= 500 &&
-      value < 15000
-    );
-
-  if (salaryAmounts.length) {
-    /*
-     * Nel tuo cedolino il totale fisso è il valore
-     * più alto della sezione: 2.538,46.
-     */
-    grossBase = Math.max(...salaryAmounts);
-  }
-}
-
-/*
- * Tentativo alternativo sulla dicitura TFR.
- */
-if (grossBase == null) {
-  const tfrMatch = normalized.match(
-    /Retribuzione\s+utile\s+T\.F\.R\.\s+([0-9.]+,[0-9]{2,5})/i
-  );
-
-  if (tfrMatch) {
-    grossBase =
-      parseItalianMoney(tfrMatch[1]);
-  }
-}
-
-/*
- * Non azzera mai il lordo già impostato se il PDF
- * non viene riconosciuto.
- */
-if (
-  grossBase == null &&
-  Number(state.settings.lordoFisso) > 0
-) {
-  grossBase =
-    Number(state.settings.lordoFisso);
-}
-  const hours50 =
-    findPayslipAmount(
-      normalized,
-      /Magg\.\s*banca\s*ore\s*50%[\s\S]{0,100}?(\d+(?:[.,]\d+)?)\s*ORE/i
-    );
-
-  const hours55 =
-    findPayslipAmount(
-      normalized,
-      /Magg\.\s*banca\s*ore\s*55%[\s\S]{0,100}?(\d+(?:[.,]\d+)?)\s*ORE/i
-    );
-
-  const addition50 =
-    lastAmountAfter(
-      'Magg\\.\\s*banca\\s*ore\\s*50%',
-      180
-    );
-
-  const addition55 =
-    lastAmountAfter(
-      'Magg\\.\\s*banca\\s*ore\\s*55%',
-      180
-    );
-
-  const socialIvs =
-    lastAmountAfter(
-      'Contributo\\s+IVS',
-      160
-    );
-
-  const socialCigs =
-    lastAmountAfter(
-      'Contributo\\s+CIGS',
-      160
-    );
-
-  const epar =
-    lastAmountAfter(
-      'Contributo\\s+EPAR',
-      160
-    );
-
-  const cometaEmployee =
-    lastAmountAfter(
-      'Contributo\\s+base\\s+COMETA(?!\\s+C\\/Ditta)',
-      170
-    );
-
-  const taxableIrpef =
-    lastAmountAfter(
-      'Imponibile\\s+IRPEF',
-      80
-    );
-
-  const grossIrpef =
-    lastAmountAfter(
-      'IRPEF\\s+lorda',
-      80
-    );
-
-  const employeeDeduction =
-    lastAmountAfter(
-      'Detrazioni\\s+lav\\.?\\s*dip\\.?',
-      80
-    );
-
-  const additionalDeduction =
-    lastAmountAfter(
-      'Ulteriore\\s+detrazione',
-      120
-    );
-
-  const irpefWithheld =
-    lastAmountAfter(
-      'Ritenute\\s+IRPEF',
-      80
-    );
-
-  const regionalTax =
-    lastAmountAfter(
-      'Addizionale\\s+regionale',
-      180
-    );
-
-  const municipalTax =
-    lastAmountAfter(
-      'Addizionale\\s+comunale',
-      180
-    );
-
-  const municipalAdvance =
-    lastAmountAfter(
-      'Acconto\\s+addiz\\.?\\s+comunale',
-      180
-    );
-
-  /*
-   * Il lordo complessivo viene ricostruito dalle competenze
-   * riconosciute. Nel cedolino di maggio:
-   *
-   * 2.538,46 + 454,87 + 64,56 = 3.057,89.
-   */
-  let grossTotal = null;
-
-  if (
-    Number(grossBase) > 0 &&
-    Number(addition50) >= 0 &&
-    Number(addition55) >= 0
-  ) {
-    grossTotal =
-      Number(grossBase) +
-      Number(addition50 || 0) +
-      Number(addition55 || 0);
-  }
-
-  /*
-   * Cerca il netto associato al simbolo €.
-   */
-  let netPay = null;
-
-  const euroAmounts = [
-    ...normalized.matchAll(
-      /(\d{1,3}(?:\.\d{3})*,\d{2})\s*€/g
-    )
-  ]
-    .map(match => parseItalianMoney(match[1]))
-    .filter(value => Number.isFinite(value) && value > 100);
-
-  if (euroAmounts.length) {
-    netPay = euroAmounts.at(-1);
-  }
-
-  /*
-   * In alternativa cerca il valore vicino alla banca.
-   */
-  if (netPay == null) {
-    const bankMatch = normalized.match(
-      /(\d{1,3}(?:\.\d{3})*,\d{2})[\s\S]{0,100}?ISYBANK/i
-    );
-
-    if (bankMatch) {
-      netPay = parseItalianMoney(bankMatch[1]);
-    }
-  }
-
-  const socialContributions =
-    Number(socialIvs || 0) +
-    Number(socialCigs || 0);
-
-  const localTaxes =
-    Number(regionalTax || 0) +
-    Number(municipalTax || 0) +
-    Number(municipalAdvance || 0);
-
-  /*
-   * Se il netto è presente, le trattenute complessive
-   * vengono ricavate dalla differenza.
-   */
-  let totalDeductions = null;
-
-  if (
-    Number(grossTotal) > 0 &&
-    Number(netPay) > 0
-  ) {
-    totalDeductions =
-      Number(grossTotal) -
-      Number(netPay);
-  }
-
-  return {
-    period,
-
-    grossBase,
-    grossTotal,
-
-    hours50,
-    hours55,
-
-    addition50,
-    addition55,
-
-    socialIvs,
-    socialCigs,
-    socialContributions,
-
-    epar,
-    cometaEmployee,
-
-    taxableIrpef,
-    grossIrpef,
-
-    employeeDeduction,
-    additionalDeduction,
-    irpefWithheld,
-
-    regionalTax,
-    municipalTax,
-    municipalAdvance,
-    localTaxes,
-
-    totalDeductions,
-    netPay
+function parsePayslipText(text){
+  const normalized=String(text||'').replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();
+  const period=detectPayslipPeriod(normalized);
+  const valuesAfter=(label,max=180)=>{
+    const m=normalized.match(new RegExp(label+'[\\s\\S]{0,'+max+'}','i'));
+    if(!m)return [];
+    return [...m[0].matchAll(/\d{1,3}(?:\.\d{3})*,\d{2,5}/g)].map(x=>parseItalianMoney(x[0])).filter(Number.isFinite);
   };
-}
+  const last=(label,max=180)=>{const a=valuesAfter(label,max);return a.length?a.at(-1):null};
 
-function renderPayslipInfo() {
-  const box =
-    document.getElementById(
-      'payslip-info'
-    );
+  const hours50=last('Magg\\.\\s*banca\\s*ore\\s*50%',120);
+  const hours55=last('Magg\\.\\s*banca\\s*ore\\s*55%',120);
+  const addition50=last('Magg\\.\\s*banca\\s*ore\\s*50%',220);
+  const addition55=last('Magg\\.\\s*banca\\s*ore\\s*55%',220);
+  const socialIvs=last('Contributo\\s+IVS',170);
+  const socialCigs=last('Contributo\\s+CIGS',170);
+  const epar=last('Contributo\\s+EPAR',170);
+  const cometaEmployee=last('Contributo\\s+base\\s+COMETA(?!\\s+C\\/Ditta)',180);
+  const taxableIrpef=last('Imponibile\\s+IRPEF',100);
+  const grossIrpef=last('IRPEF\\s+lorda',100);
+  const employeeDeduction=last('Detrazioni\\s+lav\\.?\\s*dip\\.?',100);
+  const additionalDeduction=last('Ulteriore\\s+detrazione',140);
+  const irpefWithheld=last('Ritenute\\s+IRPEF',100);
+  const regionalTax=last('Addizionale\\s+regionale',210);
+  const municipalTax=last('Addizionale\\s+comunale',210);
+  const municipalAdvance=last('Acconto\\s+addiz\\.?\\s+comunale',210);
 
-  if (!box) {
-    return;
+  let grossBase=null;
+  const salary=normalized.match(/MINIMO[\s\S]{0,700}?Zucchetti/i);
+  if(salary){
+    const vals=[...salary[0].matchAll(/\d{1,3}(?:\.\d{3})*,\d{2,5}/g)].map(x=>parseItalianMoney(x[0])).filter(v=>Number.isFinite(v)&&v>=500&&v<15000);
+    if(vals.length)grossBase=Math.max(...vals);
+  }
+  if(!(grossBase>=500))grossBase=Number(state.settings.lordoFisso)||null;
+
+  let grossTotal=null;
+  if(grossBase>0)grossTotal=Number((grossBase+(Number(addition50)||0)+(Number(addition55)||0)).toFixed(2));
+
+  let netPay=null;
+  const euros=[...normalized.matchAll(/(\d{1,3}(?:\.\d{3})*,\d{2})\s*€/g)].map(x=>parseItalianMoney(x[1])).filter(v=>Number.isFinite(v)&&v>100);
+  if(euros.length)netPay=euros.at(-1);
+  if(netPay==null){
+    const bank=normalized.match(/(\d{1,3}(?:\.\d{3})*,\d{2})[\s\S]{0,100}?ISYBANK/i);
+    if(bank)netPay=parseItalianMoney(bank[1]);
   }
 
-  const payslips =
-    Object.values(
-      state.payslips || {}
-    )
-      .filter(item => item?.period?.key)
-      .sort((a, b) =>
-        a.period.key.localeCompare(
-          b.period.key
-        )
-      );
-
-  if (!payslips.length) {
-    box.style.display = 'none';
-    return;
-  }
-
-  const latest =
-    payslips.at(-1);
-
-  box.style.display = '';
-
-  box.innerHTML =
-    `<b>${payslips.length}</b> ` +
-    `${payslips.length === 1 ? 'cedolino caricato' : 'cedolini caricati'}` +
-    `<br>` +
-    `Ultimo: <b>${latest.period.label}</b>` +
-    (
-      latest.netPay != null
-        ? `<br>Netto reale: <b>${eur(latest.netPay)}</b>`
-        : ''
-    );
+  const socialContributions=(Number(socialIvs)||0)+(Number(socialCigs)||0);
+  const localTaxes=(Number(regionalTax)||0)+(Number(municipalTax)||0)+(Number(municipalAdvance)||0);
+  const totalDeductions=grossTotal>0&&netPay>0?Number((grossTotal-netPay).toFixed(2)):null;
+  return {period,grossBase,grossTotal,hours50,hours55,addition50,addition55,socialIvs,socialCigs,socialContributions,epar,cometaEmployee,taxableIrpef,grossIrpef,employeeDeduction,additionalDeduction,irpefWithheld,regionalTax,municipalTax,municipalAdvance,localTaxes,totalDeductions,netPay};
 }
 
-const uploadPayslipButton =
-  document.getElementById(
-    'upload-payslip'
-  );
-
-const payslipFileInput =
-  document.getElementById(
-    'payslip-file'
-  );
-
-if (
-  uploadPayslipButton &&
-  payslipFileInput
-) {
-  uploadPayslipButton.onclick = () => {
-    payslipFileInput.click();
-  };
-
-  payslipFileInput.addEventListener(
-    'change',
-    async event => {
-      const file =
-        event.target.files[0];
-
-      event.target.value = '';
-
-      if (!file) {
-        return;
-      }
-
-      try {
-        toast(
-          'Lettura cedolino in corso…'
-        );
-
-        const text =
-          await extractPdfText(file);
-
-        const data =
-          parsePayslipText(text);
-
-        if (!data.period) {
-          toast(
-            'Mese del cedolino non riconosciuto'
-          );
-
-          console.log(
-            'Testo cedolino:',
-            text
-          );
-
-          return;
-        }
-
-        state.payslips[
-          data.period.key
-        ] = {
-          ...data,
-          fileName: file.name,
-          importedAt:
-            new Date().toISOString()
-        };
-
-        /*
-         * Aggiorna automaticamente
-         * i principali valori del profilo.
-         */
-        if (data.grossBase) {
-          state.settings.lordoFisso =
-            data.grossBase;
-        }
-
-        if (
-          data.socialContributions &&
-          data.grossTotal
-        ) {
-          state.settings.aliqContrib =
-            data.socialContributions /
-            data.grossTotal *
-            100;
-        }
-
-        save();
-        renderPayslipInfo();
-
-        toast(
-          `Cedolino ${data.period.label} salvato`
-        );
-
-        console.table(data);
-
-      } catch (error) {
-        console.error(error);
-
-        toast(
-          'Cedolino PDF non leggibile'
-        );
-      }
-    }
-  );
+function renderPayslipInfo(){
+  const box=document.getElementById('payslip-info');
+  if(!box)return;
+  const list=Object.values(state.payslips||{}).filter(p=>p?.period?.key).sort((a,b)=>a.period.key.localeCompare(b.period.key));
+  if(!list.length){box.style.display='none';return}
+  const p=list.at(-1);
+  box.style.display='';
+  box.innerHTML=`<b>${list.length}</b> ${list.length===1?'cedolino caricato':'cedolini caricati'}<br>Ultimo: <b>${p.period.label}</b>${p.netPay?`<br>Netto reale: <b>${eur(p.netPay)}</b>`:''}`;
 }
+
+const uploadPayslipButton=document.getElementById('upload-payslip');
+const payslipFileInput=document.getElementById('payslip-file');
+if(uploadPayslipButton&&payslipFileInput){
+  uploadPayslipButton.onclick=()=>payslipFileInput.click();
+  payslipFileInput.addEventListener('change',async e=>{
+    const file=e.target.files[0];e.target.value='';if(!file)return;
+    try{
+      toast('Lettura cedolino in corso…');
+      const data=parsePayslipText(await extractPdfText(file));
+      if(!data.period){toast('Mese del cedolino non riconosciuto');return}
+      state.payslips[data.period.key]={...data,fileName:file.name,importedAt:new Date().toISOString()};
+      if(Number(data.grossBase)>=500&&Number(data.grossBase)<=15000)state.settings.lordoFisso=Number(data.grossBase);
+      if(data.grossTotal>0&&data.socialContributions>0)state.settings.aliqContrib=data.socialContributions/data.grossTotal*100;
+      save();render();renderPayslipInfo();toast(`Cedolino ${data.period.label} salvato`);console.table(data);
+    }catch(err){console.error(err);toast('Cedolino PDF non leggibile')}
+  });
+}
+
 load();
 </script>  
