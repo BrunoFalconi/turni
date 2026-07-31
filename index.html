@@ -860,126 +860,1517 @@ document.getElementById('copy').onclick=async()=>{
   const txt=`${MESI[m]} ${y}\n${lines.join('\n')}\n\nTotale ${fmtPlain(tot)} · straordinari ${fmtPlain(ex)} · notturne ${fmtPlain(nt)}`;
   try{await navigator.clipboard.writeText(txt);toast('Riepilogo copiato')}catch(e){toast('Copia non riuscita')}
 };
-
 /* ---------- importazione da Excel ---------- */
-const norm=s=>String(s??'').trim().toLowerCase()
-  .replace(/[àáâ]/g,'a').replace(/[èé]/g,'e').replace(/[ìí]/g,'i').replace(/[òó]/g,'o').replace(/[ùú]/g,'u');
-const COLS={
-  date:['data','giorno','date'],
-  type:['turno','tipo','shift','codice','sigla'],
-  start:['inizio','entrata','dalle','ora inizio','start'],
-  end:['fine','uscita','alle','ora fine','end'],
-  brk:['pausa','break'],
-  note:['note','nota','commento','reparto','sede']
+
+/*
+ * Importatore compatibile con:
+ *
+ * 1. Il modello semplice:
+ *    Data | Turno | Inizio | Fine | Pausa | Note
+ *
+ * 2. La Turnistica T1:
+ *    - un foglio per mese;
+ *    - dipendenti sulle righe;
+ *    - giorni sulle colonne;
+ *    - codici M, P, N, R, DEAS ecc.;
+ *    - finestre che possono iniziare nel mese precedente;
+ *    - turno M 08-20 da dodici ore.
+ */
+
+const norm = value => String(value ?? '')
+  .trim()
+  .toLowerCase()
+  .replace(/[àáâä]/g, 'a')
+  .replace(/[èéêë]/g, 'e')
+  .replace(/[ìíîï]/g, 'i')
+  .replace(/[òóôö]/g, 'o')
+  .replace(/[ùúûü]/g, 'u')
+  .replace(/[–—]/g, '-')
+  .replace(/\s+/g, ' ');
+
+const IMPORT_MONTHS = {
+  gennaio: 0,
+  febbraio: 1,
+  marzo: 2,
+  aprile: 3,
+  maggio: 4,
+  giugno: 5,
+  luglio: 6,
+  agosto: 7,
+  settembre: 8,
+  ottobre: 9,
+  novembre: 10,
+  dicembre: 11
 };
-function matchCol(h){
-  const n=norm(h); if(!n) return null;
-  for(const [k,names] of Object.entries(COLS)) if(names.some(x=>n===x||n.startsWith(x))) return k;
+
+const COLS = {
+  date: [
+    'data',
+    'giorno',
+    'date'
+  ],
+
+  type: [
+    'turno',
+    'tipo',
+    'shift',
+    'codice',
+    'sigla'
+  ],
+
+  start: [
+    'inizio',
+    'entrata',
+    'dalle',
+    'ora inizio',
+    'start'
+  ],
+
+  end: [
+    'fine',
+    'uscita',
+    'alle',
+    'ora fine',
+    'end'
+  ],
+
+  brk: [
+    'pausa',
+    'break'
+  ],
+
+  note: [
+    'note',
+    'nota',
+    'commento',
+    'reparto',
+    'sede'
+  ]
+};
+
+function matchCol(header) {
+  const normalized = norm(header);
+
+  if (!normalized) {
+    return null;
+  }
+
+  for (const [key, names] of Object.entries(COLS)) {
+    if (
+      names.some(name =>
+        normalized === name ||
+        normalized.startsWith(name)
+      )
+    ) {
+      return key;
+    }
+  }
+
   return null;
 }
-function toDate(v){
-  if(v instanceof Date && !isNaN(v)) return new Date(v.getFullYear(),v.getMonth(),v.getDate());
-  if(typeof v==='number' && v>20000 && v<80000){
-    const d=XLSX.SSF.parse_date_code(v); return d?new Date(d.y,d.m-1,d.d):null;
+
+function toDate(value) {
+  if (
+    value instanceof Date &&
+    !Number.isNaN(value.getTime())
+  ) {
+    return new Date(
+      value.getFullYear(),
+      value.getMonth(),
+      value.getDate()
+    );
   }
-  const s=String(v??'').trim(); if(!s) return null;
-  let m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
-  if(m){let y=+m[3]; if(y<100)y+=2000; return new Date(y,+m[2]-1,+m[1]);}
-  m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if(m) return new Date(+m[1],+m[2]-1,+m[3]);
-  const d=new Date(s); return isNaN(d)?null:new Date(d.getFullYear(),d.getMonth(),d.getDate());
-}
-function toTime(v){
-  if(v instanceof Date && !isNaN(v)) return pad(v.getHours())+':'+pad(v.getMinutes());
-  if(typeof v==='number'){
-    let f=v%1; if(f===0 && v>=1 && v<24) f=v/24;
-    const mins=Math.round(f*1440)%1440;
-    return pad(Math.floor(mins/60))+':'+pad(mins%60);
+
+  if (
+    typeof value === 'number' &&
+    value > 20000 &&
+    value < 80000
+  ) {
+    const decoded =
+      XLSX.SSF.parse_date_code(value);
+
+    return decoded
+      ? new Date(
+          decoded.y,
+          decoded.m - 1,
+          decoded.d
+        )
+      : null;
   }
-  const s=String(v??'').trim(); if(!s) return null;
-  const m=s.match(/^(\d{1,2})\s*[:.hH]?\s*(\d{2})?/); if(!m) return null;
-  return pad(+m[1]%24)+':'+pad(m[2]?+m[2]:0);
+
+  const text =
+    String(value ?? '').trim();
+
+  if (!text) {
+    return null;
+  }
+
+  let match = text.match(
+    /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/
+  );
+
+  if (match) {
+    let year = Number(match[3]);
+
+    if (year < 100) {
+      year += 2000;
+    }
+
+    return new Date(
+      year,
+      Number(match[2]) - 1,
+      Number(match[1])
+    );
+  }
+
+  match = text.match(
+    /^(\d{4})-(\d{1,2})-(\d{1,2})/
+  );
+
+  if (match) {
+    return new Date(
+      Number(match[1]),
+      Number(match[2]) - 1,
+      Number(match[3])
+    );
+  }
+
+  const date = new Date(text);
+
+  return Number.isNaN(date.getTime())
+    ? null
+    : new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+      );
 }
-function toType(v){
-  const n=norm(v); if(!n) return null;
-  if(n.startsWith('deas')||n.startsWith('smart')||n==='sw'||n==='d') return 'deas';
-  if(n.startsWith('mal')) return 'malattia';
-  if(n.startsWith('fer')||n==='f') return 'ferie';
-  if(n.startsWith('rip')||n.startsWith('lib')||n==='r'||n==='l'||n==='-') return 'riposo';
-  if(n.startsWith('mat')||n==='m') return 'mattina';
-  if(n.startsWith('pom')||n==='p') return 'pomeriggio';
-  if(n.startsWith('not')||n==='n') return 'notte';
+
+function toTime(value) {
+  if (
+    value instanceof Date &&
+    !Number.isNaN(value.getTime())
+  ) {
+    return (
+      pad(value.getHours()) +
+      ':' +
+      pad(value.getMinutes())
+    );
+  }
+
+  if (typeof value === 'number') {
+    let fraction = value % 1;
+
+    if (
+      fraction === 0 &&
+      value >= 1 &&
+      value < 24
+    ) {
+      fraction = value / 24;
+    }
+
+    const minutes =
+      Math.round(fraction * 1440) % 1440;
+
+    return (
+      pad(Math.floor(minutes / 60)) +
+      ':' +
+      pad(minutes % 60)
+    );
+  }
+
+  const text =
+    String(value ?? '').trim();
+
+  if (!text) {
+    return null;
+  }
+
+  const match = text.match(
+    /^(\d{1,2})\s*[:.hH]?\s*(\d{2})?/
+  );
+
+  if (!match) {
+    return null;
+  }
+
+  return (
+    pad(Number(match[1]) % 24) +
+    ':' +
+    pad(match[2] ? Number(match[2]) : 0)
+  );
+}
+
+/*
+ * Restituisce una descrizione completa del codice.
+ */
+function parseExcelShiftCode(value) {
+  const original = norm(value);
+
+  if (!original) {
+    return null;
+  }
+
+  /*
+   * Turno speciale di dodici ore.
+   */
+  if (
+    /^m\s*0?8\s*[-/]\s*20\b/.test(original) ||
+    /^0?8\s*[-/]\s*20\b/.test(original)
+  ) {
+    return {
+      type: 'mattina',
+      start: '08:00',
+      end: '20:00',
+      break: 0,
+      label: 'Mattina 08:00–20:00'
+    };
+  }
+
+  /*
+   * Rimuove annotazioni:
+   * M(A), P(A), N (A) ecc.
+   */
+  const code = original
+    .replace(/\s*\([^)]*\)\s*/g, '')
+    .trim();
+
+  if (
+    code.startsWith('deas') ||
+    code.startsWith('smart') ||
+    code === 'sw' ||
+    code === 'd'
+  ) {
+    return {
+      type: 'deas'
+    };
+  }
+
+  if (code.startsWith('mal')) {
+    return {
+      type: 'malattia'
+    };
+  }
+
+  if (
+    code.startsWith('fer') ||
+    code.startsWith('perm') ||
+    code.startsWith('par') ||
+    code.startsWith('lutto') ||
+    code === 'f'
+  ) {
+    return {
+      type: 'ferie'
+    };
+  }
+
+  if (
+    code.startsWith('rip') ||
+    code.startsWith('lib') ||
+    code === 'r' ||
+    code === 'rc' ||
+    code === 'l' ||
+    code === '-'
+  ) {
+    return {
+      type: 'riposo'
+    };
+  }
+
+  if (
+    code.startsWith('mat') ||
+    code === 'm'
+  ) {
+    return {
+      type: 'mattina'
+    };
+  }
+
+  if (
+    code.startsWith('pom') ||
+    code === 'p'
+  ) {
+    return {
+      type: 'pomeriggio'
+    };
+  }
+
+  if (
+    code.startsWith('not') ||
+    code === 'n'
+  ) {
+    return {
+      type: 'notte'
+    };
+  }
+
   return null;
 }
-function rowToShift(cells,map){
-  const d=toDate(cells[map.date]); if(!d) return null;
-  let type=map.type!=null?toType(cells[map.type]):null;
-  let st=map.start!=null?toTime(cells[map.start]):null;
-  let en=map.end!=null?toTime(cells[map.end]):null;
-  if(!type&&!st) return null;
-  if(type&&!typeOf(type).work) return {key:ymd(d),shift:{type,start:'',end:'',break:0,note:''}};
-  if(!st&&type&&DEFAULTS.presets[type]) [st,en]=presetOf(type);
-  if(!st||!en) return null;
-  if(!type){
-    type=Object.keys(DEFAULTS.presets).find(k=>presetOf(k)[0]===st)||(toMin(st)<12?'mattina':toMin(st)<20?'pomeriggio':'notte');
-  }
-  const brk=map.brk!=null?Math.max(0,Number(String(cells[map.brk]).replace(',','.'))||0):(typeOf(type).brk??state.settings.defaultBreak??0);
-  return {key:ymd(d),shift:{type,start:st,end:en,break:brk,note:map.note!=null?String(cells[map.note]??'').trim():''}};
+
+/*
+ * Serve anche alla funzione "Incolla sequenza",
+ * che usa già toType().
+ */
+function toType(value) {
+  return parseExcelShiftCode(value)?.type || null;
 }
-let pending=[];
-function openPreview(label,skipped){
-  const dup=pending.filter(p=>state.shifts[p.key]).length;
-  document.getElementById('imp-sum').innerHTML=
-    `<b>${pending.length}</b> turni letti da <b>${label}</b><br>`+
-    `Non riconosciuti <b>${skipped}</b> · già presenti in agenda <b>${dup}</b>`;
-  const box=document.getElementById('imp-list'); box.innerHTML='';
-  pending.forEach(p=>{
-    const dt=new Date(p.key+'T00:00:00'), t=typeOf(p.shift.type);
-    const row=document.createElement('div'); row.className='row';
-    row.innerHTML=`<span class="dot" style="background:${t.color}"></span>
-      <span class="d">${GIORNI[dt.getDay()]} ${dt.getDate()}/${dt.getMonth()+1}</span>
-      <span class="t">${t.label}${isWork(p.shift)?`<em>${p.shift.start}–${p.shift.end}</em>`:''}</span>
-      <span class="h">${isWork(p.shift)?fmtPlain(worked(p.shift)):'—'}</span>`;
+
+function makeImportedShift(descriptor) {
+  if (!descriptor) {
+    return null;
+  }
+
+  const definition =
+    typeOf(descriptor.type);
+
+  if (!definition) {
+    return null;
+  }
+
+  if (!definition.work) {
+    return {
+      type: descriptor.type,
+      start: '',
+      end: '',
+      break: 0,
+      note: 'Importato da Excel'
+    };
+  }
+
+  const preset =
+    presetOf(descriptor.type);
+
+  return {
+    type: descriptor.type,
+
+    start:
+      descriptor.start ||
+      preset[0],
+
+    end:
+      descriptor.end ||
+      preset[1],
+
+    break:
+      descriptor.break ??
+      definition.brk ??
+      state.settings.defaultBreak ??
+      0,
+
+    note:
+      descriptor.label
+        ? `Importato da Excel · ${descriptor.label}`
+        : 'Importato da Excel'
+  };
+}
+
+/* ---------- modello Excel semplice ---------- */
+
+function rowToShift(cells, map) {
+  const date =
+    toDate(cells[map.date]);
+
+  if (!date) {
+    return null;
+  }
+
+  const descriptor =
+    map.type != null
+      ? parseExcelShiftCode(
+          cells[map.type]
+        )
+      : null;
+
+  let type =
+    descriptor?.type || null;
+
+  let start =
+    map.start != null
+      ? toTime(cells[map.start])
+      : null;
+
+  let end =
+    map.end != null
+      ? toTime(cells[map.end])
+      : null;
+
+  if (!type && !start) {
+    return null;
+  }
+
+  if (
+    descriptor?.start &&
+    descriptor?.end
+  ) {
+    start = descriptor.start;
+    end = descriptor.end;
+  }
+
+  if (
+    type &&
+    !typeOf(type).work
+  ) {
+    return {
+      key: ymd(date),
+
+      shift: {
+        type,
+        start: '',
+        end: '',
+        break: 0,
+        note:
+          map.note != null
+            ? String(cells[map.note] ?? '').trim()
+            : 'Importato da Excel'
+      }
+    };
+  }
+
+  if (
+    !start &&
+    type &&
+    DEFAULTS.presets[type]
+  ) {
+    [start, end] =
+      presetOf(type);
+  }
+
+  if (!start || !end) {
+    return null;
+  }
+
+  if (!type) {
+    type =
+      Object.keys(DEFAULTS.presets)
+        .find(key =>
+          presetOf(key)[0] === start
+        ) ||
+      (
+        toMin(start) < 12
+          ? 'mattina'
+          : toMin(start) < 20
+            ? 'pomeriggio'
+            : 'notte'
+      );
+  }
+
+  const pause =
+    map.brk != null
+      ? Math.max(
+          0,
+          Number(
+            String(cells[map.brk])
+              .replace(',', '.')
+          ) || 0
+        )
+      : (
+          descriptor?.break ??
+          typeOf(type).brk ??
+          state.settings.defaultBreak ??
+          0
+        );
+
+  return {
+    key: ymd(date),
+
+    shift: {
+      type,
+      start,
+      end,
+      break: pause,
+
+      note:
+        map.note != null
+          ? String(cells[map.note] ?? '').trim()
+          : 'Importato da Excel'
+    }
+  };
+}
+
+function parseSimpleSheet(rows) {
+  let map = null;
+  let headerRow = -1;
+
+  for (
+    let rowIndex = 0;
+    rowIndex < Math.min(rows.length, 15);
+    rowIndex++
+  ) {
+    const candidate = {};
+
+    (rows[rowIndex] || [])
+      .forEach((cell, columnIndex) => {
+        const key =
+          matchCol(cell);
+
+        if (
+          key &&
+          candidate[key] == null
+        ) {
+          candidate[key] =
+            columnIndex;
+        }
+      });
+
+    if (
+      candidate.date != null &&
+      (
+        candidate.type != null ||
+        candidate.start != null
+      )
+    ) {
+      map = candidate;
+      headerRow = rowIndex;
+      break;
+    }
+  }
+
+  if (!map) {
+    return null;
+  }
+
+  const result = [];
+  let skipped = 0;
+
+  for (
+    let rowIndex = headerRow + 1;
+    rowIndex < rows.length;
+    rowIndex++
+  ) {
+    const item =
+      rowToShift(
+        rows[rowIndex],
+        map
+      );
+
+    if (item) {
+      result.push(item);
+    } else if (
+      (rows[rowIndex] || [])
+        .some(cell =>
+          String(cell).trim()
+        )
+    ) {
+      skipped++;
+    }
+  }
+
+  return {
+    shifts: result,
+    skipped
+  };
+}
+
+/* ---------- Turnistica T1 a griglia ---------- */
+
+function parseSheetPeriods(sheetNames) {
+  const parsed =
+    sheetNames.map(name => {
+      const normalized =
+        norm(name);
+
+      const monthName =
+        Object.keys(IMPORT_MONTHS)
+          .find(month =>
+            normalized.includes(month)
+          );
+
+      const yearMatch =
+        String(name).match(
+          /(?:19|20)\d{2}/
+        );
+
+      if (!monthName) {
+        return null;
+      }
+
+      return {
+        month:
+          IMPORT_MONTHS[monthName],
+
+        year:
+          yearMatch
+            ? Number(yearMatch[0])
+            : null
+      };
+    });
+
+  const anchors =
+    parsed
+      .map((period, index) => {
+        if (
+          !period ||
+          period.year == null
+        ) {
+          return null;
+        }
+
+        return {
+          ...period,
+          index
+        };
+      })
+      .filter(Boolean);
+
+  return parsed.map(
+    (period, index) => {
+      if (!period) {
+        return null;
+      }
+
+      if (period.year != null) {
+        return period;
+      }
+
+      if (!anchors.length) {
+        return {
+          month: period.month,
+          year:
+            new Date().getFullYear()
+        };
+      }
+
+      const nearest =
+        anchors
+          .slice()
+          .sort((a, b) =>
+            Math.abs(a.index - index) -
+            Math.abs(b.index - index)
+          )[0];
+
+      const absoluteMonth =
+        nearest.year * 12 +
+        nearest.month +
+        (index - nearest.index);
+
+      return {
+        year:
+          Math.floor(
+            absoluteMonth / 12
+          ),
+
+        month:
+          (
+            (
+              absoluteMonth % 12
+            ) + 12
+          ) % 12
+      };
+    }
+  );
+}
+
+function validDay(value) {
+  const number =
+    Number(
+      String(value ?? '').trim()
+    );
+
+  return (
+    Number.isInteger(number) &&
+    number >= 1 &&
+    number <= 31
+  )
+    ? number
+    : null;
+}
+
+function isWeekdayCode(value) {
+  const code =
+    String(value ?? '')
+      .trim()
+      .toUpperCase();
+
+  return [
+    'L',
+    'M',
+    'ME',
+    'G',
+    'V',
+    'S',
+    'D',
+    'LU',
+    'MA',
+    'MI',
+    'GI',
+    'VE',
+    'SA',
+    'DO'
+  ].includes(code);
+}
+
+function findGridLayout(rows) {
+  const limit =
+    Math.min(
+      rows.length - 1,
+      30
+    );
+
+  /*
+   * Caso con cella NOME/TURNO.
+   */
+  for (
+    let rowIndex = 0;
+    rowIndex < limit;
+    rowIndex++
+  ) {
+    const row =
+      rows[rowIndex] || [];
+
+    for (
+      let columnIndex = 0;
+      columnIndex < row.length;
+      columnIndex++
+    ) {
+      const cell =
+        norm(row[columnIndex]);
+
+      if (
+        cell.includes('nome/turno') ||
+        cell.includes('nome turno')
+      ) {
+        return {
+          dayRow:
+            rowIndex - 1,
+
+          weekdayRow:
+            rowIndex,
+
+          nameColumn:
+            columnIndex
+        };
+      }
+    }
+  }
+
+  /*
+   * Caso con cella NOME/TURNO vuota.
+   */
+  for (
+    let rowIndex = 0;
+    rowIndex < limit;
+    rowIndex++
+  ) {
+    const current =
+      rows[rowIndex] || [];
+
+    const next =
+      rows[rowIndex + 1] || [];
+
+    const days =
+      current.filter(cell =>
+        validDay(cell) != null
+      ).length;
+
+    const weekdays =
+      next.filter(
+        isWeekdayCode
+      ).length;
+
+    if (
+      days >= 7 &&
+      weekdays >= 5
+    ) {
+      return {
+        dayRow: rowIndex,
+        weekdayRow:
+          rowIndex + 1,
+        nameColumn: 0
+      };
+    }
+  }
+
+  return null;
+}
+
+function normalizePersonName(value) {
+  return norm(value)
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function personNameMatches(
+  actualValue,
+  requestedValue
+) {
+  const actual =
+    normalizePersonName(actualValue);
+
+  const requested =
+    normalizePersonName(requestedValue);
+
+  if (
+    !actual ||
+    !requested
+  ) {
+    return false;
+  }
+
+  const actualWords =
+    actual
+      .split(' ')
+      .filter(Boolean);
+
+  const requestedWords =
+    requested
+      .split(' ')
+      .filter(Boolean);
+
+  return (
+    actual === requested ||
+    actual.includes(requested) ||
+    requested.includes(actual) ||
+    requestedWords.every(word =>
+      actualWords.includes(word)
+    )
+  );
+}
+
+/*
+ * Costruisce una data per ogni colonna.
+ *
+ * Il giorno 1 viene ancorato al mese indicato
+ * dal nome del foglio. Le colonne precedenti
+ * finiscono automaticamente nel mese precedente.
+ */
+function buildGridDateMap(
+  rows,
+  layout,
+  period
+) {
+  const result =
+    new Map();
+
+  if (
+    !layout ||
+    !period ||
+    layout.dayRow < 0
+  ) {
+    return result;
+  }
+
+  const dayRow =
+    rows[layout.dayRow] || [];
+
+  const columns = [];
+
+  for (
+    let column =
+      layout.nameColumn + 1;
+
+    column < dayRow.length;
+    column++
+  ) {
+    const day =
+      validDay(dayRow[column]);
+
+    if (day != null) {
+      columns.push({
+        column,
+        day
+      });
+    }
+  }
+
+  if (!columns.length) {
+    return result;
+  }
+
+  let anchorIndex =
+    columns.findIndex(
+      entry => entry.day === 1
+    );
+
+  if (anchorIndex < 0) {
+    anchorIndex = 0;
+  }
+
+  const anchorEntry =
+    columns[anchorIndex];
+
+  const anchorDate =
+    anchorEntry.day === 1
+      ? new Date(
+          period.year,
+          period.month,
+          1
+        )
+      : new Date(
+          period.year,
+          period.month,
+          anchorEntry.day
+        );
+
+  columns.forEach(
+    (entry, index) => {
+      const date =
+        new Date(anchorDate);
+
+      date.setDate(
+        anchorDate.getDate() +
+        index -
+        anchorIndex
+      );
+
+      result.set(
+        entry.column,
+        date
+      );
+    }
+  );
+
+  return result;
+}
+
+function isSummaryName(value) {
+  const name =
+    norm(value);
+
+  if (!name) {
+    return true;
+  }
+
+  return [
+    'm',
+    'p',
+    'n',
+    'r',
+    'd',
+    'deas',
+    'ferie',
+    'riposo',
+    'riposi',
+    'totale',
+    'totali',
+    'giorno',
+    'nome/turno',
+    'nome turno'
+  ].includes(name) ||
+  name.startsWith('totale ') ||
+  name.includes('numero riposi');
+}
+
+function parseGridSheet(
+  rows,
+  period,
+  requestedName
+) {
+  const layout =
+    findGridLayout(rows);
+
+  if (
+    !layout ||
+    !period
+  ) {
+    return {
+      foundPerson: false,
+      shifts: [],
+      unknownCodes: []
+    };
+  }
+
+  let personRow = -1;
+
+  for (
+    let rowIndex =
+      layout.weekdayRow + 1;
+
+    rowIndex < rows.length;
+    rowIndex++
+  ) {
+    const name =
+      rows[rowIndex]?.[
+        layout.nameColumn
+      ];
+
+    if (
+      personNameMatches(
+        name,
+        requestedName
+      )
+    ) {
+      personRow = rowIndex;
+      break;
+    }
+  }
+
+  if (personRow < 0) {
+    return {
+      foundPerson: false,
+      shifts: [],
+      unknownCodes: []
+    };
+  }
+
+  const dateMap =
+    buildGridDateMap(
+      rows,
+      layout,
+      period
+    );
+
+  const row =
+    rows[personRow] || [];
+
+  const shifts = [];
+  const unknownCodes = [];
+
+  for (
+    const [column, date]
+    of dateMap.entries()
+  ) {
+    const rawCode =
+      row[column];
+
+    const descriptor =
+      parseExcelShiftCode(rawCode);
+
+    if (!descriptor) {
+      if (
+        String(rawCode ?? '').trim()
+      ) {
+        unknownCodes.push(
+          String(rawCode).trim()
+        );
+      }
+
+      continue;
+    }
+
+    const shift =
+      makeImportedShift(
+        descriptor
+      );
+
+    if (!shift) {
+      continue;
+    }
+
+    shifts.push({
+      key: ymd(date),
+      shift
+    });
+  }
+
+  return {
+    foundPerson: true,
+    shifts,
+    unknownCodes
+  };
+}
+
+/* ---------- anteprima ---------- */
+
+let pending = [];
+
+function openPreview(
+  label,
+  skipped,
+  details = ''
+) {
+  const duplicates =
+    pending.filter(item =>
+      state.shifts[item.key]
+    ).length;
+
+  document
+    .getElementById('imp-sum')
+    .innerHTML =
+      `<b>${pending.length}</b> turni letti da ` +
+      `<b>${label}</b><br>` +
+      `Non riconosciuti <b>${skipped}</b> · ` +
+      `già presenti in agenda <b>${duplicates}</b>` +
+      (
+        details
+          ? `<br>${details}`
+          : ''
+      );
+
+  const box =
+    document.getElementById(
+      'imp-list'
+    );
+
+  box.innerHTML = '';
+
+  pending.forEach(item => {
+    const date =
+      new Date(
+        item.key + 'T00:00:00'
+      );
+
+    const type =
+      typeOf(item.shift.type);
+
+    const row =
+      document.createElement('div');
+
+    row.className = 'row';
+
+    row.innerHTML =
+      `<span class="dot" ` +
+      `style="background:${type.color}"></span>` +
+
+      `<span class="d">` +
+      `${GIORNI[date.getDay()]} ` +
+      `${date.getDate()}/${date.getMonth() + 1}` +
+      `</span>` +
+
+      `<span class="t">` +
+      `${type.label}` +
+
+      (
+        isWork(item.shift)
+          ? `<em>${item.shift.start}–${item.shift.end}</em>`
+          : ''
+      ) +
+
+      `</span>` +
+
+      `<span class="h">` +
+
+      (
+        isWork(item.shift)
+          ? fmtPlain(
+              worked(item.shift)
+            )
+          : '—'
+      ) +
+
+      `</span>`;
+
     box.appendChild(row);
   });
-  closeSheets(); showSheet('sheet-imp');
+
+  closeSheets();
+  showSheet('sheet-imp');
 }
-document.getElementById('imp').onclick=()=>document.getElementById('file').click();
-document.getElementById('file').addEventListener('change',async e=>{
-  const f=e.target.files[0]; if(!f) return;
-  e.target.value='';
-  if(typeof XLSX==='undefined'){toast('Libreria non caricata: riapri la pagina online');return}
-  try{
-    const wb=XLSX.read(new Uint8Array(await f.arrayBuffer()),{type:'array',cellDates:true});
-    const ws=wb.Sheets[wb.SheetNames[0]];
-    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',blankrows:false});
-    let map=null,head=-1;
-    for(let i=0;i<Math.min(rows.length,15);i++){
-      const m={};
-      rows[i].forEach((c,j)=>{const k=matchCol(c); if(k&&m[k]==null) m[k]=j});
-      if(m.date!=null&&(m.type!=null||m.start!=null)){map=m;head=i;break}
+
+/* ---------- apertura e lettura file ---------- */
+
+document
+  .getElementById('imp')
+  .onclick = () => {
+    document
+      .getElementById('file')
+      .click();
+  };
+
+document
+  .getElementById('file')
+  .addEventListener(
+    'change',
+    async event => {
+      const file =
+        event.target.files[0];
+
+      event.target.value = '';
+
+      if (!file) {
+        return;
+      }
+
+      if (
+        typeof XLSX === 'undefined'
+      ) {
+        toast(
+          'Libreria non caricata: ' +
+          'riapri la pagina online'
+        );
+
+        return;
+      }
+
+      try {
+        const workbook =
+          XLSX.read(
+            new Uint8Array(
+              await file.arrayBuffer()
+            ),
+            {
+              type: 'array',
+              cellDates: true
+            }
+          );
+
+        /*
+         * Prima prova il modello semplice.
+         */
+        if (
+          workbook.SheetNames.length === 1
+        ) {
+          const firstSheet =
+            workbook.Sheets[
+              workbook.SheetNames[0]
+            ];
+
+          const simpleRows =
+            XLSX.utils.sheet_to_json(
+              firstSheet,
+              {
+                header: 1,
+                defval: '',
+                blankrows: false,
+                raw: true
+              }
+            );
+
+          const simple =
+            parseSimpleSheet(simpleRows);
+
+          if (
+            simple &&
+            simple.shifts.length
+          ) {
+            pending =
+              simple.shifts.sort(
+                (a, b) =>
+                  a.key.localeCompare(
+                    b.key
+                  )
+              );
+
+            openPreview(
+              file.name,
+              simple.skipped,
+              'Formato: elenco semplice'
+            );
+
+            return;
+          }
+        }
+
+        /*
+         * Turnistica T1.
+         */
+        const savedName =
+          String(
+            state.settings.importPersonName ||
+            ''
+          ).trim();
+
+        const requestedName =
+          prompt(
+            'Scrivi il cognome o il nome da importare:',
+            savedName || 'Lo Prete'
+          );
+
+        if (
+          requestedName == null
+        ) {
+          return;
+        }
+
+        if (
+          !requestedName.trim()
+        ) {
+          toast(
+            'Inserisci il nome del dipendente'
+          );
+
+          return;
+        }
+
+        state.settings.importPersonName =
+          requestedName.trim();
+
+        const periods =
+          parseSheetPeriods(
+            workbook.SheetNames
+          );
+
+        const shiftMap =
+          new Map();
+
+        const unknownCodes =
+          new Set();
+
+        let readSheets = 0;
+        let sheetsWithPerson = 0;
+
+        workbook.SheetNames.forEach(
+          (sheetName, sheetIndex) => {
+            const period =
+              periods[sheetIndex];
+
+            if (!period) {
+              return;
+            }
+
+            const sheet =
+              workbook.Sheets[
+                sheetName
+              ];
+
+            const rows =
+              XLSX.utils.sheet_to_json(
+                sheet,
+                {
+                  header: 1,
+                  defval: '',
+                  blankrows: false,
+                  raw: true
+                }
+              );
+
+            const parsed =
+              parseGridSheet(
+                rows,
+                period,
+                requestedName
+              );
+
+            readSheets++;
+
+            if (parsed.foundPerson) {
+              sheetsWithPerson++;
+            }
+
+            parsed.unknownCodes
+              .forEach(code =>
+                unknownCodes.add(code)
+              );
+
+            /*
+             * I fogli successivi sostituiscono
+             * le date duplicate dei precedenti.
+             */
+            parsed.shifts
+              .forEach(item =>
+                shiftMap.set(
+                  item.key,
+                  item
+                )
+              );
+          }
+        );
+
+        pending =
+          [...shiftMap.values()]
+            .sort((a, b) =>
+              a.key.localeCompare(
+                b.key
+              )
+            );
+
+        if (!pending.length) {
+          toast(
+            `Nessun turno trovato per “${requestedName}”`
+          );
+
+          return;
+        }
+
+        const firstKey =
+          pending[0].key;
+
+        const lastKey =
+          pending.at(-1).key;
+
+        const details = [
+          `Formato: Turnistica T1`,
+          `${readSheets} fogli letti`,
+          `${sheetsWithPerson} con il dipendente`,
+          `dal ${firstKey} al ${lastKey}`
+        ].join(' · ');
+
+        openPreview(
+          file.name,
+          unknownCodes.size,
+          details
+        );
+
+        if (unknownCodes.size) {
+          console.warn(
+            'Codici turno non riconosciuti:',
+            [...unknownCodes]
+          );
+        }
+
+      } catch (error) {
+        console.error(
+          'Errore importazione Excel:',
+          error
+        );
+
+        pending = [];
+
+        toast(
+          'File non leggibile'
+        );
+      }
     }
-    if(!map){toast('Colonne non riconosciute — scarica il modello');return}
-    pending=[]; let skipped=0;
-    for(let i=head+1;i<rows.length;i++){
-      const r=rowToShift(rows[i],map);
-      if(r) pending.push(r);
-      else if(rows[i].some(c=>String(c).trim())) skipped++;
+  );
+
+/* ---------- conferma o annullamento ---------- */
+
+document
+  .getElementById('imp-cancel')
+  .onclick = () => {
+    pending = [];
+    closeSheets();
+  };
+
+document
+  .getElementById('imp-go')
+  .onclick = () => {
+    const overwrite =
+      document
+        .getElementById('imp-over')
+        .checked;
+
+    let imported = 0;
+
+    pending.forEach(item => {
+      if (
+        state.shifts[item.key] &&
+        !overwrite
+      ) {
+        return;
+      }
+
+      state.shifts[item.key] = {
+        ...item.shift
+      };
+
+      imported++;
+    });
+
+    /*
+     * Porta il calendario sul primo mese importato.
+     */
+    const firstKey =
+      pending
+        .map(item => item.key)
+        .sort()[0];
+
+    if (firstKey) {
+      const date =
+        new Date(
+          firstKey + 'T00:00:00'
+        );
+
+      view =
+        new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          1
+        );
     }
-    if(!pending.length){toast('Nessun turno leggibile nel file');return}
-    openPreview(f.name,skipped);
-  }catch(err){ toast('File non leggibile'); }
-});
-document.getElementById('imp-cancel').onclick=()=>{pending=[];closeSheets()};
-document.getElementById('imp-go').onclick=()=>{
-  const over=document.getElementById('imp-over').checked;
-  let n=0;
-  pending.forEach(p=>{ if(state.shifts[p.key]&&!over) return; state.shifts[p.key]={...p.shift}; n++; });
-  const first=pending.map(p=>p.key).sort()[0];
-  if(first){const d=new Date(first+'T00:00:00'); view=new Date(d.getFullYear(),d.getMonth(),1);}
-  pending=[]; save(); closeSheets(); render();
-  toast(n?`${n} turni importati`:'Nessun turno aggiunto');
-};
+
+    pending = [];
+
+    save();
+    closeSheets();
+    render();
+
+    toast(
+      imported
+        ? `${imported} turni importati`
+        : 'Nessun turno aggiunto'
+    );
+  };
 document.getElementById('tpl').onclick=()=>{
   if(typeof XLSX==='undefined'){toast('Libreria non caricata: riapri la pagina online');return}
   const p={mattina:presetOf('mattina'),pomeriggio:presetOf('pomeriggio'),notte:presetOf('notte'),deas:presetOf('deas')};
