@@ -163,12 +163,13 @@
       grossTotal *
       (profile.socialPct / 100);
 
-    const taxableIrpef = Math.max(
-      0,
-      grossTotal -
-      socialContributions -
-      profile.cometaEmployee
-    );
+const taxableIrpef = Math.max(
+  0,
+  grossTotal -
+  socialContributions -
+  profile.fixedExtraDeductions -
+  profile.cometaEmployee
+);
 
     const monthlyIrpef =
       calculateProjectedMonthlyIrpef(
