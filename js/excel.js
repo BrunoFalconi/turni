@@ -65,6 +65,97 @@ function parseGridSheet(rows,period,wanted){
   }
   return out;
 }
+function parseAllShifts(rows, period) {
+  const hdr = findHeader(rows);
+
+  if (!hdr || !period) return {};
+
+  const result = {};
+
+  for (let r = hdr.r + 1; r < rows.length; r++) {
+    const name = String(rows[r]?.[hdr.c] || '').trim();
+
+    if (!name) continue;
+
+    /*
+     * Evita le righe riepilogative presenti nella parte
+     * inferiore del foglio.
+     */
+    const normalizedName = norm(name);
+
+    if (
+      normalizedName === 'm' ||
+      normalizedName === 'p' ||
+      normalizedName === 'n' ||
+      normalizedName.includes('riposi')
+    ) {
+      continue;
+    }
+
+    const row = rows[r] || [];
+
+    for (let c = hdr.c + 1; c < row.length; c++) {
+      const type = toType(row[c]);
+
+      /*
+       * Nel PDF semplificato servono solamente:
+       * N = notte
+       * M = mattina
+       * P = pomeriggio
+       */
+      if (
+        type !== 'notte' &&
+        type !== 'mattina' &&
+        type !== 'pomeriggio'
+      ) {
+        continue;
+      }
+
+      const day = validDay(rows[hdr.r - 1]?.[c]);
+
+      if (!day) continue;
+
+      const date = new Date(
+        period.year,
+        period.month,
+        day
+      );
+
+      if (
+        date.getMonth() !== period.month ||
+        date.getFullYear() !== period.year
+      ) {
+        continue;
+      }
+
+      const weekday =
+        String(rows[hdr.r]?.[c] ?? '')
+          .trim()
+          .toUpperCase();
+
+      if (
+        weekday &&
+        WEEKDAY_CODE[date.getDay()] !== weekday
+      ) {
+        continue;
+      }
+
+      const key = ymd(date);
+
+      if (!result[key]) {
+        result[key] = {
+          notte: [],
+          mattina: [],
+          pomeriggio: []
+        };
+      }
+
+      result[key][type].push(name);
+    }
+  }
+
+  return result;
+}
 let pendingAllShifts = {};
 document.getElementById('importBtn').onclick=()=>{
   if(!state.settings.excelName){document.getElementById('settings').click();return}
