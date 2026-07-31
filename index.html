@@ -116,8 +116,8 @@ input[type=time]{font-family:var(--mono)}
 /* ---- pannello ---- */
 .scrim{position:fixed;inset:0;background:#0007;backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
 .scrim.on{opacity:1;pointer-events:auto}
-.sheet{position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:var(--surface);border-radius:22px 22px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(102%);transition:transform .26s cubic-bezier(.32,.72,0,1);z-index:21;max-height:92vh;overflow-y:auto}
-.sheet.on{transform:translateY(0)}
+.sheet{pointer-events:none;visibility:hidden;position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:var(--surface);border-radius:22px 22px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(102%);transition:transform .26s cubic-bezier(.32,.72,0,1);z-index:21;max-height:92vh;overflow-y:auto}
+.sheet.on{pointer-events:auto;visibility:visible;transform:translateY(0)}
 .sheet h2{font-family:var(--display);font-size:20px;font-weight:700;margin:0 0 16px;letter-spacing:-.01em}
 .sheet h2 span{color:var(--muted);font-weight:500}
 .types{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px}
@@ -211,7 +211,7 @@ input[type=time]{font-family:var(--mono)}
     width:560px;max-width:92vw;border-radius:20px;max-height:86vh;padding:24px 24px 22px;
     opacity:0;transition:opacity .18s ease,transform .18s ease;
     box-shadow:0 24px 70px #0009;border:1px solid var(--line)}
-  .sheet.on{transform:translate(-50%,-50%) scale(1);opacity:1}
+  .sheet.on{pointer-events:auto;visibility:visible;transform:translate(-50%,-50%) scale(1);opacity:1}
   .fab{left:auto;right:28px;transform:none;bottom:28px}
   #stampa{display:none}
 }
@@ -456,7 +456,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='18 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='19 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
