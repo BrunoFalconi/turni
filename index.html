@@ -295,6 +295,23 @@ input[type=time]{font-family:var(--mono)}
     <button class="btn" id="set-close">Fatto</button>
     <button class="btn ghost" id="copy">Copia riepilogo</button>
   </div>
+  <div class="actions" style="margin-bottom:10px">
+  <button
+    type="button"
+    class="btn ghost"
+    style="flex:1"
+    id="upload-payslip"
+  >
+    Carica busta paga PDF
+  </button>
+</div>
+
+<input
+  type="file"
+  id="payslip-file"
+  accept="application/pdf,.pdf"
+  style="display:none"
+>
   <div style="height:10px"></div>
   <button class="btn danger" style="width:100%" id="wipe">Cancella tutti i dati</button>
   <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
