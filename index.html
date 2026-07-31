@@ -476,8 +476,12 @@ async function load(){
     if(r&&r.value){
       const d=JSON.parse(r.value);
       const saved=d.settings||{};
-      state.shifts=d.shifts||{};
-      state.settings={...DEFAULTS,...saved};
+state.shifts = d.shifts || {};
+state.allShifts = d.allShifts || {};
+state.settings = {
+  ...DEFAULTS,
+  ...saved
+};
       let changed=false;
       /* la versione va letta dal dato salvato, non da quello già unito */
       if((saved.presetsV||0)<DEFAULTS.presetsV){
