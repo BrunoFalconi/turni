@@ -165,6 +165,9 @@ input[type=time]{font-family:var(--mono)}
 .pay-net{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
 .pay-net span{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
 .pay-net b{font-family:var(--mono);font-size:21px;font-weight:600;color:var(--pomeriggio)}
+.upd{display:block;width:100%;text-align:left;background:#7F6CF21f;border:1px solid #7F6CF255;
+  border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13px;line-height:1.5;color:var(--text)}
+.upd b{color:#A99CF7;font-weight:600;display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;margin-bottom:3px}
 .nudge{display:block;width:100%;text-align:left;background:#3FB6A814;border:1px solid #3FB6A83d;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:13px;line-height:1.5;color:var(--text)}
 .nudge b{color:var(--pomeriggio);font-weight:600;display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;margin-bottom:3px}
 .busta{display:block;width:100%;text-align:left;background:var(--surface-2);border-radius:12px;padding:13px 15px;margin-bottom:7px}
@@ -268,6 +271,7 @@ input[type=time]{font-family:var(--mono)}
     </div>
   </div>
 
+  <div id="upd"></div>
   <div id="nudge"></div>
 
   </div>
@@ -452,7 +456,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='17 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='18 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -621,6 +625,7 @@ async function load(){
   }catch(e){/* prima apertura: nessun dato salvato */}
   render();
   const b=document.getElementById('boot'); if(b) b.remove();
+  controllaAggiornamenti();
 }
 let saveTimer;
 function save(){
@@ -1464,6 +1469,41 @@ function renderNudge(){
               :`I turni di ${MESI[n.getMonth()].toLowerCase()} sono usciti entro il ${g}. Tocca per incollarli.`);
   b.onclick=()=>apriSequenza(ymd(new Date(n.getFullYear(),n.getMonth(),compilati+1)));
   box.appendChild(b);
+}
+
+/* ---------- aggiornamenti ---------- */
+/* Il browser può servire una copia vecchia dell'app. Qui rileggo il file
+   scavalcando la cache e confronto il numero di versione: se ne esiste una
+   più recente lo dico, invece di lasciare l'utente a indovinare. */
+async function controllaAggiornamenti(){
+  const box=document.getElementById('upd');
+  if(!box||location.protocol==='file:') return;
+  try{
+    const r=await fetch(location.pathname+'?_ck='+Date.now(),{cache:'no-store'});
+    if(!r.ok) return;
+    const t=await r.text();
+    const m=t.match(/const VERSIONE='(\d+)/);
+    if(!m) return;
+    const online=+m[1], mia=+VERSIONE.match(/^\d+/)[0];
+    if(online<=mia) return;
+    const b=document.createElement('button'); b.className='upd';
+    b.innerHTML=`<b>AGGIORNAMENTO DISPONIBILE</b>Hai la versione ${mia}, online c'è la ${online}. Tocca per caricarla.`;
+    b.onclick=async()=>{
+      b.innerHTML='<b>AGGIORNAMENTO</b>Sto ricaricando…';
+      try{
+        if(navigator.serviceWorker){
+          const rs=await navigator.serviceWorker.getRegistrations();
+          await Promise.all(rs.map(x=>x.unregister()));
+        }
+        if(typeof caches!=='undefined'){
+          const ks=await caches.keys();
+          await Promise.all(ks.map(k=>caches.delete(k)));
+        }
+      }catch(e){}
+      location.replace(location.pathname+'?v='+online);   /* indirizzo nuovo: niente cache */
+    };
+    box.appendChild(b);
+  }catch(e){/* offline: pazienza */}
 }
 
 /* ---------- esportazione nel calendario ---------- */
