@@ -388,7 +388,13 @@ const DEFAULTS={
   presets:{mattina:['08:00','16:00'],pomeriggio:['16:00','00:00'],notte:['00:00','08:00'],deas:['09:00','18:00']}
 };
 
-let state={shifts:{},settings:{...DEFAULTS}};
+let state = {
+  shifts: {},
+  allShifts: {},
+  settings: {
+    ...DEFAULTS
+  }
+};
 let view=new Date(); view.setDate(1);
 let editing=null;   // stringa data 'YYYY-MM-DD'
 let draft=null;
