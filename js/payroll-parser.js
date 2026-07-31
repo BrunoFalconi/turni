@@ -4,77 +4,6 @@
  * Estrae i parametri vitali dal testo grezzo del PDF (es. usando pdf.js)
  * ============================================================================
  */
-async function estraiTestoPdf(file) {
-  if (!window.pdfjsLib) {
-    throw new Error('PDF.js non è disponibile');
-  }
-
-  const data = new Uint8Array(await file.arrayBuffer());
-
-  const documento = await window.pdfjsLib.getDocument({
-    data
-  }).promise;
-
-  const pagine = [];
-
-  for (
-    let numeroPagina = 1;
-    numeroPagina <= documento.numPages;
-    numeroPagina++
-  ) {
-    const pagina = await documento.getPage(numeroPagina);
-    const contenuto = await pagina.getTextContent();
-
-    /*
-     * Ricostruisce il testo raggruppandolo approssimativamente
-     * per righe. È più affidabile di un semplice join con spazio.
-     */
-    const elementi = contenuto.items
-      .filter(item => item.str?.trim())
-      .map(item => ({
-        testo: item.str.trim(),
-        x: item.transform[4],
-        y: item.transform[5]
-      }))
-      .sort((a, b) => {
-        const differenzaRiga = b.y - a.y;
-
-        if (Math.abs(differenzaRiga) > 3) {
-          return differenzaRiga;
-        }
-
-        return a.x - b.x;
-      });
-
-    const righe = [];
-    let rigaCorrente = [];
-    let ultimaY = null;
-
-    elementi.forEach(elemento => {
-      if (
-        ultimaY !== null &&
-        Math.abs(elemento.y - ultimaY) > 3
-      ) {
-        righe.push(rigaCorrente.join(' | '));
-        rigaCorrente = [];
-      }
-
-      rigaCorrente.push(elemento.testo);
-      ultimaY = elemento.y;
-    });
-
-    if (rigaCorrente.length) {
-      righe.push(rigaCorrente.join(' | '));
-    }
-
-    pagine.push(righe.join('\n'));
-  }
-
-  return pagine.join('\n\n');
-}
-
-window.estraiTestoPdf = estraiTestoPdf;
-
 const estraiProfiloDaPDF = (testoPDF) => {
     // Helper per convertire numeri italiani ("2.615,39") in float JS (2615.39)
     const parseItaNumber = (str) => {
@@ -142,7 +71,93 @@ const estraiProfiloDaPDF = (testoPDF) => {
         oreContrattuali: 173 // Divisore standard (modificabile se necessario)
     };
 };
-window.estraiProfiloDaPDF = estraiProfiloDaPDF;
 
 
- 
+/**
+ * ============================================================================
+ * MODULO 2: MOTORE DI SIMULAZIONE
+ * Calcola il netto per il mese selezionato basandosi sul profilo estratto e i turni
+ * ============================================================================
+ */
+const calcolaSimulazioneMese = (profilo, meseSimulazione, oreLavorate) => {
+    // 1. Calcolo Base Oraria
+    const pagaOrariaBase = profilo.lordoFisso / profilo.oreContrattuali;
+
+    // 2. Calcolo Maggiorazioni dai Turni
+    let lordoMaggiorazioni = 0;
+    if (oreLavorate.notturne) {
+        lordoMaggiorazioni += oreLavorate.notturne * (pagaOrariaBase * profilo.moltiplicatori.notturno);
+    }
+    if (oreLavorate.festive) {
+        lordoMaggiorazioni += oreLavorate.festive * (pagaOrariaBase * profilo.moltiplicatori.festivo);
+    }
+    if (oreLavorate.festiveNotturne) {
+        lordoMaggiorazioni += oreLavorate.festiveNotturne * (pagaOrariaBase * profilo.moltiplicatori.festivoNotturno);
+    }
+
+    const lordoTotale = profilo.lordoFisso + lordoMaggiorazioni;
+
+    // 3. Calcolo Trattenute Previdenziali (INPS, Fondi, ecc.)
+    let totaleContributi = 0;
+    
+    // Applica contributi dinamici (es. INPS) sul Lordo Totale maggiorato
+    profilo.contributi.dinamici.forEach(c => {
+        totaleContributi += (lordoTotale * c.aliquota);
+    });
+
+    // Applica contributi fissi (es. EPAR) solo sul Lordo Base contrattuale
+    profilo.contributi.fissi.forEach(c => {
+        totaleContributi += (profilo.lordoFisso * c.aliquota);
+    });
+
+    // 4. Gestione Addizionali Temporali (Niente addizionali a Gen/Feb)
+    let trattenutaAddizionaliReale = 0;
+    const mesiSenzaAddizionali = [1, 2]; // 1 = Gennaio, 2 = Febbraio
+    
+    if (!mesiSenzaAddizionali.includes(meseSimulazione)) {
+        trattenutaAddizionaliReale = profilo.addizionaliMensili;
+    }
+
+    // 5. Calcolo Fiscale (IRPEF)
+    const imponibileIrpef = lordoTotale - totaleContributi;
+    
+    // Funzione fittizia: qui il collega deve richiamare il modulo scaglioni IRPEF 2026 e detrazioni
+    const irpefNetta = calcolaIrpefAnnuaProiettata(imponibileIrpef); 
+
+    // 6. Netto Finale
+    const nettoStimato = imponibileIrpef - irpefNetta - trattenutaAddizionaliReale;
+
+    return {
+        competenze: {
+            lordoBase: profilo.lordoFisso.toFixed(2),
+            maggiorazioni: lordoMaggiorazioni.toFixed(2),
+            lordoFinale: lordoTotale.toFixed(2)
+        },
+        trattenute: {
+            contributiInpsFondi: totaleContributi.toFixed(2),
+            irpef: irpefNetta.toFixed(2),
+            addizionali: trattenutaAddizionaliReale.toFixed(2)
+        },
+        nettoStimato: nettoStimato.toFixed(2)
+    };
+};
+
+// ============================================================================
+// ESEMPIO DI UTILIZZO NELL'APP
+// ============================================================================
+/*
+  // 1. Quando l'utente carica il PDF:
+  const testoEstrattoDalPdf = "...(testo restituito dalla libreria PDF)...";
+  const profiloUtente = estraiProfiloDaPDF(testoEstrattoDalPdf);
+  // -> Salva 'profiloUtente' nel database o nel local storage
+
+  // 2. Quando l'utente guarda Agosto (Mese 8) e segna i turni:
+  const turniInseriti = {
+      notturne: 18,
+      festive: 26,
+      festiveNotturne: 6
+  };
+  
+  const previsione = calcolaSimulazioneMese(profiloUtente, 8, turniInseriti);
+  console.log(previsione);
+*/
