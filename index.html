@@ -2963,15 +2963,15 @@ function parsePayslipText(text) {
    * Lordo fisso.
    * Nel cedolino di maggio è 2.538,46.
    */
-  const grossBase =
-    findPayslipAmount(
-      normalized,
-      /ELEMENTI\s+DELLA\s+RETRIBUZIONE[\s\S]{0,500}?TOTALE[\s\S]{0,40}?([0-9.]+,[0-9]{2,5})/i
-    ) ??
-    findPayslipAmount(
-      normalized,
-      /\b2\.538,46000\b/i
-    );
+const grossBase =
+  findPayslipAmount(
+    normalized,
+    /MINIMO[\s\S]{0,300}?Straord\s+Forfett[\s\S]{0,200}?SUP\.ASS\.[\s\S]{0,100}?([0-9.]+,[0-9]{2,5})/i
+  ) ??
+  findPayslipAmount(
+    normalized,
+    /Retribuzione\s+utile\s+T\.F\.R\.\s+([0-9.]+,[0-9]{2})/i
+  );
 
   const hours50 =
     findPayslipAmount(
@@ -3075,17 +3075,25 @@ function parsePayslipText(text) {
       /TOTALE\s+TRATTENUTE[\s\S]{0,80}?([0-9.]+,[0-9]{2})/i
     );
 
-  const grossTotal =
-    findPayslipAmount(
-      normalized,
-      /TOTALE\s+COMPETENZE[\s\S]{0,80}?([0-9.]+,[0-9]{2})/i
-    );
+const grossTotal =
+  findPayslipAmount(
+    normalized,
+    /([0-9.]+,[0-9]{2})\s+Maturato\s+Goduto\s+Residuo/i
+  ) ??
+  findPayslipAmount(
+    normalized,
+    /TOTALE\s+COMPETENZE[\s\S]{0,500}?([0-9.]+,[0-9]{2})/i
+  );
 
-  const netPay =
-    findPayslipAmount(
-      normalized,
-      /NETTO\s+DEL\s+MESE[\s\S]{0,80}?([0-9.]+,[0-9]{2})/i
-    );
+const netPay =
+  findPayslipAmount(
+    normalized,
+    /([0-9.]+,[0-9]{2})\s*€\s+ISYBANK/i
+  ) ??
+  findPayslipAmount(
+    normalized,
+    /NETTO\s+DEL\s+MESE[\s\S]{0,500}?([0-9.]+,[0-9]{2})/i
+  );
 
   const localTaxes =
     (regionalTax || 0) +
