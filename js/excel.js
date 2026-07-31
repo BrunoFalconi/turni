@@ -166,11 +166,42 @@ document.getElementById('fileInput').addEventListener('change',async e=>{
   if(typeof XLSX==='undefined'){alert('La libreria Excel non è disponibile. Apri una volta l’app con internet.');return}
   try{
     const wb=XLSX.read(new Uint8Array(await f.arrayBuffer()),{type:'array',cellDates:true});
-    const periods=parsePeriods(wb.SheetNames),map=new Map();
-    wb.SheetNames.forEach((name,i)=>{
-      const rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:'',blankrows:false,raw:true});
-      parseGridSheet(rows,periods[i],state.settings.excelName).forEach(x=>map.set(x.key,x));
-    });
+  const periods = parsePeriods(wb.SheetNames);
+  const map = new Map();
+  const allShifts = {};
+
+    wb.SheetNames.forEach((name, i) => {
+    const rows = XLSX.utils.sheet_to_json(
+      wb.Sheets[name],
+    {
+      header: 1,
+      defval: '',
+      blankrows: false,
+      raw: true
+    }
+  );
+
+  /*
+   * Importazione personale invariata.
+   */
+  parseGridSheet(
+    rows,
+    periods[i],
+    state.settings.excelName
+  ).forEach(x => map.set(x.key, x));
+
+  /*
+   * Legge anche tutti i colleghi per il PDF semplificato.
+   */
+  const sheetShifts = parseAllShifts(
+    rows,
+    periods[i]
+  );
+
+  Object.assign(allShifts, sheetShifts);
+});
+
+pendingAllShifts = allShifts;
     pending=[...map.values()].sort((a,b)=>a.key.localeCompare(b.key));
     if(!pending.length){alert(`Nessun turno trovato per “${state.settings.excelName}”.`);return}
     document.getElementById('previewText').textContent=`Trovati ${pending.length} giorni. L'importazione sostituirà soltanto i vecchi turni importati da Excel.`;
