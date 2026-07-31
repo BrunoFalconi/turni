@@ -3006,14 +3006,66 @@ function parsePayslipText(text) {
    * Lordo fisso: utilizza la retribuzione utile TFR,
    * che nel tuo modello coincide con il fisso mensile.
    */
-  const grossBase =
-    lastAmountAfter(
-      'Retribuzione\\s+utile\\s+T\\.F\\.R\\.',
-      80
-    ) ??
-    Number(state.settings.lordoFisso) ??
-    null;
+/*
+ * Lordo fisso: prende il valore totale della sezione
+ * MINIMO + Straordinario forfettario + SUP.ASS.
+ *
+ * Non usa lastAmountAfter("Retribuzione utile T.F.R."),
+ * perché nell'estrazione PDF può catturare la voce SUP.ASS. 180,20.
+ */
+let grossBase = null;
 
+const salarySectionMatch = normalized.match(
+  /MINIMO([\s\S]{0,600}?)Zucchetti/i
+);
+
+if (salarySectionMatch) {
+  const salaryAmounts = [
+    ...salarySectionMatch[1].matchAll(
+      /\b\d{1,3}(?:\.\d{3})*,\d{2,5}\b/g
+    )
+  ]
+    .map(match => parseItalianMoney(match[0]))
+    .filter(value =>
+      Number.isFinite(value) &&
+      value >= 500 &&
+      value < 15000
+    );
+
+  if (salaryAmounts.length) {
+    /*
+     * Nel tuo cedolino il totale fisso è il valore
+     * più alto della sezione: 2.538,46.
+     */
+    grossBase = Math.max(...salaryAmounts);
+  }
+}
+
+/*
+ * Tentativo alternativo sulla dicitura TFR.
+ */
+if (grossBase == null) {
+  const tfrMatch = normalized.match(
+    /Retribuzione\s+utile\s+T\.F\.R\.\s+([0-9.]+,[0-9]{2,5})/i
+  );
+
+  if (tfrMatch) {
+    grossBase =
+      parseItalianMoney(tfrMatch[1]);
+  }
+}
+
+/*
+ * Non azzera mai il lordo già impostato se il PDF
+ * non viene riconosciuto.
+ */
+if (
+  grossBase == null &&
+  Number(state.settings.lordoFisso) > 0
+) {
+  grossBase =
+    Number(state.settings.lordoFisso);
+}
   const hours50 =
     findPayslipAmount(
       normalized,
