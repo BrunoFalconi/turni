@@ -1,0 +1,503 @@
+/* Importazione locale di buste paga PDF.
+   Il file resta sul dispositivo: viene estratto soltanto il testo necessario. */
+
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc=
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+function moneyNumber(value){
+  if(value==null)return null;
+  const cleaned=String(value)
+    .replace(/\s/g,'')
+    .replace(/\.(?=\d{3}(?:\D|$))/g,'')
+    .replace(',','.')
+    .replace(/[^\d.-]/g,'');
+  const n=Number(cleaned);
+  return Number.isFinite(n)?n:null;
+}
+
+function percentNumber(value){
+  const n=moneyNumber(value);
+  return n!=null&&n>=0&&n<=100?n:null;
+}
+
+function findAmountNear(text,labels){
+  for(const label of labels){
+    const rx=new RegExp(label+'[\\s\\S]{0,90}?([0-9]{1,3}(?:[. ][0-9]{3})*(?:,[0-9]{2,5})|[0-9]+(?:\\.[0-9]{2,5}))','i');
+    const m=text.match(rx);
+    if(m){
+      const n=moneyNumber(m[1]);
+      if(n!=null)return n;
+    }
+  }
+  return null;
+}
+
+function findPercentageNear(text,labels){
+  for(const label of labels){
+    const rx=new RegExp(label+'[\\s\\S]{0,80}?([0-9]{1,2}(?:[,.][0-9]{1,5})?)\\s*%','i');
+    const m=text.match(rx);
+    if(m){
+      const n=percentNumber(m[1]);
+      if(n!=null)return n;
+    }
+  }
+  return null;
+}
+
+
+function findCometaLineAmount(text,{employer=false}={}){
+  const lines=String(text||'').split(/\r?\n/);
+
+  for(const rawLine of lines){
+    const line=rawLine.replace(/\s+/g,' ').trim();
+    if(!/contributo\s+base\s+cometa/i.test(line))continue;
+
+    const isEmployer=/c\s*\/?\s*ditta|azienda/i.test(line);
+    if(employer!==isEmployer)continue;
+
+    /* Esempio:
+       Contributo base COMETA 2.411,43 1,20000 % 28,94
+       Il primo importo è la base imponibile, l'ultimo è la trattenuta reale. */
+    const amounts=[...line.matchAll(/(?:^|\s|\()([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{2,5})|[0-9]+(?:,[0-9]{2,5}))(?=\s|\)|$)/g)]
+      .map(m=>moneyNumber(m[1]))
+      .filter(n=>n!=null);
+
+    if(amounts.length){
+      const amount=amounts.at(-1);
+      if(amount>=0 && amount<1000)return amount;
+    }
+  }
+
+  return null;
+}
+
+function findNameFromText(text){
+  const patterns=[
+    /COGNOME\s*E?\s*NOME[\s:;-]*([A-ZÀ-Ü' ]{5,60})/i,
+    /Codice dipendente[\s\S]{0,80}?([A-ZÀ-Ü']+\s+[A-ZÀ-Ü' ]+)/i
+  ];
+  for(const rx of patterns){
+    const m=text.match(rx);
+    if(m){
+      return m[1].replace(/\s+/g,' ').trim().replace(/\b\w/g,c=>c.toUpperCase());
+    }
+  }
+  return '';
+}
+
+
+function numericItems(row){
+  return row.items
+    .map(item=>({item,value:moneyNumber(item.text)}))
+    .filter(entry=>entry.value!=null);
+}
+
+function itemCenter(item){
+  return item.x+(item.width||0)/2;
+}
+
+function headerColumnCenters(header){
+  const find=rx=>header.items.find(item=>rx.test(item.text));
+  const importo=find(/IMPORTO/i);
+  const riferimento=find(/RIFERIMENTO/i);
+  const trattenute=find(/TRATTENUTE/i);
+  const competenze=find(/COMPETENZE/i);
+
+  if(!riferimento||!trattenute||!competenze)return null;
+
+  return{
+    importo:importo?itemCenter(importo):null,
+    riferimento:itemCenter(riferimento),
+    trattenute:itemCenter(trattenute),
+    competenze:itemCenter(competenze)
+  };
+}
+
+function strictColumnBounds(centers,column){
+  if(column==='trattenute'){
+    return{
+      min:(centers.riferimento+centers.trattenute)/2,
+      max:(centers.trattenute+centers.competenze)/2
+    };
+  }
+
+  if(column==='competenze'){
+    return{
+      min:(centers.trattenute+centers.competenze)/2,
+      max:Infinity
+    };
+  }
+
+  if(column==='riferimento'){
+    const left=centers.importo!=null
+      ?(centers.importo+centers.riferimento)/2
+      :centers.riferimento-70;
+    return{
+      min:left,
+      max:(centers.riferimento+centers.trattenute)/2
+    };
+  }
+
+  return{min:-Infinity,max:Infinity};
+}
+
+function valueInNamedColumn(row,centers,column){
+  const bounds=strictColumnBounds(centers,column);
+  const candidates=numericItems(row)
+    .filter(({item,value})=>{
+      const center=itemCenter(item);
+      return center>=bounds.min &&
+        center<bounds.max &&
+        Math.abs(value)<100000;
+    })
+    .sort((a,b)=>itemCenter(a.item)-itemCenter(b.item));
+
+  return candidates.length?candidates.at(-1).value:null;
+}
+
+function findRowByCode(rows,code,{contains='',excludes=''}={}){
+  return rows.find(row=>{
+    const text=row.text;
+    return text.includes(code) &&
+      (!contains||new RegExp(contains,'i').test(text)) &&
+      (!excludes||!new RegExp(excludes,'i').test(text));
+  })||null;
+}
+
+function columnValuesFromPdf(pdfData){
+  const result={
+    cometaEmployee:null,
+    cometaEmployer:null,
+    cometaDeductible:null,
+    irpefWithheld:null,
+    localTaxes:null,
+    regionalInstallment:null,
+    municipalBalanceInstallment:null,
+    municipalAdvanceInstallment:null,
+    fixedExtraDeductions:null
+  };
+
+  let localTaxes=0;
+  let foundLocalTax=false;
+
+  for(const page of pdfData.pages){
+    const header=page.rows.find(row=>
+      /TRATTENUTE/i.test(row.text) && /COMPETENZE/i.test(row.text)
+    );
+    if(!header)continue;
+
+    const centers=headerColumnCenters(header);
+    if(!centers)continue;
+
+    const cometaEmployeeRow=findRowByCode(page.rows,'Z20010',{
+      contains:'COMETA',
+      excludes:'C\\s*\\/?\\s*DITTA'
+    });
+    if(cometaEmployeeRow){
+      const value=valueInNamedColumn(cometaEmployeeRow,centers,'trattenute');
+      if(value!=null)result.cometaEmployee=value;
+    }
+
+    /* La riga della quota azienda cambia forma fra i cedolini:
+       "C/DITTA", "C.DITTA", "DITTA", "AZIENDA". Si provano in ordine
+       varianti sempre più larghe, e come ultima spiaggia si cerca una
+       riga COMETA che non sia quella del lavoratore. */
+    let cometaEmployerRow=null;
+    const employerVariants=[
+      'COMETA.*C\\s*[\\/.]?\\s*DITTA',
+      'COMETA.*DITTA',
+      'COMETA.*AZIEND',
+      'C\\s*[\\/.]?\\s*DITTA.*COMETA'
+    ];
+    for(const variant of employerVariants){
+      cometaEmployerRow=findRowByCode(page.rows,'Z20010',{contains:variant});
+      if(cometaEmployerRow)break;
+    }
+    if(!cometaEmployerRow){
+      cometaEmployerRow=page.rows.find(row=>
+        /COMETA/i.test(row.text) &&
+        /DITTA|AZIEND|CARICO\s+AZIEND/i.test(row.text) &&
+        row!==cometaEmployeeRow
+      )||null;
+    }
+
+    if(cometaEmployerRow){
+      /* Prima la colonna COMPETENZE, che è la sua sede naturale.
+         Se lì non c'è nulla, si ripiega sull'ultimo importo della riga,
+         che nel layout Zucchetti è comunque il contributo effettivo. */
+      let value=valueInNamedColumn(cometaEmployerRow,centers,'competenze');
+      if(value==null){
+        const amounts=numericItems(cometaEmployerRow)
+          .map(entry=>entry.value)
+          .filter(v=>v>0&&v<1000);
+        if(amounts.length)value=amounts.at(-1);
+      }
+      if(value!=null)result.cometaEmployer=Math.abs(value);
+    }
+
+    const deductibleRow=findRowByCode(page.rows,'F01998');
+    if(deductibleRow){
+      const values=numericItems(deductibleRow)
+        .map(x=>x.value)
+        .filter(v=>v>=0&&v<10000);
+      if(values.length)result.cometaDeductible=values.at(-1);
+    }
+
+    const irpefRow=findRowByCode(page.rows,'F03020');
+    if(irpefRow){
+      const value=valueInNamedColumn(irpefRow,centers,'trattenute');
+      if(value!=null)result.irpefWithheld=value;
+    }
+
+    const regionalRow=findRowByCode(page.rows,'F09110');
+    const municipalBalanceRow=findRowByCode(page.rows,'F09130');
+    const municipalAdvanceRow=findRowByCode(page.rows,'F09140');
+
+    if(regionalRow){
+      const value=valueInNamedColumn(regionalRow,centers,'trattenute');
+      if(value!=null)result.regionalInstallment=Math.abs(value);
+    }
+    if(municipalBalanceRow){
+      const value=valueInNamedColumn(municipalBalanceRow,centers,'trattenute');
+      if(value!=null)result.municipalBalanceInstallment=Math.abs(value);
+    }
+    if(municipalAdvanceRow){
+      const value=valueInNamedColumn(municipalAdvanceRow,centers,'trattenute');
+      if(value!=null)result.municipalAdvanceInstallment=Math.abs(value);
+    }
+
+    const eparRow=findRowByCode(page.rows,'003005',{contains:'Contributo\s+EPAR'});
+    if(eparRow){
+      const value=valueInNamedColumn(eparRow,centers,'trattenute');
+      if(value!=null)result.fixedExtraDeductions=Math.abs(value);
+    }
+  }
+
+  /* Il totale deducibile è la somma delle due quote.
+     Se la riga azienda non è stata trovata ma le altre due sì,
+     la quota azienda si ricava per differenza. */
+  if(result.cometaEmployer==null &&
+     result.cometaDeductible!=null &&
+     result.cometaEmployee!=null){
+    const diff=result.cometaDeductible-result.cometaEmployee;
+    if(diff>0)result.cometaEmployer=Number(diff.toFixed(2));
+  }
+
+  result.localTaxes=[
+    result.regionalInstallment,
+    result.municipalBalanceInstallment,
+    result.municipalAdvanceInstallment
+  ].filter(v=>v!=null).reduce((a,b)=>a+b,0)||null;
+  return result;
+}
+
+function parsePayslipData(pdfData){
+  const detected=parsePayslipText(pdfData.text);
+  const columns=columnValuesFromPdf(pdfData);
+
+  if(columns.cometaEmployee!=null)detected.cometaEmployee=columns.cometaEmployee;
+  if(columns.cometaEmployer!=null)detected.cometaEmployer=columns.cometaEmployer;
+  if(columns.cometaDeductible!=null)detected.cometaDeductible=columns.cometaDeductible;
+  if(columns.localTaxes!=null)detected.localTaxes=columns.localTaxes;
+  if(columns.regionalInstallment!=null)detected.regionalInstallment=columns.regionalInstallment;
+  if(columns.municipalBalanceInstallment!=null)detected.municipalBalanceInstallment=columns.municipalBalanceInstallment;
+  if(columns.municipalAdvanceInstallment!=null)detected.municipalAdvanceInstallment=columns.municipalAdvanceInstallment;
+  if(columns.fixedExtraDeductions!=null)detected.fixedExtraDeductions=columns.fixedExtraDeductions;
+
+  return detected;
+}
+
+function parsePayslipText(text){
+  const compact=text.replace(/\u00a0/g,' ').replace(/[ \t]+/g,' ');
+
+  const gross=
+    findAmountNear(compact,[
+      'TOTALE\\s+(?:ELEMENTI\\s+)?RETRIBUZIONE',
+      'RETRIBUZIONE\\s+LORDA',
+      'TOTALE\\s+FISSO',
+      'S\\.MIN\\s+ASSORB[\\s\\S]{0,50}?TOTALE'
+    ]);
+
+  const taxable=findAmountNear(compact,['Imponibile\\s+IRPEF']);
+  const withheld=findAmountNear(compact,['Ritenute\\s+IRPEF','IRPEF\\s+trattenuta']);
+  const computedTax=taxable&&withheld?withheld/taxable*100:null;
+
+  const ivs=findPercentageNear(compact,['Contributo\\s+IVS','IVS']);
+  const cigs=findPercentageNear(compact,['Contributo\\s+CIGS','CIGS']);
+  const epar=findPercentageNear(compact,['Contributo\\s+EPAR','EPAR']);
+  const socialParts=[ivs,cigs,epar].filter(v=>v!=null);
+  const social=socialParts.length?socialParts.reduce((a,b)=>a+b,0):null;
+
+  const regional=findAmountNear(compact,['Addizionale\\s+regionale']);
+  const municipal=findAmountNear(compact,['Addizionale\\s+comunale']);
+  const municipalAdvance=findAmountNear(compact,['Acconto\\s+addiz\\.\\s+comunale','Acconto\\s+addizionale\\s+comunale']);
+  const localTaxes=[regional,municipal,municipalAdvance].filter(v=>v!=null).reduce((a,b)=>a+b,0)||null;
+
+  const cometaEmployee=findCometaLineAmount(compact,{employer:false});
+  const cometaEmployer=findCometaLineAmount(compact,{employer:true});
+  const cometaDeductible=findAmountNear(compact,[
+    'Ctr\\.prev\\.compl\\.deducib\\.',
+    'Contributo\\s+previdenziale\\s+complementare\\s+deducibile',
+    'Totale\\s+COMETA\\s+deducibile'
+  ]);
+
+  const percentages=[...compact.matchAll(/Magg(?:iorazione)?\.?[\s\S]{0,45}?([0-9]{2}(?:[,.][0-9]+)?)\s*%/gi)]
+    .map(m=>percentNumber(m[1]))
+    .filter(v=>v!=null);
+
+  const uniquePct=[...new Set(percentages.map(v=>Math.round(v*100)/100))].sort((a,b)=>a-b);
+
+  return{
+    profileName:findNameFromText(compact),
+    gross:gross&&gross>=500&&gross<=15000?gross:null,
+    divisor:173,
+    nightPct:uniquePct.includes(50)?50:(uniquePct[0]||50),
+    holidayPct:uniquePct.includes(50)?50:(uniquePct[0]||50),
+    holidayNightPct:uniquePct.includes(55)?55:(uniquePct.at(-1)||55),
+    socialPct:social,
+    taxPct:computedTax&&computedTax<=60?computedTax:null,
+    localTaxes,
+    cometaEmployee,
+    cometaEmployer,
+    cometaDeductible:cometaDeductible ??
+      ((cometaEmployee||0)+(cometaEmployer||0) || null)
+  };
+}
+
+async function extractPdfData(file){
+  if(!window.pdfjsLib)throw new Error('Libreria PDF non disponibile');
+  const bytes=new Uint8Array(await file.arrayBuffer());
+  const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
+  const pages=[];
+  const pageTexts=[];
+
+  for(let pageNo=1;pageNo<=pdf.numPages;pageNo++){
+    const page=await pdf.getPage(pageNo);
+    const content=await page.getTextContent();
+    const sorted=content.items
+      .filter(item=>String(item.str||'').trim())
+      .map(item=>({
+        text:String(item.str).trim(),
+        x:item.transform[4],
+        y:item.transform[5],
+        width:item.width||0
+      }))
+      .sort((a,b)=>Math.abs(b.y-a.y)>2.5?b.y-a.y:a.x-b.x);
+
+    const rows=[];
+    let current=null;
+
+    for(const item of sorted){
+      if(!current||Math.abs(item.y-current.y)>2.5){
+        current={y:item.y,items:[],text:''};
+        rows.push(current);
+      }
+      current.items.push(item);
+    }
+
+    for(const row of rows){
+      row.items.sort((a,b)=>a.x-b.x);
+      row.text=row.items.map(item=>item.text).join(' ').replace(/\s+/g,' ').trim();
+    }
+
+    pages.push({pageNo,rows});
+    pageTexts.push(rows.map(row=>row.text).join('\n'));
+  }
+
+  return{
+    text:pageTexts.join('\n\n'),
+    pages
+  };
+}
+
+function fillPayslipDialog(data,fileName){
+  const current=state.settings;
+  const values={
+    psProfileName:data.profileName||current.profileName||'',
+    psGross:data.gross??current.gross,
+    psDivisor:data.divisor??current.divisor,
+    psSocialPct:data.socialPct??current.socialPct,
+    psFixedExtraDeductions:data.fixedExtraDeductions??current.fixedExtraDeductions,
+    psRegionalInstallment:data.regionalInstallment??current.regionalInstallment,
+    psMunicipalBalanceInstallment:data.municipalBalanceInstallment??current.municipalBalanceInstallment,
+    psMunicipalAdvanceInstallment:data.municipalAdvanceInstallment??current.municipalAdvanceInstallment,
+    psCometaEmployee:data.cometaEmployee??current.cometaEmployee,
+    psCometaEmployer:data.cometaEmployer??current.cometaEmployer,
+    psCometaDeductible:data.cometaDeductible??current.cometaDeductible,
+    psNightPct:data.nightPct??current.nightPct,
+    psHolidayPct:data.holidayPct??current.holidayPct,
+    psHolidayNightPct:data.holidayNightPct??current.holidayNightPct
+  };
+  Object.entries(values).forEach(([id,value])=>document.getElementById(id).value=value??0);
+  document.getElementById('payslipMessage').textContent=
+    `File analizzato localmente: ${fileName}. Controlla i valori prima di salvarli.`;
+  document.getElementById('payslipDialog').dataset.fileName=fileName;
+  document.getElementById('payslipDialog').showModal();
+}
+
+document.getElementById('uploadPayslip').onclick=()=>{
+  document.getElementById('payslipInput').click();
+};
+
+document.getElementById('payslipInput').addEventListener('change',async event=>{
+  const file=event.target.files[0];
+  event.target.value='';
+  if(!file)return;
+
+  try{
+    document.getElementById('payslipStatus').textContent='Analisi della busta paga in corso…';
+    const pdfData=await extractPdfData(file);
+    const detected=parsePayslipData(pdfData);
+
+    if(pdfData.text.replace(/\s/g,'').length<50){
+      document.getElementById('payslipStatus').textContent=
+        'PDF senza testo rilevabile: inserisci i valori manualmente.';
+    }
+
+    fillPayslipDialog(detected,file.name);
+  }catch(error){
+    console.error(error);
+    document.getElementById('payslipStatus').textContent=
+      'Non è stato possibile leggere automaticamente il PDF. Puoi comunque inserire i dati manualmente.';
+    fillPayslipDialog({},file.name);
+  }
+});
+
+document.getElementById('savePayslipProfile').onclick=()=>{
+  const map={
+    profileName:'psProfileName',
+    gross:'psGross',
+    divisor:'psDivisor',
+    socialPct:'psSocialPct',
+    fixedExtraDeductions:'psFixedExtraDeductions',
+    regionalInstallment:'psRegionalInstallment',
+    municipalBalanceInstallment:'psMunicipalBalanceInstallment',
+    municipalAdvanceInstallment:'psMunicipalAdvanceInstallment',
+    cometaEmployee:'psCometaEmployee',
+    cometaEmployer:'psCometaEmployer',
+    cometaDeductible:'psCometaDeductible',
+    nightPct:'psNightPct',
+    holidayPct:'psHolidayPct',
+    holidayNightPct:'psHolidayNightPct'
+  };
+
+  for(const [key,id] of Object.entries(map)){
+    state.settings[key]=key==='profileName'
+      ? document.getElementById(id).value.trim()
+      : Number(document.getElementById(id).value)||0;
+  }
+
+  state.settings.payslipFileName=
+    document.getElementById('payslipDialog').dataset.fileName||'Busta paga PDF';
+  state.settings.payslipImportedAt=new Date().toISOString();
+
+  saveState();
+  render();
+  document.getElementById('payslipDialog').close();
+};
+
+document.getElementById('closePayslipDialog').onclick=()=>{
+  document.getElementById('payslipDialog').close();
+};

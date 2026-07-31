@@ -1,17 +1,76 @@
 {
-  "name": "Turni",
+  "name": "TurniApp - Gestione Turni e Stipendi",
   "short_name": "Turni",
+  "description": "App modulare per la gestione dei turni di lavoro, calcolo automatico dei stipendi, analisi cedolini PDF e simulatore di busta paga con IRPEF dinamica",
+  "version": "3.1",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "orientation": "portrait-primary",
+  "dir": "ltr",
+  "lang": "it-IT",
   "background_color": "#0e1420",
   "theme_color": "#0e1420",
+  "categories": ["productivity", "utilities", "finance"],
+  "screenshots": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
   "icons": [
     {
       "src": "./icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Aggiungi turno",
+      "short_name": "Turno",
+      "description": "Aggiungi velocemente un nuovo turno",
+      "url": "./index.html#add",
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Visualizza statistiche",
+      "short_name": "Stats",
+      "description": "Vai al riepilogo mensile",
+      "url": "./index.html#stats",
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "screenshots_large": [
     {
       "src": "./icon-512.png",
       "sizes": "512x512",

@@ -6,6 +6,13 @@
   <meta name="theme-color" content="#0e1420">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Gestione turni di lavoro, statistiche mensili e simulatore di busta paga. Funziona offline, i dati restano sul dispositivo.">
+  <meta property="og:title" content="Turni">
+  <meta property="og:description" content="Gestione turni e simulatore busta paga, offline.">
+  <meta property="og:image" content="./icon-512.png">
+  <meta property="og:type" content="website">
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <title>Turni</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-192.png">
@@ -193,6 +200,9 @@
   <div class="fields">
     <div><label>Lordo fisso mensile €</label><input id="pfGross" type="number" step="0.01"></div>
     <div><label>Divisore mensile</label><input id="pfDivisor" type="number" step="1"></div>
+    <div><label>Base maggiorazioni € <small>(0 = lordo fisso)</small></label><input id="pfPremiumBase" type="number" step="0.01"></div>
+    <div><label>Divisore maggiorazioni <small>(0 = come sopra)</small></label><input id="pfPremiumDivisor" type="number" step="1"></div>
+    <div><label>Correzione netto €</label><input id="pfNetAdjustment" type="number" step="0.01"></div>
     <div><label>Contributi dipendente %</label><input id="pfSocialPct" type="number" step="0.01"></div>
     <div><label>Trattenute fisse extra €</label><input id="pfFixedExtraDeductions" type="number" step="0.01"></div>
     <div><label>Addizionale regionale €</label><input id="pfRegionalInstallment" type="number" step="0.01"></div>
@@ -210,9 +220,32 @@
     <div><label>Già usato nell'anno €</label><input id="pfSubstituteUsedYtd" type="number" step="0.01"></div>
   </div>
   <p class="notice">L'IRPEF viene calcolata dinamicamente sul lordo finale del mese, non con una percentuale fissa.</p>
+  <p class="notice">Le maggiorazioni in busta paga si calcolano su paga base + contingenza + EDR, non sul lordo fisso completo. Se la stima non torna, usa la calibrazione.</p>
   <div class="dialog-actions">
     <button class="btn" id="savePayrollSettings">Salva</button>
+    <button class="btn alt" id="openCalibration">Calibra da cedolino</button>
     <button class="btn alt" id="closePayrollSettings">Chiudi</button>
+  </div>
+</dialog>
+
+
+<dialog id="calibrationDialog">
+  <h3>Calibra sul cedolino reale</h3>
+  <p class="notice">
+    Scegli un mese di cui hai già la busta paga e i turni completi in app,
+    poi inserisci lordo e netto veri. L'app ricava da sola la base delle
+    maggiorazioni e lo scarto residuo.
+  </p>
+  <div class="notice">Mese in calibrazione: <b id="calMonth">—</b></div>
+  <div class="notice" id="calEstimated">—</div>
+  <div class="fields">
+    <div><label>Lordo reale €</label><input id="calRealGross" type="number" step="0.01"></div>
+    <div><label>Netto reale €</label><input id="calRealNet" type="number" step="0.01"></div>
+  </div>
+  <div class="notice" id="calResult" style="white-space:pre-line"></div>
+  <div class="dialog-actions">
+    <button class="btn" id="runCalibration">Calcola e salva</button>
+    <button class="btn alt" id="closeCalibration">Chiudi</button>
   </div>
 </dialog>
 
@@ -245,6 +278,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="./js/logger.js"></script>
 <script src="./js/core.js"></script>
 <script src="./js/excel.js"></script>
 <script src="./js/backup.js"></script>
