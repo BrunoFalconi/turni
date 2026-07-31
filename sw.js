@@ -5,20 +5,20 @@
 // 3. Migliore gestione degli errori
 // 4. Pulizia cache obsolete
 
-const VERSION = '3.5'; // Incrementare quando deploy
+const VERSION = '3.6'; // Incrementare quando deploy
 const CACHE_NAME = `turni-app-v${VERSION}`;
 const CORE_ASSETS = [
   './',
   './index.html',
-  './css/style.css?v=3.5',
-  './js/core.js?v=3.5',
-  './js/excel.js?v=3.5',
-  './js/backup.js?v=3.5',
-  './js/stats.js?v=3.5',
-  './js/payslip.js?v=3.5',
+  './css/style.css?v=3.6',
+  './js/core.js?v=3.6',
+  './js/excel.js?v=3.6',
+  './js/backup.js?v=3.6',
+  './js/stats.js?v=3.6',
+  './js/payslip.js?v=3.6',
   './js/dashboard.js',
-  './js/app.js?v=3.5',
-  './js/logger.js?v=3.5',
+  './js/app.js?v=3.6',
+  './js/logger.js?v=3.6',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png'

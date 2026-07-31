@@ -16,7 +16,7 @@
   <title>Turni</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="stylesheet" href="./css/style.css?v=3.5">
+  <link rel="stylesheet" href="./css/style.css?v=3.6">
 </head>
 <body>
 <div id="app">
@@ -29,6 +29,23 @@
     </div>
   </div>
 
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab" data-tab="oggi" aria-label="Oggi">
+      <span class="tab-ico">◉</span><span class="tab-txt">Oggi</span>
+    </button>
+    <button class="tab" data-tab="calendario" aria-label="Calendario">
+      <span class="tab-ico">▦</span><span class="tab-txt">Calendario</span>
+    </button>
+    <button class="tab" data-tab="statistiche" aria-label="Statistiche">
+      <span class="tab-ico">◧</span><span class="tab-txt">Statistiche</span>
+    </button>
+    <button class="tab" data-tab="busta" aria-label="Busta paga">
+      <span class="tab-ico">€</span><span class="tab-txt">Busta paga</span>
+    </button>
+  </nav>
+
+  <div class="tab-panel" id="tab-oggi">
 
   <section class="card dashboard-card" id="dashboardCard">
     <div class="section-head">
@@ -65,6 +82,10 @@
     </div>
   </section>
 
+  </div><!-- /tab-oggi -->
+
+  <div class="tab-panel" id="tab-calendario">
+
   <section class="card">
     <div class="summary-grid">
       <div><div class="lab">Ore lavorate</div><div class="val" id="totHours">0h</div></div>
@@ -83,6 +104,11 @@
 
   <div class="week"><div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div></div>
   <div class="grid" id="calendar"></div>
+  <div class="list" id="list"></div>
+
+  </div><!-- /tab-calendario -->
+
+  <div class="tab-panel" id="tab-statistiche">
 
 
   <section class="card stats-card">
@@ -122,7 +148,11 @@
     <div id="historyChart" class="history-chart"></div>
   </section>
 
-  <section class="card payroll-card" style="margin-top:14px">
+  </div><!-- /tab-statistiche -->
+
+  <div class="tab-panel" id="tab-busta">
+
+  <section class="card payroll-card">
     <div class="section-head">
       <div>
         <div class="lab">Simulatore busta paga</div>
@@ -135,8 +165,11 @@
     <div class="payroll-note">La stima usa le percentuali configurate nelle impostazioni e non sostituisce il cedolino ufficiale.</div>
   </section>
 
-  <div class="list" id="list"></div>
+  </div><!-- /tab-busta -->
+
   <button class="fab" id="addBtn">Aggiungi turno</button>
+
+
 </div>
 
 <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" hidden>
@@ -310,12 +343,12 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="./js/logger.js?v=3.5"></script>
-<script src="./js/core.js?v=3.5"></script>
-<script src="./js/excel.js?v=3.5"></script>
-<script src="./js/backup.js?v=3.5"></script>
-<script src="./js/stats.js?v=3.5"></script>
-<script src="./js/payslip.js?v=3.5"></script>
-<script src="./js/app.js?v=3.5"></script>
+<script src="./js/logger.js?v=3.6"></script>
+<script src="./js/core.js?v=3.6"></script>
+<script src="./js/excel.js?v=3.6"></script>
+<script src="./js/backup.js?v=3.6"></script>
+<script src="./js/stats.js?v=3.6"></script>
+<script src="./js/payslip.js?v=3.6"></script>
+<script src="./js/app.js?v=3.6"></script>
 </body>
 </html>

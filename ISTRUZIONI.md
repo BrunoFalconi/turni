@@ -603,3 +603,38 @@ coincidono con quelle pagate. Ad aprile la stima migliora di ~60 euro con
 questa versione, ma se le ore accantonate sono diverse da quelle
 notturne lavorate lo scarto restante viene da li e si chiude solo
 caricando la busta paga di aprile.
+
+
+---
+
+# v3.6 — Quattro schede invece di un rotolo unico
+
+La pagina era diventata lunghissima: cruscotto, riepilogo, calendario,
+statistiche, grafico a sei mesi e simulatore busta paga tutti impilati.
+Ora sono quattro pannelli con una barra di navigazione.
+
+## Le schede
+
+**Oggi** — turno di oggi, prossimo turno, ore e netto del mese, e
+l'indicazione se il mese ha una busta paga caricata.
+
+**Calendario** — riepilogo ore, pulsanti di importazione, griglia del
+mese ed elenco dei turni.
+
+**Statistiche** — conteggi per tipo di turno, distribuzione, ore con
+maggiorazione e andamento degli ultimi sei mesi.
+
+**Busta paga** — etichetta stima/verificato e dettaglio delle voci.
+
+## Dettagli
+
+- La barra sta in basso su telefono, in alto su schermi larghi.
+- La scheda scelta viene ricordata alla riapertura dell'app.
+- Il pulsante "Aggiungi turno" compare solo dove serve, cioe su Oggi e
+  Calendario.
+- Cambiando scheda la pagina torna in cima.
+- Le frecce del mese restano sempre visibili in testata: cambiando mese
+  si aggiornano tutte le schede insieme.
+
+Nessun calcolo e stato toccato: e solo una riorganizzazione
+dell'interfaccia. I dati e le impostazioni restano dove sono.
