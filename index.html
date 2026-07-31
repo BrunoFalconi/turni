@@ -194,6 +194,16 @@ input[type=time]{font-family:var(--mono)}
 .alert b{color:var(--extra);font-weight:600;display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;margin-bottom:3px}
 .warn{position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--extra)}
 .calc .issue{color:var(--extra);display:block;margin-top:6px}
+.tabs{display:flex;gap:4px;background:var(--surface);border-radius:13px;padding:4px;margin:0 0 16px}
+.tab{flex:1;padding:10px 6px;border-radius:10px;font-size:14px;font-weight:600;
+  color:var(--muted);-webkit-text-fill-color:var(--muted);transition:background .16s,color .16s}
+.tab.on{background:var(--surface-2);color:var(--text);-webkit-text-fill-color:var(--text)}
+.tab .bad{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--extra);margin-left:5px;vertical-align:2px}
+.pane{display:none}
+.pane.on{display:block;animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.pane.on{animation:none}}
+
 /* ---- schermi larghi: due colonne affiancate ---- */
 @media (min-width:900px){
   #app{max-width:1180px;padding:28px 28px 60px}
@@ -216,6 +226,7 @@ input[type=time]{font-family:var(--mono)}
     box-shadow:0 24px 70px #0009;border:1px solid var(--line)}
   .sheet.on{pointer-events:auto;visibility:visible;transform:translate(-50%,-50%) scale(1);opacity:1}
   .fab{left:auto;right:28px;transform:none;bottom:28px}
+  .pane[data-pane="pag"] .pay{background:var(--surface);border-radius:18px;padding:20px;border-top:none;margin-top:0}
   #stampa{display:none}
 }
 @media (min-width:1400px){
@@ -265,28 +276,43 @@ input[type=time]{font-family:var(--mono)}
       <span><b style="background:var(--deas)"></b>DEAS</span>
       <span><b style="background:var(--ferie)"></b>Ferie / permesso</span>
     </div>
-    <div class="pay" id="pay" style="display:none">
-      <div class="pay-top"><span>Lordo stimato</span><b id="pay-tot">—</b></div>
-      <div class="pay-rows" id="pay-rows"></div>
-      <div class="pay-net" id="pay-net" style="display:none"><span>Netto stimato</span><b id="pay-net-v">—</b></div>
-      <div class="pay-note" id="pay-note"></div>
-      <button class="pay-btn" id="buste">Prossime buste paga</button>
     </div>
   </div>
 
   <div id="upd"></div>
   <div id="nudge"></div>
 
+  <div class="tabs" role="tablist">
+    <button class="tab on" data-tab="cal" role="tab">Calendario</button>
+    <button class="tab" data-tab="tur" role="tab">Turni</button>
+    <button class="tab" data-tab="pag" role="tab">Paga</button>
+  </div>
+
   </div>
   <div class="col-b">
+  <section class="pane on" data-pane="cal">
   <div class="week-head"><div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div></div>
   <div class="grid" id="grid"></div>
   <div class="weeks" id="weeks"></div>
 
-  <div id="alerts" style="margin-top:22px"></div>
+  </section>
+
+  <section class="pane" data-pane="tur">
+  <div id="alerts" style="margin-top:4px"></div>
 
   <div class="list-title">Turni del mese</div>
   <div id="list"></div>
+  </section>
+
+  <section class="pane" data-pane="pag">
+  <div class="pay" id="pay" style="display:none">
+      <div class="pay-top"><span>Lordo stimato</span><b id="pay-tot">—</b></div>
+      <div class="pay-rows" id="pay-rows"></div>
+      <div class="pay-net" id="pay-net" style="display:none"><span>Netto stimato</span><b id="pay-net-v">—</b></div>
+      <div class="pay-note" id="pay-note"></div>
+      <button class="pay-btn" id="buste">Prossime buste paga</button>
+  <div class="empty-state" id="pay-empty">Per vedere il compenso, apri le impostazioni e inserisci il lordo fisso mensile.</div>
+  </section>
 
   </div>
   </div>
@@ -459,7 +485,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='21 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='22 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -696,7 +722,13 @@ function render(){
   document.getElementById('bar-2').style.width=(target?Math.min(over/target*100,100-base/target*100):0)+'%';
   document.getElementById('bar-left').textContent=`${worked_days} lavorati · ${rest_days} riposi`;
   document.getElementById('bar-right').textContent=`obiettivo ${fmtPlain(target)}`;
-  renderPay(y,m); renderWeeks(y,m); renderAlerts(y,m); renderNudge();
+  renderPay(y,m); renderWeeks(y,m); renderNudge();
+  const nAvvisi=renderAlerts(y,m)||0;
+  const tabTur=document.querySelector('.tab[data-tab="tur"]');
+  if(tabTur) tabTur.innerHTML='Turni'+(nAvvisi?'<span class="bad" title="'+nAvvisi+(nAvvisi===1?' avviso':' avvisi')+'"></span>':'');
+  const haPaga=document.getElementById('pay').style.display!=='none';
+  const vuoto=document.getElementById('pay-empty');
+  if(vuoto) vuoto.style.display=haPaga?'none':'';
 
   const list=document.getElementById('list'); list.innerHTML='';
   if(!rows.length){
@@ -772,6 +804,7 @@ function renderWeeks(y,m){
 }
 function renderAlerts(y,m){
   const box=document.getElementById('alerts'); box.innerHTML='';
+  let quanti=0;
   const items=[], days=new Date(y,m+1,0).getDate();
   for(let d=1;d<=days;d++){
     const key=`${y}-${pad(m+1)}-${pad(d)}`;
@@ -786,7 +819,8 @@ function renderAlerts(y,m){
     items.push({key:ymd(start),label:`Settimana del ${start.getDate()}/${start.getMonth()+1}`,
       text:`${w.work} giorni di lavoro e ${w.rest} riposi, invece di ${state.settings.workDays} e ${state.settings.restDays}.`});
   });
-  if(!items.length) return;
+  quanti=items.length;
+  if(!items.length) return 0;
   const h=document.createElement('div'); h.className='list-title';
   h.style.marginTop='0'; h.textContent=items.length===1?'1 avviso':`${items.length} avvisi`;
   box.appendChild(h);
@@ -796,6 +830,7 @@ function renderAlerts(y,m){
     b.onclick=()=>openEditor(it.key);
     box.appendChild(b);
   });
+  return quanti;
 }
 
 /* ---------- festivi e compenso ---------- */
@@ -1473,6 +1508,15 @@ function renderNudge(){
   b.onclick=()=>apriSequenza(ymd(new Date(n.getFullYear(),n.getMonth(),compilati+1)));
   box.appendChild(b);
 }
+
+/* ---------- schede ---------- */
+let scheda='cal';
+function mostraScheda(k){
+  scheda=k;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===k));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.dataset.pane===k));
+}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>mostraScheda(b.dataset.tab));
 
 /* Solo per dirlo con la parola giusta: i dati stanno nel browser di questo
    dispositivo, che sia telefono, tablet o computer. */
