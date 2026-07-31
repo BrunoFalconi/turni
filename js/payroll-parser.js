@@ -4,6 +4,77 @@
  * Estrae i parametri vitali dal testo grezzo del PDF (es. usando pdf.js)
  * ============================================================================
  */
+async function estraiTestoPdf(file) {
+  if (!window.pdfjsLib) {
+    throw new Error('PDF.js non è disponibile');
+  }
+
+  const data = new Uint8Array(await file.arrayBuffer());
+
+  const documento = await window.pdfjsLib.getDocument({
+    data
+  }).promise;
+
+  const pagine = [];
+
+  for (
+    let numeroPagina = 1;
+    numeroPagina <= documento.numPages;
+    numeroPagina++
+  ) {
+    const pagina = await documento.getPage(numeroPagina);
+    const contenuto = await pagina.getTextContent();
+
+    /*
+     * Ricostruisce il testo raggruppandolo approssimativamente
+     * per righe. È più affidabile di un semplice join con spazio.
+     */
+    const elementi = contenuto.items
+      .filter(item => item.str?.trim())
+      .map(item => ({
+        testo: item.str.trim(),
+        x: item.transform[4],
+        y: item.transform[5]
+      }))
+      .sort((a, b) => {
+        const differenzaRiga = b.y - a.y;
+
+        if (Math.abs(differenzaRiga) > 3) {
+          return differenzaRiga;
+        }
+
+        return a.x - b.x;
+      });
+
+    const righe = [];
+    let rigaCorrente = [];
+    let ultimaY = null;
+
+    elementi.forEach(elemento => {
+      if (
+        ultimaY !== null &&
+        Math.abs(elemento.y - ultimaY) > 3
+      ) {
+        righe.push(rigaCorrente.join(' | '));
+        rigaCorrente = [];
+      }
+
+      rigaCorrente.push(elemento.testo);
+      ultimaY = elemento.y;
+    });
+
+    if (rigaCorrente.length) {
+      righe.push(rigaCorrente.join(' | '));
+    }
+
+    pagine.push(righe.join('\n'));
+  }
+
+  return pagine.join('\n\n');
+}
+
+window.estraiTestoPdf = estraiTestoPdf;
+
 const estraiProfiloDaPDF = (testoPDF) => {
     // Helper per convertire numeri italiani ("2.615,39") in float JS (2615.39)
     const parseItaNumber = (str) => {
