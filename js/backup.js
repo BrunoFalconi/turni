@@ -1,3 +1,4 @@
+(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['backup']='3.3';
 document.getElementById('exportBackup').onclick=()=>{
   const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');
   a.href=URL.createObjectURL(blob);a.download=`turni-backup-${ymd(new Date())}.json`;a.click();URL.revokeObjectURL(a.href);

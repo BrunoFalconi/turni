@@ -1,3 +1,4 @@
+(window.__MODULE_VERSIONS=window.__MODULE_VERSIONS||{})['excel']='3.3';
 function toType(v){
   const n=norm(v).replace(/\s*\([^)]*\)\s*/g,'').trim();
   if(n.startsWith('deas')||n==='d'||n==='sw')return'deas';
