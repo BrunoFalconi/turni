@@ -407,6 +407,7 @@ input[type=time]{font-family:var(--mono)}
   <div class="set-row"><span>Orario DEAS</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-d1"><input type="time" id="p-d2"></div></div>
   <div style="height:18px"></div>
   <div class="calc" id="store-info"></div>
+  <button class="btn ghost" style="width:100%;margin-bottom:10px" id="ricarica">Forza aggiornamento</button>
   <button class="btn" style="width:100%;margin-bottom:10px" id="ced">Cedolini dei mesi scorsi</button>
   <button class="btn" style="width:100%;margin-bottom:10px" id="seq">Incolla sequenza turni</button>
   <div class="actions" style="margin-bottom:10px">
@@ -517,7 +518,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='27 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='28 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -1788,6 +1789,25 @@ function nomeDispositivo(){
 /* Il browser può servire una copia vecchia dell'app. Qui rileggo il file
    scavalcando la cache e confronto il numero di versione: se ne esiste una
    più recente lo dico, invece di lasciare l'utente a indovinare. */
+/* Svuota tutto ciò che può servire una copia vecchia dell'app e ricarica
+   da un indirizzo mai visto. I turni non sono toccati: stanno altrove. */
+async function forzaAggiornamento(numero){
+  try{
+    if(navigator.serviceWorker){
+      const rs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(rs.map(x=>x.unregister()));
+    }
+  }catch(e){}
+  try{
+    if(typeof caches!=='undefined'){
+      const ks=await caches.keys();
+      await Promise.all(ks.map(k=>caches.delete(k)));
+    }
+  }catch(e){}
+  const v=numero||Date.now().toString(36);
+  location.replace(location.pathname+'?v='+v);
+}
+
 async function controllaAggiornamenti(){
   const box=document.getElementById('upd');
   if(!box||location.protocol==='file:') return;
@@ -1801,19 +1821,9 @@ async function controllaAggiornamenti(){
     if(online<=mia) return;
     const b=document.createElement('button'); b.className='upd';
     b.innerHTML=`<b>AGGIORNAMENTO DISPONIBILE</b>Hai la versione ${mia}, online c'è la ${online}. Tocca per caricarla.`;
-    b.onclick=async()=>{
+    b.onclick=()=>{
       b.innerHTML='<b>AGGIORNAMENTO</b>Sto ricaricando…';
-      try{
-        if(navigator.serviceWorker){
-          const rs=await navigator.serviceWorker.getRegistrations();
-          await Promise.all(rs.map(x=>x.unregister()));
-        }
-        if(typeof caches!=='undefined'){
-          const ks=await caches.keys();
-          await Promise.all(ks.map(k=>caches.delete(k)));
-        }
-      }catch(e){}
-      location.replace(location.pathname+'?v='+online);   /* indirizzo nuovo: niente cache */
+      forzaAggiornamento(online);
     };
     box.appendChild(b);
   }catch(e){/* offline: pazienza */}
@@ -2052,6 +2062,23 @@ function renderCedolini(){
              :`<br><b>Uso questa misura</b> per il netto dei mesi futuri.`);
   }
 }
+document.getElementById('ricarica').onclick=async()=>{
+  const b=document.getElementById('ricarica');
+  b.textContent='Controllo…';
+  let online=null;
+  try{
+    const r=await fetch(location.pathname+'?_ck='+Date.now(),{cache:'no-store'});
+    if(r.ok){
+      const m=(await r.text()).match(/const VERSIONE='(\d+)/);
+      if(m) online=+m[1];
+    }
+  }catch(e){}
+  const mia=+VERSIONE.match(/^\d+/)[0];
+  if(online===null){ b.textContent='Forza aggiornamento'; toast('Nessuna rete: riprova quando sei connesso'); return; }
+  if(online<=mia){ b.textContent='Forza aggiornamento'; toast(`Hai già l'ultima versione (${mia})`); return; }
+  b.textContent=`Carico la versione ${online}…`;
+  forzaAggiornamento(online);
+};
 document.getElementById('ced').onclick=()=>{renderCedolini();closeSheets();showSheet('sheet-ced')};
 document.getElementById('ced-close').onclick=closeSheets;
 document.getElementById('ced-add').onclick=()=>{
