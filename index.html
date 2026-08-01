@@ -787,10 +787,7 @@ function render(){
       list.appendChild(b);
     });
   }
-  renderBacheca();
-}
-
-function renderBacheca(){
+ function renderBacheca(){
   const box=document.getElementById('bac-list');
   const note=document.getElementById('bac-note');
   if(!box)return;
@@ -805,8 +802,8 @@ function renderBacheca(){
     return;
   }
 
-  /* Ordine in cui verranno mostrati i turni nel singolo giorno */
-  const order=['mattina','pomeriggio','notte','deas'];
+  /* Ordine corretto: Notte, Mattina, Pomeriggio, DEAS */
+  const order=['notte','mattina','pomeriggio','deas'];
   let html='';
   let hasShifts=false;
 
