@@ -503,7 +503,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='23 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='24 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -584,6 +584,10 @@ function worked(s){
   return Math.max(0, span(s).gross - (Number(s.break)||0));
 }
 function isWork(s){const t=TYPES.find(t=>t.id===s.type);return t&&t.work}
+/* Il riposo è l'unico giorno "non dovuto": ferie, permessi e malattia
+   occupano invece un giorno di lavoro, sono retribuiti e scalano dal monte. */
+function isRiposo(s){return s.type==='riposo'}
+function isAssenza(s){return !isWork(s)&&!isRiposo(s)}
 function nightMin(s){
   if(!isWork(s)) return 0;
   const {a,b}=span(s);
@@ -625,16 +629,18 @@ function issuesFor(key,override){
 }
 function weekStart(d){const x=new Date(d);x.setDate(x.getDate()-((x.getDay()+6)%7));x.setHours(0,0,0,0);return x}
 function weekStats(start){
-  const days=[];let work=0,rest=0,mins=0,filled=0;
+  const days=[];let work=0,rest=0,ass=0,mins=0,filled=0;
   for(let i=0;i<7;i++){
     const k=ymd(new Date(start.getFullYear(),start.getMonth(),start.getDate()+i));
     const s=state.shifts[k];
     days.push(s||null);
     if(!s) continue;
     filled++;
-    if(isWork(s)){work++;mins+=worked(s)}else rest++;
+    if(isWork(s)){work++;mins+=worked(s)}
+    else if(isRiposo(s)) rest++;
+    else ass++;                       /* ferie, permesso, malattia */
   }
-  return {days,work,rest,mins,complete:filled===7};
+  return {days,work,rest,ass,mins,complete:filled===7};
 }
 
 /* ---------- archivio ---------- */
@@ -719,13 +725,13 @@ function render(){
   }
 
   /* riepilogo */
-  let tot=0,ex=0,nt=0,worked_days=0,rest_days=0;
+  let tot=0,ex=0,nt=0,worked_days=0,rest_days=0,abs_days=0;
   const rows=[];
   for(let d=1;d<=days;d++){
     const key=`${y}-${pad(m+1)}-${pad(d)}`, s=state.shifts[key];
     if(!s) continue;
     rows.push([key,s]);
-    if(!isWork(s)){rest_days++;continue}
+    if(!isWork(s)){isRiposo(s)?rest_days++:abs_days++;continue}
     tot+=worked(s); ex+=overtime(s); nt+=nightMin(s); worked_days++;
   }
   document.getElementById('tot-h').innerHTML=fmt(tot);
@@ -738,7 +744,8 @@ function render(){
   const base=Math.min(tot,target), over=Math.max(0,tot-target);
   document.getElementById('bar-1').style.width=(target?base/target*100:0)+'%';
   document.getElementById('bar-2').style.width=(target?Math.min(over/target*100,100-base/target*100):0)+'%';
-  document.getElementById('bar-left').textContent=`${worked_days} lavorati · ${rest_days} riposi`;
+  document.getElementById('bar-left').textContent=
+    `${worked_days} lavorati · ${rest_days} riposi`+(abs_days?` · ${abs_days} assenze`:'');
   document.getElementById('bar-right').textContent=`obiettivo ${fmtPlain(target)}`;
   renderPay(y,m); renderWeeks(y,m); renderNudge();
   const nAvvisi=renderAlerts(y,m)||0;
@@ -803,8 +810,10 @@ function eachWeek(y,m,fn){
   let cur=weekStart(new Date(y,m,1));
   while(cur<=last){ fn(cur,weekStats(cur)); cur=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate()+7); }
 }
+/* Una settimana è in regola se i giorni dovuti sono coperti da lavoro
+   o da assenze retribuite, e i riposi sono almeno quelli previsti. */
 function weekOff(w){
-  return w.complete && (w.work!==state.settings.workDays || w.rest<state.settings.restDays);
+  return w.complete && (w.work+w.ass!==state.settings.workDays || w.rest<state.settings.restDays);
 }
 function renderWeeks(y,m){
   const box=document.getElementById('weeks'); box.innerHTML='';
@@ -816,7 +825,7 @@ function renderWeeks(y,m){
     const el=document.createElement('div'); el.className='wk';
     el.innerHTML=`<span class="lb">${start.getDate()}/${start.getMonth()+1}</span>
       <span class="pips">${pips}</span>
-      <span class="cnt ${w.complete?(weekOff(w)?'bad':'ok'):''}">${w.work}L ${w.rest}R</span>`;
+      <span class="cnt ${w.complete?(weekOff(w)?'bad':'ok'):''}">${w.work}L${w.ass?'+'+w.ass+'A':''} ${w.rest}R</span>`;
     box.appendChild(el);
   });
 }
@@ -834,8 +843,11 @@ function renderAlerts(y,m){
   }
   eachWeek(y,m,(start,w)=>{
     if(!weekOff(w)) return;
+    const dovuti=w.work+w.ass;
+    const dett=w.ass?`${w.work} lavorati più ${w.ass} di assenza fanno ${dovuti} giorni coperti`
+                    :`${w.work} giorni di lavoro`;
     items.push({key:ymd(start),label:`Settimana del ${start.getDate()}/${start.getMonth()+1}`,
-      text:`${w.work} giorni di lavoro e ${w.rest} riposi, invece di ${state.settings.workDays} e ${state.settings.restDays}.`});
+      text:`${dett} e ${w.rest} riposi, invece di ${state.settings.workDays} e ${state.settings.restDays}.`});
   });
   quanti=items.length;
   if(!items.length) return 0;
