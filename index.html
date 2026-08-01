@@ -409,6 +409,7 @@ input[type=time]{font-family:var(--mono)}
   <div class="calc" id="store-info"></div>
   <button class="btn ghost" style="width:100%;margin-bottom:10px" id="ricarica">Forza aggiornamento</button>
   <button class="btn" style="width:100%;margin-bottom:10px" id="ced">Cedolini dei mesi scorsi</button>
+  <button class="btn ghost" style="width:100%;margin-bottom:10px" id="sca">Aumenti e scatti di stipendio</button>
   <button class="btn" style="width:100%;margin-bottom:10px" id="seq">Incolla sequenza turni</button>
   <div class="actions" style="margin-bottom:10px">
     <button class="btn ghost" style="flex:1" id="imp">Importa da Excel</button>
@@ -450,6 +451,20 @@ input[type=time]{font-family:var(--mono)}
   <div class="actions">
     <button class="btn" id="pdf-go">Scarica PDF</button>
     <button class="btn ghost" id="pdf-close">Chiudi</button>
+  </div>
+</div>
+
+<div class="sheet" id="sheet-sca">
+  <h2>Aumenti e scatti</h2>
+  <div class="calc" id="sca-info" style="margin-bottom:12px"></div>
+  <div id="sca-list" style="max-height:34vh;overflow-y:auto;margin-bottom:12px"></div>
+  <div class="fields">
+    <div class="field"><label for="sca-da">In vigore da</label><input type="month" id="sca-da"></div>
+    <div class="field"><label for="sca-lordo">Nuovo lordo (€)</label><input type="text" inputmode="decimal" id="sca-lordo" placeholder="es. 2600,00"></div>
+  </div>
+  <div class="actions">
+    <button class="btn" id="sca-add">Aggiungi</button>
+    <button class="btn ghost" id="sca-close">Chiudi</button>
   </div>
 </div>
 
@@ -518,7 +533,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='28 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='29 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -572,7 +587,7 @@ const DEFAULTS={
   weekHours:40, dayThreshold:8, night1:'22:00', night2:'06:00', defaultBreak:0, presetsV:3,
   workDays:5, restDays:2,
   lordoFisso:0, oreContratto:173, pctNotturno:50, pctFestivo:50, pctFestNott:55, pctStraord:0, straordAparte:0,
-  patrono:'', cedolini:[],
+  patrono:'', cedolini:[], scatti:[],
   bpNetto:0, bpComp:0, bpImpIrpef:0, bpMagg:0, bpScaglione:0, ritardo:0, giornoBusta:10, giornoTurni:15, periodoDa:1, payV:2, nome:'',
   presets:{mattina:['08:00','16:00'],pomeriggio:['16:00','00:00'],notte:['00:00','08:00'],deas:['09:00','18:00']}
 };
@@ -619,6 +634,20 @@ function overtime(s){
   return Math.max(0, w - state.settings.dayThreshold*60);
 }
 function typeOf(id){return TYPES.find(t=>t.id===id)||TYPES[0]}
+/* Il lordo cambia nel tempo: scatti, aumenti, passaggi di livello.
+   Per ogni mese vale l'ultimo importo entrato in vigore entro quel mese. */
+function lordoDi(y,m){
+  const mese=`${y}-${pad(m+1)}`;
+  const lista=(state.settings.scatti||[]).filter(x=>x&&x.da&&x.da<=mese)
+    .sort((a,b)=>a.da<b.da?-1:1);
+  if(lista.length) return Number(lista[lista.length-1].lordo)||0;
+  return Number(state.settings.lordoFisso)||0;   /* nessuno scatto: il valore di base */
+}
+function scattoDi(y,m){
+  const mese=`${y}-${pad(m+1)}`;
+  const lista=(state.settings.scatti||[]).filter(x=>x&&x.da&&x.da<=mese).sort((a,b)=>a.da<b.da?-1:1);
+  return lista.length?lista[lista.length-1].da:null;
+}
 function presetOf(id){
   const p=state.settings.presets[id];
   return (Array.isArray(p)&&p[0]&&p[1])?p:(DEFAULTS.presets[id]||['08:00','16:00']);
@@ -753,7 +782,7 @@ function render(){
   document.getElementById('tot-x').innerHTML=fmt(ex);
   document.getElementById('tot-n').innerHTML=fmt(nt);
 
-  const target=Number(state.settings.lordoFisso)>0&&Number(state.settings.oreContratto)>0
+  const target=lordoDi(y,m)>0&&Number(state.settings.oreContratto)>0
     ? Math.round(Number(state.settings.oreContratto)*60)
     : Math.round(state.settings.weekHours*60*days/7);
   const base=Math.min(tot,target), over=Math.max(0,tot-target);
@@ -1012,7 +1041,7 @@ function fasceMese(y,m){
   return {B,compilati,days,da,a};
 }
 function paga(y,m){
-  const S=state.settings, lordo=Number(S.lordoFisso)||0;
+  const S=state.settings, lordo=lordoDi(y,m);
   if(!lordo) return null;
   const oreC=Number(S.oreContratto)||173, ph=lordo/oreC;
   const F=fasceMese(y,m), {B,compilati,days}=F;
@@ -1050,7 +1079,8 @@ function renderProfilo(){
           `${Number(S.bpScaglione)?'':` (imponibile annuo ${eur(P.annuo)})`}<br>`+
           `Di ogni euro lordo in più ti resta <b>${pc(P.k)}</b><br>`+
           `Netto base senza maggiorazioni <b>${eur(P.base)}</b>`;
-  const lf=Number(S.lordoFisso)||0;
+  const oggiD=new Date();
+  const lf=lordoDi(oggiD.getFullYear(),oggiD.getMonth());
   if(lf){
     const atteso=lf+P.M, scarto=Math.abs(P.C-atteso)/atteso;
     if(scarto>0.05) txt+=`<span class="issue">Le competenze non tornano col lordo fisso (${eur(atteso)} attesi): quel mese aveva assenze o arretrati. Meglio usare una busta ordinaria.</span>`;
@@ -1095,7 +1125,9 @@ function syncFields(){
   document.getElementById('f-note').value=draft.note||'';
   const w=worked(draft), x=overtime(draft), n=nightMin(draft);
   const iss=issuesFor(editing,draft);
-  const S=state.settings, lf=Number(S.lordoFisso)||0;
+  const S=state.settings;
+  const dEd=new Date(editing+'T00:00:00');
+  const lf=lordoDi(dEd.getFullYear(),dEd.getMonth());
   let mag='';
   if(lf){
     const ph=lf/(Number(S.oreContratto)||173), z=fasce(editing,draft);
@@ -1964,6 +1996,55 @@ document.getElementById('pdf-go').onclick=()=>{
   toast('PDF scaricato');
 };
 
+/* ---------- aumenti e scatti ---------- */
+function renderScatti(){
+  const box=document.getElementById('sca-list'), info=document.getElementById('sca-info');
+  if(!box) return;
+  const base=Number(state.settings.lordoFisso)||0;
+  const lista=(state.settings.scatti||[]).slice().sort((a,b)=>a.da<b.da?1:-1);
+  box.innerHTML='';
+  const riga=(etichetta,importo,onDel)=>{
+    const r=document.createElement('div'); r.className='row';
+    r.innerHTML=`<span class="t">${etichetta}${onDel?'':'<em>valore di partenza, dalle impostazioni</em>'}</span>
+                 <span class="h">${eur(importo)}</span>`;
+    if(onDel) r.onclick=onDel;
+    box.appendChild(r);
+  };
+  lista.forEach(x=>{
+    const [y,m]=x.da.split('-').map(Number);
+    riga(`Da ${MESI[m-1].toLowerCase()} ${y}`, x.lordo, ()=>{
+      if(!confirm(`Togliere l'aumento da ${MESI[m-1].toLowerCase()} ${y}?`)) return;
+      state.settings.scatti=state.settings.scatti.filter(z=>z.da!==x.da);
+      save(); renderScatti(); render();
+    });
+  });
+  if(base) riga('Prima di ogni scatto', base, null);
+  if(!lista.length&&!base) box.innerHTML='<div class="empty-state">Nessun lordo impostato.<br>Metti prima il lordo fisso nelle impostazioni.</div>';
+
+  const oggi=new Date(), att=lordoDi(oggi.getFullYear(),oggi.getMonth());
+  info.innerHTML=lista.length
+    ? `In vigore ora: <b>${eur(att)}</b> · paga oraria <b>${eur(att/(Number(state.settings.oreContratto)||173))}</b><br>`+
+      `Ogni mese usa il lordo valido allora: i mesi passati non vengono ricalcolati.`
+    : `Aggiungi un aumento indicando <b>da quale mese</b> è entrato in vigore. I mesi precedenti continueranno a usare ${base?eur(base):'il lordo di base'}.`;
+}
+document.getElementById('sca').onclick=()=>{
+  const o=new Date();
+  document.getElementById('sca-da').value=`${o.getFullYear()}-${pad(o.getMonth()+1)}`;
+  document.getElementById('sca-lordo').value='';
+  renderScatti(); closeSheets(); showSheet('sheet-sca');
+};
+document.getElementById('sca-close').onclick=closeSheets;
+document.getElementById('sca-add').onclick=()=>{
+  const da=document.getElementById('sca-da').value;
+  const lordo=numIta(document.getElementById('sca-lordo').value);
+  if(!/^\d{4}-\d{2}$/.test(da)||!lordo){toast('Servono il mese e il nuovo lordo');return}
+  if(lordo<200){toast('Importo troppo basso: scrivi il lordo per intero');return}
+  state.settings.scatti=[...(state.settings.scatti||[]).filter(x=>x.da!==da),{da,lordo}];
+  document.getElementById('sca-lordo').value='';
+  save(); renderScatti(); render();
+  toast('Aumento registrato');
+};
+
 /* ---------- il netto misurato sui cedolini ---------- */
 /* Con due o più cedolini non serve modellare la busta: il legame fra
    maggiorazioni e netto si misura. Retta ai minimi quadrati:
@@ -1977,25 +2058,35 @@ function magDelMese(mese){
           compilati:P.compilati, days:P.days};
 }
 function fitNetto(){
-  const dati=(state.settings.cedolini||[]).map(c=>{
+  /* Dopo un aumento la parte fissa cambia: mescolare cedolini di periodi
+     diversi darebbe una retta senza senso. Tengo solo quelli attuali. */
+  const oggi=new Date(), periodo=scattoDi(oggi.getFullYear(),oggi.getMonth());
+  const tutti=(state.settings.cedolini||[]).map(c=>{
     const q=magDelMese(c.mese);
-    return q?{...c,...q}:null;
+    if(!q) return null;
+    const [yy,mm]=c.mese.split('-').map(Number);
+    return {...c,...q,periodo:scattoDi(yy,mm-1)};
   }).filter(Boolean);
-  if(dati.length<2) return null;
+  const dati=tutti.filter(c=>c.periodo===periodo);
+  const esclusi=tutti.length-dati.length;
+  if(dati.length<2) return (dati.length||esclusi)?{scarsi:true,esclusi,n:dati.length}:null;
   const n=dati.length;
   const sx=dati.reduce((a,p)=>a+p.mag,0), sy=dati.reduce((a,p)=>a+p.netto,0);
   const sxx=dati.reduce((a,p)=>a+p.mag*p.mag,0), sxy=dati.reduce((a,p)=>a+p.mag*p.netto,0);
   const den=n*sxx-sx*sx;
-  if(Math.abs(den)<1)  return {dati,piatto:true};   /* maggiorazioni tutte uguali */
+  if(Math.abs(den)<1)  return {dati,piatto:true,esclusi};   /* maggiorazioni tutte uguali */
   const b=(n*sxy-sx*sy)/den, a=(sy-b*sx)/n;
   const punti=dati.map(p=>({...p,stima:a+b*p.mag,scarto:p.netto-(a+b*p.mag)}));
   const err=punti.map(p=>Math.abs(p.scarto));
-  return {a,b,punti,n,errMax:Math.max(...err),errMedio:err.reduce((x,y)=>x+y,0)/n};
+  return {a,b,punti,n,esclusi,errMax:Math.max(...err),errMedio:err.reduce((x,y)=>x+y,0)/n};
 }
 /* Con due soli cedolini la retta ci passa sempre esatta, anche su numeri sbagliati:
    la misura va usata solo se supera dei controlli di plausibilità. */
 function fitProblema(F){
   if(!F) return 'servono almeno due cedolini';
+  if(F.scarsi) return F.esclusi
+    ? `dopo l'ultimo aumento hai solo ${F.n} ${F.n===1?'cedolino':'cedolini'} (${F.esclusi} ${F.esclusi===1?'è precedente':'sono precedenti'} e non ${F.esclusi===1?'vale':'valgono'} più)`
+    : 'servono almeno due cedolini';
   if(F.piatto) return 'i cedolini hanno le stesse maggiorazioni';
   if(F.b<=0.2||F.b>=0.9) return `coefficiente implausibile (${(F.b*100).toFixed(0)}%)`;
   if(F.n>2&&F.errMedio>40) return `i netti non stanno su una retta (scarto medio ${eur(F.errMedio)})`;
@@ -2046,7 +2137,9 @@ function renderCedolini(){
   });
   if(!sel.children.length){const o=document.createElement('option');o.textContent='nessun mese disponibile';sel.appendChild(o)}
 
-  if(!F) info.innerHTML='Servono almeno <b>due</b> cedolini con maggiorazioni diverse fra loro. Da lì in poi il netto lo misuro invece di stimarlo.';
+  if(!F||F.scarsi) info.innerHTML=(F&&F.esclusi
+      ? `<span class="issue">${F.esclusi} cedolini sono precedenti all'ultimo aumento: non li uso, perché la parte fissa è cambiata.</span>`
+      : '')+'Servono almeno <b>due</b> cedolini con maggiorazioni diverse fra loro. Da lì in poi il netto lo misuro invece di stimarlo.';
   else if(F.piatto) info.innerHTML='<span class="issue">I cedolini inseriti hanno le stesse maggiorazioni: non riesco a separare la parte fissa da quella variabile. Aggiungine uno di un mese diverso.</span>';
   else {
     const PR=profilo(), guaio=fitProblema(F);
