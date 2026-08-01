@@ -232,6 +232,7 @@ input[type=time]{font-family:var(--mono)}
   .cell{aspect-ratio:1/.85}
 }
 
+/* ---- bacheca condivisa ---- */
 .bac-day{background:var(--surface);border-radius:12px;padding:14px;margin-bottom:8px}
 .bac-day-title{font-family:var(--display);font-size:15px;font-weight:600;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--surface-2)}
 .bac-shift{display:flex;align-items:center;gap:10px;padding:4px 0}
@@ -847,6 +848,147 @@ function mostraScheda(k){
   document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.dataset.pane===k));
 }
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>mostraScheda(b.dataset.tab));
+
+function nomeDispositivo(){
+  const u=navigator.userAgent||'';
+  if(/iPad/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1)) return 'questo iPad';
+  if(/iPhone|iPod/.test(u)) return 'questo iPhone';
+  if(/Android/.test(u)) return /Mobile/.test(u)?'questo telefono':'questo tablet';
+  if(/Macintosh|Mac OS/.test(u)) return 'questo Mac';
+  if(/Windows/.test(u)) return 'questo PC';
+  if(/Linux|CrOS/.test(u)) return 'questo computer';
+  return 'questo dispositivo';
+}
+
+async function controllaAggiornamenti(){
+  const box=document.getElementById('upd');
+  if(!box||location.protocol==='file:') return;
+  try{
+    const r=await fetch(location.pathname+'?_ck='+Date.now(),{cache:'no-store'});
+    if(!r.ok) return;
+    const t=await r.text();
+    const m=t.match(/const VERSIONE='(\d+)/);
+    if(!m) return;
+    const online=+m[1], mia=+VERSIONE.match(/^\d+/)[0];
+    if(online<=mia) return;
+    const b=document.createElement('button'); b.className='upd';
+    b.innerHTML=`<b>AGGIORNAMENTO DISPONIBILE</b>Hai la versione ${mia}, online c'è la ${online}. Tocca per caricarla.`;
+    b.onclick=async()=>{
+      b.innerHTML='<b>AGGIORNAMENTO</b>Sto ricaricando…';
+      try{
+        if(navigator.serviceWorker){
+          const rs=await navigator.serviceWorker.getRegistrations();
+          await Promise.all(rs.map(x=>x.unregister()));
+        }
+        if(typeof caches!=='undefined'){
+          const ks=await caches.keys();
+          await Promise.all(ks.map(k=>caches.delete(k)));
+        }
+      }catch(e){}
+      location.replace(location.pathname+'?v='+online);
+    };
+    box.appendChild(b);
+  }catch(e){}
+}
+
+function icsData(){
+  const oggi=ymd(new Date());
+  const chiavi=Object.keys(state.shifts).filter(k=>k>=oggi).sort();
+  if(!chiavi.length) return null;
+  const esc=t=>String(t||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
+  const stampo=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  const dt=(key,ora)=>key.replace(/-/g,'')+'T'+ora.replace(':','')+'00';
+  const righe=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Turni//IT','CALSCALE:GREGORIAN',
+               'METHOD:PUBLISH','X-WR-CALNAME:Turni'];
+  let conOra=0, interi=0;
+  chiavi.forEach(key=>{
+    const s=state.shifts[key], t=typeOf(s.type);
+    const uid=`turno-${key}-${s.type}@turni.app`;
+    righe.push('BEGIN:VEVENT',`UID:${uid}`,`DTSTAMP:${stampo}`,
+               `SUMMARY:${esc(t.label)}${s.note?' · '+esc(s.note):''}`);
+    if(isWork(s)&&s.start&&s.end){
+      const {gross}=span(s);
+      const fine=new Date(new Date(key+'T'+s.start+':00').getTime()+gross*60000);
+      righe.push(`DTSTART:${dt(key,s.start)}`,`DTEND:${dt(ymd(fine),pad(fine.getHours())+':'+pad(fine.getMinutes()))}`);
+      const ore=worked(s)/60;
+      righe.push(`DESCRIPTION:${esc(`${s.start}-${s.end} · ${ore.toFixed(2)} ore`+(s.break?`pausa ${s.break} min`:''))}`);
+      conOra++;
+    }else{
+      const dom=new Date(key+'T00:00:00'); dom.setDate(dom.getDate()+1);
+      righe.push(`DTSTART;VALUE=DATE:${key.replace(/-/g,'')}`,
+                 `DTEND;VALUE=DATE:${ymd(dom).replace(/-/g,'')}`,'TRANSP:TRANSPARENT');
+      interi++;
+    }
+    righe.push('END:VEVENT');
+  });
+  righe.push('END:VCALENDAR');
+  return {testo:righe.join('\r\n')+'\r\n', n:chiavi.length, conOra, interi,
+          da:chiavi[0], a:chiavi[chiavi.length-1]};
+}
+
+const COLONNE=['notte','mattina','pomeriggio'];
+function tabellaMese(y,m){
+  const nomi=Object.keys(state.roster||{});
+  if(!nomi.length) return null;
+  const days=new Date(y,m+1,0).getDate();
+  const ore=t=>{const p=presetOf(t); return `${p[0]}-${p[1]==='00:00'?'24:00':p[1]}`};
+  const testa=['Data',...COLONNE.map((t,i)=>`TURNO ${i+1} (${ore(t)})`)];
+  const corpo=[]; let vuoti=0;
+  for(let d=1;d<=days;d++){
+    const key=`${y}-${pad(m+1)}-${pad(d)}`;
+    const celle=COLONNE.map(t=>nomi.filter(n=>state.roster[n][key]===t).join(', '));
+    if(!celle.some(Boolean)) vuoti++;
+    corpo.push([`${pad(d)}/${pad(m+1)}`,...celle.map(c=>c||'—')]);
+  }
+  const html=`<h1>Turni ${MESI[m]} ${y}</h1><table><thead><tr>`+
+    testa.map(t=>`<th>${t}</th>`).join('')+`</tr></thead><tbody>`+
+    corpo.map(r=>`<tr>${r.map((c,i)=>`<td${i?'':' class="g"'}>${c}</td>`).join('')}</tr>`).join('')+
+    `</tbody></table>`;
+  return {html,testa,corpo,titolo:`Turni ${MESI[m]} ${y}`,vuoti,days,nomi:nomi.length};
+}
+
+function magDelMese(mese){
+  const [y,m]=mese.split('-').map(Number);
+  const P=paga(y,m-1);
+  if(!P) return null;
+  return {mag:P.magNott+P.magFest+P.magFN+P.stra, completo:P.compilati>=P.days,
+          compilati:P.compilati, days:P.days};
+}
+
+function fitNetto(){
+  const dati=(state.settings.cedolini||[]).map(c=>{
+    const q=magDelMese(c.mese);
+    return q?{...c,...q}:null;
+  }).filter(Boolean);
+  if(dati.length<2) return null;
+  const n=dati.length;
+  const sx=dati.reduce((a,p)=>a+p.mag,0), sy=dati.reduce((a,p)=>a+p.netto,0);
+  const sxx=dati.reduce((a,p)=>a+p.mag*p.mag,0), sxy=dati.reduce((a,p)=>a+p.mag*p.netto,0);
+  const den=n*sxx-sx*sx;
+  if(Math.abs(den)<1) return {dati,piatto:true};
+  const b=(n*sxy-sx*sy)/den, a=(sy-b*sx)/n;
+  const punti=dati.map(p=>({...p,stima:a+b*p.mag,scarto:p.netto-(a+b*p.mag)}));
+  const err=punti.map(p=>Math.abs(p.scarto));
+  return {a,b,punti,n,errMax:Math.max(...err),errMedio:err.reduce((x,y)=>x+y,0)/n};
+}
+
+function fitProblema(F){
+  if(!F) return 'servono almeno due cedolini';
+  if(F.piatto) return 'i cedolini hanno le stesse maggiorazioni';
+  if(F.b<=0.2||F.b>=0.9) return `coefficiente implausibile (${(F.b*100).toFixed(0)}%)`;
+  if(F.n>2&&F.errMedio>40) return `i netti non stanno su una retta (scarto medio ${eur(F.errMedio)})`;
+  const PR=profilo();
+  if(PR&&Math.abs(PR.k-F.b)>0.15) return `lontano dal calcolo teorico (${(F.b*100).toFixed(0)}% contro ${(PR.k*100).toFixed(0)}%)`;
+  return null;
+}
+
+function nettoDa(mag){
+  const F=fitNetto();
+  if(F&&!fitProblema(F)) return {v:F.a+F.b*mag, fonte:'cedolini', F};
+  const PR=profilo();
+  if(PR) return {v:PR.base+mag*PR.k, fonte:'profilo'};
+  return null;
+}
 
 load();
 </script>
