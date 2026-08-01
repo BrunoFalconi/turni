@@ -533,7 +533,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='29 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='30 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -878,7 +878,7 @@ function renderPay(y,m){
   if(P.B.festNott) r.push([`Festive notturne ${fmtPlain(P.B.festNott)} · +${S.pctFestNott}%`,eur(P.magFN)]);
   if(P.oreStra>0.02) r.push([`Straordinario ${P.oreStra.toFixed(1)}h`,eur(P.stra)]);
   document.getElementById('pay-rows').innerHTML=r.map(([a,b])=>`<div>${a}<i>${b}</i></div>`).join('');
-  const mag=P.magNott+P.magFest+P.magFN+P.stra, N=nettoDa(mag);
+  const mag=P.magNott+P.magFest+P.magFN+P.stra, N=nettoDa(mag,y,m);
   const netBox=document.getElementById('pay-net'), netV=document.getElementById('pay-net-v');
   netBox.style.display='';
   if(N){
@@ -1068,7 +1068,10 @@ function profilo(){
   const i=(Number(S.bpScaglione)||0)>0 ? Number(S.bpScaglione)/100
         : annuo>50000?0.43 : annuo>28000?0.35 : 0.23;
   const k=(1-c)*(1-i);                   /* quanto resta di ogni euro lordo in più */
-  return {N,C,I,M,c,i,k,annuo,base:N-M*k};
+  /* Il lordo fisso di quella busta si ricava: competenze meno maggiorazioni.
+     Serve per adattare la stima ai mesi con uno stipendio diverso. */
+  const lordoRif=C-M;
+  return {N,C,I,M,c,i,k,annuo,lordoRif,base:N-M*k};
 }
 function renderProfilo(){
   const el=document.getElementById('prof-info'); if(!el) return;
@@ -1726,7 +1729,7 @@ function prossimaBusta(){
     const arr=new Date(d.getFullYear(),d.getMonth()+1,Number(state.settings.giornoBusta)||10);
     if(arr<oggi) continue;                     /* già arrivata */
     const mag=P.magNott+P.magFest+P.magFN+P.stra;
-    const N=nettoDa(mag);
+    const N=nettoDa(mag,d.getFullYear(),d.getMonth());
     return {d,P,mag,arr,netto:N,parziale:P.compilati<P.days};
   }
   return null;
@@ -2057,10 +2060,11 @@ function magDelMese(mese){
   return {mag:P.magNott+P.magFest+P.magFN+P.stra, completo:P.compilati>=P.days,
           compilati:P.compilati, days:P.days};
 }
-function fitNetto(){
+function fitNetto(periodoChiesto){
   /* Dopo un aumento la parte fissa cambia: mescolare cedolini di periodi
      diversi darebbe una retta senza senso. Tengo solo quelli attuali. */
-  const oggi=new Date(), periodo=scattoDi(oggi.getFullYear(),oggi.getMonth());
+  const oggi=new Date();
+  const periodo=arguments.length?periodoChiesto:scattoDi(oggi.getFullYear(),oggi.getMonth());
   const tutti=(state.settings.cedolini||[]).map(c=>{
     const q=magDelMese(c.mese);
     if(!q) return null;
@@ -2095,12 +2099,20 @@ function fitProblema(F){
   return null;
 }
 /* Il netto di un mese: se la misura è affidabile la uso, altrimenti il profilo. */
-function nettoDa(mag){
-  const F=fitNetto();
+/* Il netto di un mese preciso. La parte fissa dipende dal lordo di quel mese:
+   applicare quella di un altro periodo darebbe un importo sbagliato. */
+function nettoDa(mag,y,m){
+  const oggi=new Date();
+  if(y===undefined){y=oggi.getFullYear();m=oggi.getMonth()}
+  const periodo=scattoDi(y,m);
+  const F=fitNetto(periodo);
   if(F&&!fitProblema(F)) return {v:F.a+F.b*mag, fonte:'cedolini', F};
   const PR=profilo();
-  if(PR) return {v:PR.base+mag*PR.k, fonte:'profilo'};
-  return null;
+  if(!PR) return null;
+  /* differenza di lordo fra questo mese e la busta di riferimento,
+     riportata al netto con la stessa proporzione */
+  const delta=(lordoDi(y,m)-PR.lordoRif)*PR.k;
+  return {v:PR.base+delta+mag*PR.k, fonte:'profilo', delta};
 }
 function renderCedolini(){
   const box=document.getElementById('ced-list'), info=document.getElementById('ced-info');
@@ -2228,7 +2240,7 @@ function renderBuste(){
     el.innerHTML=`<div class="t">
         <span class="m">${MESI[r.d.getMonth()]} ${r.d.getFullYear()}</span>
         <span class="v" ${stimato||r.stato==='vuoto'?'style="opacity:.6"':''}>${
-          PR?eur(nettoDa(mag).v):eur(lordo)}</span>
+          PR?eur(nettoDa(mag,r.src.getFullYear(),r.src.getMonth()).v):eur(lordo)}</span>
       </div>
       <div class="s">${arr<oggi?'arrivata':'entro'} il ${arr.getDate()} ${MESI[arr.getMonth()].toLowerCase()}`+
       ` · turni dal ${gg(r.P.da)} al ${gg(r.P.a)}`+
