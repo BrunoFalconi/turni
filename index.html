@@ -165,6 +165,18 @@ input[type=time]{font-family:var(--mono)}
 .pay-rows{display:flex;flex-direction:column;gap:5px;font-size:12px;font-family:var(--mono);color:var(--muted)}
 .pay-rows div{display:flex;justify-content:space-between;gap:12px}
 .pay-rows i{font-style:normal;color:var(--text);white-space:nowrap}
+.dett{margin-top:10px}
+.dett>summary{list-style:none;cursor:pointer;font-size:12px;color:var(--muted);
+  padding:6px 0;display:inline-flex;align-items:center;gap:6px;font-family:var(--mono)}
+.dett>summary::-webkit-details-marker{display:none}
+.dett>summary::after{content:'';width:6px;height:6px;border-right:1.5px solid var(--muted);
+  border-bottom:1.5px solid var(--muted);transform:translateY(-2px) rotate(45deg);transition:transform .18s}
+.dett[open]>summary::after{transform:translateY(1px) rotate(-135deg)}
+.dett table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px;margin-top:4px}
+.dett th{text-align:right;color:var(--muted);font-weight:400;padding:4px 5px;border-bottom:1px solid var(--line)}
+.dett th:first-child,.dett td:first-child{text-align:left}
+.dett td{padding:4px 5px;text-align:right;border-bottom:1px solid #ffffff0d;font-variant-numeric:tabular-nums}
+.dett tfoot td{border:none;border-top:1px solid var(--line);color:var(--text);padding-top:6px}
 .pay-net{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
 .pay-net span{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
 .pay-net b{font-family:var(--mono);font-size:21px;font-weight:600;color:var(--pomeriggio)}
@@ -348,6 +360,7 @@ input[type=time]{font-family:var(--mono)}
   <div class="pay" id="pay" style="display:none">
       <div class="pay-top"><span>Lordo stimato</span><b id="pay-tot">—</b></div>
       <div class="pay-rows" id="pay-rows"></div>
+      <details class="dett"><summary>Da quali giorni</summary><div id="pay-dett"></div></details>
       <div class="pay-net" id="pay-net" style="display:none"><span>Netto stimato</span><b id="pay-net-v">—</b></div>
       <div class="pay-note" id="pay-note"></div>
       <button class="pay-btn" id="buste">Prossime buste paga</button>
@@ -514,6 +527,13 @@ input[type=time]{font-family:var(--mono)}
 
 <div class="sheet" id="sheet-pdf">
   <h2 id="pdf-title">Turnario del mese</h2>
+  <div class="fields" style="margin-bottom:12px">
+    <div class="field"><label for="pdf-tipo">Cosa esportare</label><select id="pdf-tipo">
+      <option value="reparto">Turnario di reparto</option>
+      <option value="persona">Turni di una persona</option>
+    </select></div>
+    <div class="field" id="pdf-chi-box"><label for="pdf-chi">Chi</label><select id="pdf-chi"></select></div>
+  </div>
   <div class="calc" id="pdf-info" style="margin-bottom:12px"></div>
   <div id="pdf-prev" style="max-height:46vh;overflow:auto;margin-bottom:14px"></div>
   <div class="actions">
@@ -602,7 +622,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='46 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='48 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -956,6 +976,35 @@ function renderBacheca(){
   if(note) note.textContent=`${nomi.length} colleghi nel reparto. Riposi, assenze e ferie sono nascosti.`;
 }
 
+/* Elenco giorno per giorno di cosa genera le maggiorazioni: è l'unico modo
+   per confrontare riga per riga con la busta e trovare dove si discosta. */
+function renderDettaglio(y,m){
+  const box=document.getElementById('pay-dett'); if(!box) return;
+  const S=state.settings, ph=lordoDi(y,m)/(Number(S.oreContratto)||173);
+  const days=new Date(y,m+1,0).getDate();
+  let righe='', T={n:0,f:0,fn:0,e:0};
+  for(let d=1;d<=days;d++){
+    const key=`${y}-${pad(m+1)}-${pad(d)}`, sh=state.shifts[key];
+    if(!sh||!isWork(sh)) continue;
+    const z=fasce(key,sh);
+    if(!z.nott&&!z.fest&&!z.festNott) continue;
+    const h=x=>x/60;
+    const val=h(z.nott)*ph*(S.pctNotturno||0)/100+h(z.fest)*ph*(S.pctFestivo||0)/100+h(z.festNott)*ph*(S.pctFestNott||0)/100;
+    T.n+=z.nott; T.f+=z.fest; T.fn+=z.festNott; T.e+=val;
+    const dt=new Date(key+'T00:00:00');
+    righe+=`<tr><td>${pad(d)} ${GIORNI[dt.getDay()].toLowerCase()}${isFest(key)?' ●':''}</td>`+
+      `<td>${typeOf(sh.type).label.slice(0,4)}</td>`+
+      `<td>${z.nott?h(z.nott).toFixed(0):'–'}</td><td>${z.fest?h(z.fest).toFixed(0):'–'}</td>`+
+      `<td>${z.festNott?h(z.festNott).toFixed(0):'–'}</td><td>${eur(val)}</td></tr>`;
+  }
+  const h=x=>x/60;
+  box.innerHTML=righe
+    ? `<table><thead><tr><th>Giorno</th><th>Turno</th><th>Nott</th><th>Fest</th><th>F.Nott</th><th>Valore</th></tr></thead>`+
+      `<tbody>${righe}</tbody><tfoot><tr><td colspan="2">Totale</td>`+
+      `<td>${h(T.n).toFixed(0)}</td><td>${h(T.f).toFixed(0)}</td><td>${h(T.fn).toFixed(0)}</td><td>${eur(T.e)}</td></tr></tfoot></table>`+
+      `<div class="pay-note">● giorno festivo o domenica. Le ore sono al netto della pausa non pagata.</div>`
+    : '<div class="pay-note">Nessuna maggiorazione in questo mese.</div>';
+}
 function renderPay(y,m){
   const box=document.getElementById('pay'), P=paga(y,m);
   if(!P){box.style.display='none';return}
@@ -1027,6 +1076,7 @@ function renderPay(y,m){
   }
   if(lordoApprossimato(y,m))
     avvisi.push(`Questo mese è precedente al primo aumento registrato: sto usando ${eur(P.lordo)}. Metti il lordo di allora in ⚙ → Retribuzione.`);
+  renderDettaglio(y,m);
   document.getElementById('pay-note').innerHTML=
     `Base ${eur(P.ph)} l'ora (${eur(P.lordo)} ÷ ${S.oreContratto}h). Stima: non sostituisce la busta paga.`+
     (dettaglio?`<br>${dettaglio}`:'')+
@@ -2237,6 +2287,56 @@ document.getElementById('ics').onclick=()=>{
   toast(`${I.n} turni dal ${f(I.da)} al ${f(I.a)}`);
 };
 
+/* Elenco dei turni di una persona: per me uso i dati completi (orari, pause,
+   note), per un collega solo il tipo dal turnario, con gli orari standard. */
+function tabellaPersona(y,m,chi){
+  const mio=chi==='__io__';
+  const fonte=mio?state.shifts:(state.roster||{})[chi];
+  if(!fonte) return null;
+  const nome=mio?(state.settings.nome||'I miei turni'):chi;
+  const days=new Date(y,m+1,0).getDate();
+  const testa=['Data','Giorno','Turno','Orario','Ore'];
+  const corpo=[]; let tot=0,nott=0,fest=0,fnott=0,lav=0,rip=0,ass=0;
+  for(let d=1;d<=days;d++){
+    const key=`${y}-${pad(m+1)}-${pad(d)}`;
+    const v=fonte[key]; if(!v) continue;
+    const sh=mio?v:turnoDa(v);
+    const t=typeOf(sh.type), dt=new Date(key+'T00:00:00');
+    let orario='—', ore='—';
+    if(isWork(sh)&&sh.start){
+      orario=`${sh.start}-${sh.end==='00:00'?'24:00':sh.end}`;
+      const w=worked(sh); tot+=w; lav++;
+      ore=(w/60).toFixed(w%60?2:0).replace('.',',');
+      const z=fasce(key,sh); nott+=z.nott; fest+=z.fest; fnott+=z.festNott;
+    } else { isRiposo(sh)?rip++:ass++; }
+    corpo.push([`${pad(d)}/${pad(m+1)}`,GIORNI[dt.getDay()]+(isFest(key)?' •':''),t.label,orario,ore]);
+  }
+  if(!corpo.length) return null;
+  const h=x=>(x/60).toFixed(0);
+  const riepilogo=`${lav} giorni lavorati · ${rip} riposi${ass?` · ${ass} assenze`:''} · `+
+    `${h(tot)}h totali · ${h(nott)}h notturne · ${h(fest+fnott)}h festive`;
+  const html=`<h1>${nome} — ${MESI[m]} ${y}</h1><table><thead><tr>`+
+    testa.map(t=>`<th>${t}</th>`).join('')+`</tr></thead><tbody>`+
+    corpo.map(r=>`<tr>${r.map((c,i)=>`<td${i?'':' class="g"'}>${c}</td>`).join('')}</tr>`).join('')+
+    `</tbody></table><p style="text-align:center;font-size:9pt;margin-top:10pt">${riepilogo}</p>`;
+  return {html,testa,corpo,riepilogo,titolo:`${nome} - ${MESI[m]} ${y}`,
+          giorni:corpo.length,days,nomi:1,vuoti:days-corpo.length};
+}
+function elencoPersone(){
+  const sel=document.getElementById('pdf-chi'); if(!sel) return;
+  const prec=sel.value;
+  sel.innerHTML='';
+  const add=(v,t)=>{const o=document.createElement('option');o.value=v;o.textContent=t;sel.appendChild(o)};
+  if(Object.keys(state.shifts).length) add('__io__',(state.settings.nome||'I miei turni')+' (io)');
+  Object.keys(state.roster||{}).sort().forEach(n=>{
+    if(n===state.settings.nome) return;      /* già presente come "io" */
+    add(n,n);
+  });
+  if(!sel.children.length) add('__io__','I miei turni');
+  if(prec) sel.value=prec;
+  if(!sel.value) sel.selectedIndex=0;
+}
+
 /* ---------- turnario di reparto in PDF ---------- */
 /* Le tre colonne sono i turni che coprono le 24 ore, nell'ordine del vostro
    modello: notte, mattina, pomeriggio. Chi è a riposo, in ferie o in DEAS
@@ -2261,14 +2361,27 @@ function tabellaMese(y,m){
     `</tbody></table>`;
   return {html,testa,corpo,titolo:`Turni ${MESI[m]} ${y}`,vuoti,days,nomi:nomi.length};
 }
+function tabellaPdf(y,m){
+  const tipo=(document.getElementById('pdf-tipo')||{}).value||'reparto';
+  if(tipo==='persona'){
+    const chi=(document.getElementById('pdf-chi')||{}).value;
+    return tabellaPersona(y,m,chi);
+  }
+  return tabellaMese(y,m);
+}
 function apriPdf(){
   const y=view.getFullYear(), m=view.getMonth();
-  const T=tabellaMese(y,m);
+  elencoPersone();
+  const tipo=document.getElementById('pdf-tipo').value;
+  document.getElementById('pdf-chi-box').style.display=tipo==='persona'?'':'none';
+  const T=tabellaPdf(y,m);
   const info=document.getElementById('pdf-info');
   document.getElementById('pdf-title').textContent=`Turni ${MESI[m]} ${y}`;
   if(!T){
     document.getElementById('pdf-prev').innerHTML='';
-    info.innerHTML='<span class="issue">Non ho il turnario di reparto. Importa il file Excel collettivo: da lì l\'app tiene i turni di tutti, non solo i tuoi.</span>';
+    info.innerHTML=tipo==='persona'
+      ? '<span class="issue">Nessun turno per questa persona in questo mese.</span>'
+      : '<span class="issue">Non ho il turnario di reparto. Importa il file Excel collettivo: da lì l\'app tiene i turni di tutti, non solo i tuoi.</span>';
   }else{
     document.getElementById('pdf-prev').innerHTML=
       `<div style="background:#fff;color:#111;padding:12px;border-radius:8px;overflow:auto;font-family:Helvetica,Arial,sans-serif">
@@ -2277,16 +2390,20 @@ function apriPdf(){
                 #pdf-prev td{background:#fff;color:#111!important;-webkit-text-fill-color:#111;text-align:center;padding:5px 4px;border:1px solid #d2d2d2;white-space:nowrap}
                 #pdf-prev tbody tr:nth-child(even) td{background:#f2f2f2}
                 #pdf-prev h1{font-size:15px;margin:0 0 10px;text-align:center;font-weight:700;color:#111!important;-webkit-text-fill-color:#111}</style>${T.html}</div>`;
-    info.innerHTML=`<b>${T.nomi}</b> persone · <b>${T.days-T.vuoti}</b> giorni coperti su ${T.days}`+
-      (T.vuoti?`<span class="issue">${T.vuoti} giorni senza nessun turno: probabilmente il mese non è nel file importato.</span>`:'');
+    info.innerHTML=T.riepilogo
+      ? T.riepilogo+(T.vuoti?`<span class="issue">${T.vuoti} giorni del mese non hanno un turno assegnato.</span>`:'')
+      : `<b>${T.nomi}</b> persone · <b>${T.days-T.vuoti}</b> giorni coperti su ${T.days}`+
+        (T.vuoti?`<span class="issue">${T.vuoti} giorni senza nessun turno: probabilmente il mese non è nel file importato.</span>`:'');
   }
   closeSheets(); showSheet('sheet-pdf');
 }
 document.getElementById('pdf').onclick=apriPdf;
+document.getElementById('pdf-tipo').onchange=apriPdf;
+document.getElementById('pdf-chi').onchange=apriPdf;
 document.getElementById('pdf-close').onclick=closeSheets;
 document.getElementById('pdf-go').onclick=()=>{
-  const y=view.getFullYear(), m=view.getMonth(), T=tabellaMese(y,m);
-  if(!T){toast('Manca il turnario di reparto');return}
+  const y=view.getFullYear(), m=view.getMonth(), T=tabellaPdf(y,m);
+  if(!T){toast('Niente da esportare');return}
   const lib=window.jspdf&&window.jspdf.jsPDF;
   if(!lib){                                   /* senza rete resta la stampa come ripiego */
     document.getElementById('stampa').innerHTML=T.html;
@@ -2315,6 +2432,11 @@ document.getElementById('pdf-go').onclick=()=>{
     columnStyles:{0:{cellWidth:22}},
     margin:{left:14,right:14,top:14,bottom:14}
   });
+  if(T.riepilogo){
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(80);
+    const yy=(doc.lastAutoTable?doc.lastAutoTable.finalY:0)+8;
+    doc.text(T.riepilogo,L/2,yy,{align:'center'});
+  }
   doc.save(T.titolo+'.pdf');
   toast('PDF scaricato');
 };
