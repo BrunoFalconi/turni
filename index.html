@@ -45,7 +45,7 @@ body{margin:0}
 }
 button{font-family:inherit;color:inherit;border:none;background:none;cursor:pointer}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--mattina);outline-offset:2px}
-input,select,textarea{font-family:inherit;color:var(--text);-webkit-text-fill-color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px;width:100%}
+input,select,textarea{font-family:inherit;color:var(--text);-webkit-text-fill-color:var(--text);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;font-size:15px;width:100%}
 ::placeholder{color:var(--muted);-webkit-text-fill-color:var(--muted);opacity:1}
 option{background:var(--surface);color:var(--text)}
 select{-webkit-appearance:none;appearance:none;padding-right:30px;
@@ -68,7 +68,9 @@ input[type=time]{font-family:var(--mono)}
 .month-name span{color:var(--muted);font-weight:500}
 .nav-btn{width:36px;height:36px;border-radius:50%;background:transparent;display:grid;place-items:center;font-size:18px;color:var(--muted);transition:background .15s}
 .nav-btn:active{background:var(--surface)}
-.icon-btn{width:36px;height:36px;border-radius:50%;background:transparent;display:grid;place-items:center;font-size:16px}
+.icon-btn{width:36px;height:36px;border-radius:50%;background:transparent;display:grid;place-items:center;color:var(--muted);transition:color .16s}
+.icon-btn svg{width:20px;height:20px}
+.icon-btn:active{color:var(--text)}
 
 .month-name{display:flex;align-items:center;gap:7px;padding:2px 0}
 .month-name::after{content:'';width:7px;height:7px;border-right:2px solid var(--muted);
@@ -101,7 +103,7 @@ input[type=time]{font-family:var(--mono)}
 .bar{height:3px;border-radius:2px;background:#ffffff14;margin-top:20px;overflow:hidden;display:flex}
 .bar i{display:block;height:100%;background:var(--text);transition:width .35s ease}
 .bar i.over{background:var(--extra)}
-.bar-note{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:9px}
+.bar-note{font-size:11.5px;color:var(--muted);margin-top:9px}
 .chips-legend{display:flex;gap:14px;margin-top:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 .chips-legend b{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:1px}
 
@@ -110,7 +112,11 @@ input[type=time]{font-family:var(--mono)}
 .week-head div{text-align:center;font-size:10px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
 .cell{position:relative;aspect-ratio:1/1.08;border-radius:11px;background:var(--surface);padding:7px 5px 6px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;transition:background .15s}
+.cell.altro{opacity:.34}
+.cell.altro .num{color:var(--muted)}
 .cell.empty{background:transparent;pointer-events:none}
+.cell{transition:background .15s,transform .12s cubic-bezier(.32,.72,0,1)}
+.cell:active{transform:scale(.94)}
 .cell:active{background:var(--surface-2)}
 .cell.sel{box-shadow:inset 0 0 0 2px var(--text)}
 .cell .num{font-family:var(--mono);font-size:14px;font-variant-numeric:tabular-nums;color:var(--text)}
@@ -133,11 +139,11 @@ input[type=time]{font-family:var(--mono)}
 .empty-state{background:transparent;border:1px dashed var(--line);border-radius:14px;padding:26px 20px;text-align:center;color:var(--muted);font-size:14px;line-height:1.5}
 
 /* ---- pannello ---- */
-.scrim{position:fixed;inset:0;background:#0007;backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+.scrim{position:fixed;inset:0;background:rgba(6,10,18,.55);-webkit-backdrop-filter:blur(14px) saturate(120%);backdrop-filter:blur(14px) saturate(120%);opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
 .scrim.on{opacity:1;pointer-events:auto}
-.sheet{pointer-events:none;visibility:hidden;position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:var(--surface);border-radius:22px 22px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(102%);transition:transform .26s cubic-bezier(.32,.72,0,1);z-index:21;max-height:92vh;overflow-y:auto}
+.sheet{pointer-events:none;visibility:hidden;position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:rgba(24,31,45,.82);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);border-top:1px solid rgba(255,255,255,.09);border-radius:22px 22px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(102%);transition:transform .26s cubic-bezier(.32,.72,0,1);z-index:21;max-height:92vh;overflow-y:auto}
 .sheet.on{pointer-events:auto;visibility:visible;transform:translateY(0)}
-.sheet h2{font-family:var(--display);font-size:20px;font-weight:700;margin:0 0 16px;letter-spacing:-.01em}
+.sheet h2{font-family:var(--display);font-size:19px;font-weight:600;margin:0 0 14px;letter-spacing:-.01em}
 .sheet h2 span{color:var(--muted);font-weight:500}
 .types{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px}
 .type{padding:10px 4px;border-radius:11px;background:var(--surface-2);font-size:13px;text-align:center;border:1px solid transparent;transition:.15s}
@@ -149,17 +155,18 @@ input[type=time]{font-family:var(--mono)}
 .calc b{color:var(--text);font-weight:600}
 .calc b.x{color:var(--extra)}
 .actions{display:flex;gap:8px}
-.btn{flex:1;padding:14px;border-radius:12px;background:var(--text);color:var(--bg);
+.btn{flex:1;padding:13px;border-radius:12px;background:var(--text);color:var(--bg);
   -webkit-text-fill-color:var(--bg);font-weight:600;font-size:15px}
-.btn.ghost{background:var(--surface-2);color:var(--text);-webkit-text-fill-color:var(--text);
-  border:1px solid var(--line);flex:0 0 auto;padding:14px 18px}
+.btn.ghost{background:rgba(255,255,255,.055);color:var(--text);-webkit-text-fill-color:var(--text);
+  border:1px solid rgba(255,255,255,.09);flex:0 0 auto;padding:13px 18px;font-weight:500}
 .btn.danger{background:var(--surface-2);color:var(--extra);-webkit-text-fill-color:var(--extra);
   border:1px solid #FF7A6B44}
-.fab{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);font-weight:600;font-size:14px;padding:13px 22px;border-radius:24px;box-shadow:0 6px 22px #000a;z-index:10}
-.toast{position:fixed;bottom:96px;left:50%;transform:translate(-50%,14px);background:var(--surface-2);border:1px solid var(--line);color:var(--text);font-size:13px;padding:10px 16px;border-radius:20px;opacity:0;pointer-events:none;transition:.2s;z-index:30}
+.fab{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);font-weight:600;font-size:14px;padding:13px 22px;border-radius:24px;box-shadow:0 6px 24px rgba(0,0,0,.5);z-index:10;transition:transform .2s cubic-bezier(.32,.72,0,1)}
+.fab:active{transform:translateX(-50%) scale(.94)}
+.toast{position:fixed;bottom:96px;left:50%;transform:translate(-50%,14px);background:rgba(30,38,54,.85);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid rgba(255,255,255,.10);color:var(--text);font-size:13px;padding:10px 16px;border-radius:20px;opacity:0;pointer-events:none;transition:.2s;z-index:30}
 .toast.on{opacity:1;transform:translate(-50%,0)}
-.set-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
-.set-row span{font-size:14px}
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid #ffffff0d}
+.set-row span{font-size:14px;color:var(--text);opacity:.9}
 .set-row .in{width:110px;flex:none}
 .set-row .in input{text-align:right;font-family:var(--mono)}
 #stampa{display:none}
@@ -238,43 +245,62 @@ input[type=time]{font-family:var(--mono)}
 .bac-shift .name{flex:1;font-size:14px;color:var(--text)}
 .bac-shift .time{font-family:var(--mono);font-size:13px;color:var(--muted)}
 /* ---- impostazioni a gruppi richiudibili ---- */
-.grp{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;
-  margin-bottom:7px;overflow:hidden;transition:border-color .18s,background .18s}
-.grp[open]{border-color:#ffffff26;background:#1B2437}
-.grp>summary{list-style:none;cursor:pointer;padding:13px 40px 13px 14px;position:relative;
-  display:grid;grid-template-columns:26px 1fr;column-gap:12px;align-items:center;user-select:none}
+/* Nessun riquadro: solo righe separate da una linea sottile, come le
+   impostazioni di sistema. Il gruppo aperto si distingue dal titolo chiaro. */
+.grp{border-bottom:1px solid var(--line)}
+.grp:last-of-type{border-bottom:none}
+.grp>summary{list-style:none;cursor:pointer;padding:15px 26px 15px 0;position:relative;
+  display:flex;flex-direction:column;gap:2px;user-select:none}
 .grp>summary::-webkit-details-marker{display:none}
-/* pastiglia colorata: dà a ogni gruppo un'identità riconoscibile a colpo d'occhio */
-.grp>summary::before{content:'';grid-row:1/3;width:26px;height:26px;border-radius:9px;
-  background:var(--gc,var(--muted));opacity:.22;box-shadow:inset 0 0 0 1.5px var(--gc,var(--muted))}
-.grp>summary b{font-size:15px;font-weight:600;line-height:1.25}
+.grp>summary b{font-size:15px;font-weight:500;color:var(--muted);transition:color .2s}
+.grp[open]>summary b{color:var(--text);font-weight:600}
 .grp>summary i{font-style:normal;font-weight:400;font-size:12px;color:var(--muted);
-  line-height:1.35;margin-top:1px;font-family:var(--mono)}
-.grp>summary i.warn-t{color:var(--extra)}
-.grp>summary i.ok-t{color:var(--pomeriggio)}
-.grp>summary::after{content:'';position:absolute;right:17px;top:50%;width:7px;height:7px;
-  border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
-  transform:translateY(-70%) rotate(45deg);transition:transform .2s}
+  opacity:.75;line-height:1.35;font-family:var(--mono)}
+.grp>summary i.warn-t{color:var(--extra);opacity:1}
+.grp>summary i.ok-t{color:var(--muted)}
+.grp>summary::after{content:'';position:absolute;right:4px;top:50%;width:6px;height:6px;
+  border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);
+  transform:translateY(-70%) rotate(45deg);transition:transform .24s cubic-bezier(.32,.72,0,1)}
 .grp[open]>summary::after{transform:translateY(-20%) rotate(-135deg)}
-.grp[open]>summary{border-bottom:1px solid var(--line)}
-.grp>summary:hover{background:#ffffff08}
-.grp>summary:active{background:#ffffff12}
-.grp>*:not(summary){margin-left:16px;margin-right:16px}
-.grp>*:not(summary):first-of-type{margin-top:6px}
-.grp>*:last-child{margin-bottom:16px}
+.grp>summary:active b{opacity:.55}
+.grp>*:not(summary){margin-left:0;margin-right:0}
+.grp>*:not(summary):first-of-type{margin-top:2px}
+.grp>*:last-child{margin-bottom:18px}
 .grp .set-row:last-of-type{border-bottom:none}
-.grp .set-row{padding:11px 0}
-.tabs{display:flex;gap:2px;background:transparent;border-bottom:1px solid var(--line);border-radius:0;padding:0;margin:0 0 18px}
-.tab{flex:1;padding:11px 4px 10px;border-radius:0;font-size:13.5px;font-weight:600;position:relative;
-  color:var(--muted);-webkit-text-fill-color:var(--muted);transition:color .16s}
+.grp .set-row{padding:11px 0;border-bottom:1px solid #ffffff0a}
+.grp-intro{font-size:12.5px;color:var(--muted);line-height:1.5;margin:0 0 6px}
+.grp-intro b{color:var(--text);font-weight:600}
+/* Controllo a segmenti con vetro smerigliato: la pastiglia attiva scorre
+   sotto le etichette invece di comparire e sparire. */
+.tabs{display:flex;gap:0;position:relative;border-radius:14px;padding:4px;margin:0 0 18px;
+  background:rgba(255,255,255,.045);
+  -webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);
+  border:1px solid rgba(255,255,255,.07);
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset}
+.tab-thumb{position:absolute;top:4px;bottom:4px;left:4px;border-radius:11px;
+  background:rgba(255,255,255,.11);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 2px 10px rgba(0,0,0,.28), 0 1px 0 rgba(255,255,255,.10) inset;
+  transition:transform .42s cubic-bezier(.32,.72,0,1), width .42s cubic-bezier(.32,.72,0,1);
+  pointer-events:none;will-change:transform}
+.tab{flex:1;padding:10px 4px;border-radius:11px;font-size:13.5px;font-weight:600;position:relative;z-index:1;
+  color:var(--muted);-webkit-text-fill-color:var(--muted);
+  transition:color .28s ease,-webkit-text-fill-color .28s ease}
 .tab.on{color:var(--text);-webkit-text-fill-color:var(--text)}
-.tab.on::after{content:'';position:absolute;left:14%;right:14%;bottom:-1px;height:2px;
-  background:var(--text);border-radius:2px}
 .tab .bad{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--extra);margin-left:5px;vertical-align:2px}
+.col-b{will-change:transform}
 .pane{display:none}
-.pane.on{display:block;animation:fade .18s ease}
-@keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){.pane.on{animation:none}}
+.pane.on{display:block;animation:vetro .34s cubic-bezier(.32,.72,0,1)}
+.pane.on.da-destra{animation-name:vetro-dx}
+@keyframes vetro{from{opacity:0;transform:translateY(6px) scale(.988);filter:blur(6px)}
+                 to{opacity:1;transform:none;filter:none}}
+@keyframes vetro-dx{from{opacity:0;transform:translateX(22px) scale(.99);filter:blur(5px)}
+                    to{opacity:1;transform:none;filter:none}}
+.pane.on.da-sinistra{animation-name:vetro-sx}
+@keyframes vetro-sx{from{opacity:0;transform:translateX(-22px) scale(.99);filter:blur(5px)}
+                    to{opacity:1;transform:none;filter:none}}
+@media (prefers-reduced-motion:reduce){.pane.on{animation:none}.tab-thumb{transition:none}}
 
 /* ---- schermi larghi: due colonne affiancate ---- */
 @media (min-width:900px){
@@ -295,7 +321,7 @@ input[type=time]{font-family:var(--mono)}
   .sheet{top:50%;bottom:auto;left:50%;right:auto;transform:translate(-50%,-46%) scale(.97);
     width:560px;max-width:92vw;border-radius:20px;max-height:86vh;padding:24px 24px 22px;
     opacity:0;transition:opacity .18s ease,transform .18s ease;
-    box-shadow:0 24px 70px #0009;border:1px solid var(--line)}
+    box-shadow:0 24px 70px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.10)}
   .sheet.on{pointer-events:auto;visibility:visible;transform:translate(-50%,-50%) scale(1);opacity:1}
   .fab{left:auto;right:28px;transform:none;bottom:28px}
   .pane[data-pane="pag"] .pay{background:var(--surface);border-radius:18px;padding:20px;border-top:none;margin-top:0}
@@ -320,7 +346,12 @@ input[type=time]{font-family:var(--mono)}
     <div class="nav-right">
       <button class="nav-btn" id="prev" aria-label="Mese precedente">‹</button>
       <button class="nav-btn" id="next" aria-label="Mese successivo">›</button>
-      <button class="icon-btn" id="settings" aria-label="Impostazioni">⚙</button>
+      <button class="icon-btn" id="settings" aria-label="Impostazioni">
+        <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <path d="M3 6.5h9M16 6.5h3M3 15.5h3M10 15.5h9"/>
+          <circle cx="14" cy="6.5" r="2.2"/><circle cx="8" cy="15.5" r="2.2"/>
+        </svg>
+      </button>
     </div>
   </div>
 
@@ -340,7 +371,7 @@ input[type=time]{font-family:var(--mono)}
       </div>
     </div>
     <div class="bar"><i id="bar-1"></i><i class="over" id="bar-2"></i></div>
-    <div class="bar-note"><span id="bar-left">—</span><span id="bar-right">—</span></div>
+    <div class="bar-note"><span id="bar-left">—</span></div>
 
     </div>
   </div>
@@ -349,6 +380,7 @@ input[type=time]{font-family:var(--mono)}
   <div id="nudge"></div>
 
   <div class="tabs" role="tablist">
+    <span class="tab-thumb" id="tab-thumb"></span>
     <button class="tab on" data-tab="cal" role="tab">Calendario</button>
     <button class="tab" data-tab="tur" role="tab">Turni</button>
     <button class="tab" data-tab="pag" role="tab">Paga</button>
@@ -431,28 +463,8 @@ input[type=time]{font-family:var(--mono)}
   <h2>Impostazioni</h2>
 
   <details class="grp" open>
-    <summary style="--gc:var(--mattina)"><b>Il tuo contratto</b><i id="st-contratto"></i></summary>
-    <div class="set-row"><span>Ore contrattuali mensili</span><div class="in"><input type="number" id="s-orec" min="1" step="1" inputmode="numeric"></div></div>
-    <div class="set-row"><span>Giorni di lavoro a settimana</span><div class="in"><input type="number" id="s-wd" min="0" max="7" step="1" inputmode="numeric"></div></div>
-    <div class="set-row"><span>Riposi a settimana</span><div class="in"><input type="number" id="s-rd" min="0" max="7" step="1" inputmode="numeric"></div></div>
-    
-    
-    
-  </details>
-
-  <details class="grp">
-    <summary style="--gc:var(--pomeriggio)"><b>Orari dei turni</b><i id="st-orari"></i></summary>
-    <div class="set-row"><span>Mattina</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-m1"><input type="time" id="p-m2"></div></div>
-    <div class="set-row"><span>Pomeriggio</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-p1"><input type="time" id="p-p2"></div></div>
-    <div class="set-row"><span>Notte</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-n1"><input type="time" id="p-n2"></div></div>
-    <div class="set-row"><span>DEAS</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-d1"><input type="time" id="p-d2"></div></div>
-    
-    <div class="set-row"><span>Fascia notturna dalle</span><div class="in"><input type="time" id="s-n1"></div></div>
-    <div class="set-row"><span>alle</span><div class="in"><input type="time" id="s-n2"></div></div>
-  </details>
-
-  <details class="grp">
-    <summary style="--gc:var(--notte)"><b>Retribuzione</b><i id="st-retrib"></i></summary>
+    <summary><b>Retribuzione</b><i id="st-retrib"></i></summary>
+    <p class="grp-intro">Il lordo è il <b>TOTALE</b> degli elementi della retribuzione, in alto sulla busta: non il minimo.</p>
     <div class="set-row"><span>Lordo fisso mensile (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-lordo" placeholder="2538,46"></div></div>
     <div class="set-row"><span>Maggiorazione notturna %</span><div class="in"><input type="number" id="s-pn" min="0" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>Maggiorazione festiva %</span><div class="in"><input type="number" id="s-pf" min="0" step="1" inputmode="numeric"></div></div>
@@ -468,8 +480,9 @@ input[type=time]{font-family:var(--mono)}
   </details>
 
   <details class="grp">
-    <summary style="--gc:var(--deas)"><b>La tua busta paga</b><i id="st-busta"></i></summary>
-    <div class="set-row"><span>Busta di riferimento</span><div class="in" style="width:150px"><input type="month" id="s-bmese"></div></div>
+    <summary><b>La tua busta paga</b><i id="st-busta"></i></summary>
+    <p class="grp-intro">Copia i dati di <b>una</b> busta paga: da lì ricavo contributi e IRPEF, e li applico a tutti i mesi.</p>
+    <div class="set-row"><span>Di che mese è questa busta</span><div class="in" style="width:160px"><select id="s-bmese"></select></div></div>
     <div class="set-row"><span>Netto del mese (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bn" placeholder="2174,00"></div></div>
     <div class="set-row"><span>Totale competenze (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bc" placeholder="3057,89"></div></div>
     <div class="set-row"><span>Imponibile IRPEF (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bi" placeholder="2736,85"></div></div>
@@ -481,7 +494,45 @@ input[type=time]{font-family:var(--mono)}
   </details>
 
   <details class="grp">
-    <summary style="--gc:var(--malattia)"><b>Avanzate</b><i>si toccano di rado</i></summary>
+    <summary><b>Turni</b><i id="st-turni"></i></summary>
+    <button class="btn" style="width:100%;margin-bottom:8px" id="seq">Incolla sequenza turni</button>
+    <div class="actions" style="margin-bottom:8px">
+      <button class="btn ghost" style="flex:1" id="imp">Importa da Excel</button>
+      <button class="btn ghost" style="flex:1" id="tpl">Scarica modello</button>
+    </div>
+    <button class="btn ghost" style="width:100%;margin-bottom:8px" id="ics">Invia al calendario iPhone</button>
+    <button class="btn ghost" style="width:100%;margin-bottom:8px" id="pdf">Turnario del mese in PDF</button>
+    <button class="btn ghost" style="width:100%" id="copy">Copia riepilogo del mese</button>
+  </details>
+
+  <details class="grp">
+    <summary><b>Backup e dati</b><i id="st-dati"></i></summary>
+    <div class="actions" style="margin-bottom:8px">
+      <button class="btn ghost" style="flex:1" id="bk-save">Salva backup</button>
+      <button class="btn ghost" style="flex:1" id="bk-load">Ripristina</button>
+    </div>
+    <div class="calc" id="store-info" style="margin:10px 0"></div>
+    <button class="btn ghost" style="width:100%;margin-bottom:8px" id="ricarica">Forza aggiornamento</button>
+    <button class="btn danger" style="width:100%" id="wipe">Cancella tutti i dati</button>
+  </details>
+
+  <details class="grp">
+    <summary><b>Avanzate</b><i id="st-avanz"></i></summary>
+    <div class="set-row"><span>Ore contrattuali mensili</span><div class="in"><input type="number" id="s-orec" min="1" step="1" inputmode="numeric"></div></div>
+    <div class="set-row"><span>Giorni di lavoro a settimana</span><div class="in"><input type="number" id="s-wd" min="0" max="7" step="1" inputmode="numeric"></div></div>
+    <div class="set-row"><span>Riposi a settimana</span><div class="in"><input type="number" id="s-rd" min="0" max="7" step="1" inputmode="numeric"></div></div>
+    
+    
+    
+  
+    <div class="set-row"><span>Mattina</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-m1"><input type="time" id="p-m2"></div></div>
+    <div class="set-row"><span>Pomeriggio</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-p1"><input type="time" id="p-p2"></div></div>
+    <div class="set-row"><span>Notte</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-n1"><input type="time" id="p-n2"></div></div>
+    <div class="set-row"><span>DEAS</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-d1"><input type="time" id="p-d2"></div></div>
+    
+    <div class="set-row"><span>Fascia notturna dalle</span><div class="in"><input type="time" id="s-n1"></div></div>
+    <div class="set-row"><span>alle</span><div class="in"><input type="time" id="s-n2"></div></div>
+  
     <div class="set-row"><span>Il periodo di paga parte dal giorno</span><div class="in"><input type="number" id="s-pd" min="1" max="28" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>I turni escono entro il giorno</span><div class="in"><input type="number" id="s-gt" min="1" max="28" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>La busta arriva entro il giorno</span><div class="in"><input type="number" id="s-gb" min="1" max="28" step="1" inputmode="numeric"></div></div>
@@ -495,29 +546,6 @@ input[type=time]{font-family:var(--mono)}
     <div class="set-row"><span>Scaglione IRPEF</span><div class="in"><select id="s-bs">
       <option value="0">Automatico</option><option value="23">23%</option><option value="35">35%</option><option value="43">43%</option>
     </select></div></div>
-  </details>
-
-  <details class="grp">
-    <summary style="--gc:var(--ferie)"><b>Turni</b><i id="st-turni"></i></summary>
-    <button class="btn" style="width:100%;margin-bottom:8px" id="seq">Incolla sequenza turni</button>
-    <div class="actions" style="margin-bottom:8px">
-      <button class="btn ghost" style="flex:1" id="imp">Importa da Excel</button>
-      <button class="btn ghost" style="flex:1" id="tpl">Scarica modello</button>
-    </div>
-    <button class="btn ghost" style="width:100%;margin-bottom:8px" id="ics">Invia al calendario iPhone</button>
-    <button class="btn ghost" style="width:100%;margin-bottom:8px" id="pdf">Turnario del mese in PDF</button>
-    <button class="btn ghost" style="width:100%" id="copy">Copia riepilogo del mese</button>
-  </details>
-
-  <details class="grp">
-    <summary style="--gc:var(--extra)"><b>Backup e dati</b><i id="st-dati"></i></summary>
-    <div class="actions" style="margin-bottom:8px">
-      <button class="btn ghost" style="flex:1" id="bk-save">Salva backup</button>
-      <button class="btn ghost" style="flex:1" id="bk-load">Ripristina</button>
-    </div>
-    <div class="calc" id="store-info" style="margin:10px 0"></div>
-    <button class="btn ghost" style="width:100%;margin-bottom:8px" id="ricarica">Forza aggiornamento</button>
-    <button class="btn danger" style="width:100%" id="wipe">Cancella tutti i dati</button>
   </details>
 
   <div class="actions" style="margin-top:16px">
@@ -651,7 +679,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='50 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='57 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -873,13 +901,21 @@ function render(){
   const grid=document.getElementById('grid'); grid.innerHTML='';
   const todayS=ymd(new Date());
 
-  for(let i=0;i<offset;i++){const e=document.createElement('div');e.className='cell empty';grid.appendChild(e)}
+  /* Costruisco l'elenco dei giorni: la coda del mese scorso, il mese, e
+     quanto basta a chiudere l'ultima settimana. Le caselle vuote non dicevano
+     nulla, mentre il ciclo dei turni non si interrompe il primo del mese. */
+  const celle=[];
+  const prima=new Date(y,m,0).getDate();            /* ultimo giorno del mese precedente */
+  for(let i=offset;i>0;i--) celle.push({d:prima-i+1,y:m===0?y-1:y,m:m===0?11:m-1,altro:true});
+  for(let d=1;d<=days;d++) celle.push({d,y,m,altro:false});
+  const resto=(7-celle.length%7)%7;
+  for(let d=1;d<=resto;d++) celle.push({d,y:m===11?y+1:y,m:m===11?0:m+1,altro:true});
 
-  for(let d=1;d<=days;d++){
-    const key=`${y}-${pad(m+1)}-${pad(d)}`;
+  celle.forEach(({d,y:cy,m:cm,altro})=>{
+    const key=`${cy}-${pad(cm+1)}-${pad(d)}`;
     const s=state.shifts[key];
     const cell=document.createElement('button');
-    cell.className='cell'+(s?'':' off')+(isFest(key)?' fest':'')+(key===todayS?' today':'');
+    cell.className='cell'+(s?'':' off')+(altro?' altro':'')+(isFest(key)?' fest':'')+(key===todayS?' today':'');
     let inner=`<span class="num">${d}</span>`;
     if(s&&isWork(s)){
       const {a,gross}=span(s);
@@ -899,9 +935,12 @@ function render(){
     }
     if(s&&issuesFor(key).length) inner+='<span class="warn"></span>';
     cell.innerHTML=inner;
-    cell.onclick=()=>openEditor(key);
+    cell.onclick=()=>{
+      if(altro){ cambiaMese(0,cy,cm); setTimeout(()=>openEditor(key),200); }
+      else openEditor(key);
+    };
     grid.appendChild(cell);
-  }
+  });
 
   /* riepilogo */
   let tot=0,ex=0,nt=0,worked_days=0,rest_days=0,abs_days=0;
@@ -927,7 +966,6 @@ function render(){
   document.getElementById('bar-2').style.width=(target?Math.min(over/target*100,100-base/target*100):0)+'%';
   document.getElementById('bar-left').textContent=
     `${worked_days} lavorati · ${rest_days} riposi`+(abs_days?` · ${abs_days} assenze`:'');
-  document.getElementById('bar-right').textContent=`obiettivo ${fmtPlain(target)}`;
   renderPay(y,m); renderWeeks(y,m); renderNudge(); renderBacheca();
   const nAvvisi=renderAlerts(y,m)||0;
   const tabTur=document.querySelector('.tab[data-tab="tur"]');
@@ -1484,14 +1522,28 @@ document.getElementById('fab').onclick=()=>{
   const t=new Date(), k=(t.getMonth()===view.getMonth()&&t.getFullYear()===view.getFullYear())?ymd(t):ymd(new Date(view.getFullYear(),view.getMonth(),1));
   openEditor(k);
 };
-document.getElementById('prev').onclick=()=>{view.setMonth(view.getMonth()-1);render()};
-document.getElementById('next').onclick=()=>{view.setMonth(view.getMonth()+1);render()};
+/* Anche da freccia o da selettore il cambio è animato, per coerenza. */
+function cambiaMese(passo,y,m){
+  const sl=document.querySelector('.col-b');
+  const applica=()=>{ if(passo) view.setMonth(view.getMonth()+passo); else view=new Date(y,m,1); render(); };
+  if(!sl||!sl.animate){applica();return}
+  const verso=passo?Math.sign(passo):((y*12+m)>(view.getFullYear()*12+view.getMonth())?1:-1);
+  const w=(sl.offsetWidth||320)*0.3;
+  sl.animate([{transform:'none',opacity:1},{transform:`translateX(${-verso*w}px)`,opacity:0}],
+             {duration:150,easing:'cubic-bezier(.4,0,1,1)'}).onfinish=()=>{
+    applica();
+    sl.animate([{transform:`translateX(${verso*w}px)`,opacity:0},{transform:'none',opacity:1}],
+               {duration:280,easing:'cubic-bezier(.32,.72,0,1)'});
+  };
+}
+document.getElementById('prev').onclick=()=>cambiaMese(-1);
+document.getElementById('next').onclick=()=>cambiaMese(1);
 
 /* ---------- impostazioni ---------- */
 const setMap={'s-day':['dayThreshold','num'],'s-n1':['night1','str'],'s-n2':['night2','str'],'s-break':['defaultBreak','num'],'s-wd':['workDays','num'],'s-rd':['restDays','num'],'s-lordo':['lordoFisso','num'],'s-orec':['oreContratto','num'],'s-pn':['pctNotturno','num'],'s-pf':['pctFestivo','num'],'s-pfn':['pctFestNott','num'],'s-ps':['pctStraord','num'],'s-sa':['straordAparte','num'],'s-pat':['patrono','str'],'s-bn':['bpNetto','num'],'s-bc':['bpComp','num'],'s-bi':['bpImpIrpef','num'],'s-bm':['bpMagg','num'],'s-bs':['bpScaglione','num'],'s-bmese':['bpMese','str'],'s-rit':['ritardo','num'],'s-gb':['giornoBusta','num'],'s-gt':['giornoTurni','num'],'s-pd':['periodoDa','num']};
 /* Apre le impostazioni posizionandosi sul gruppo che interessa,
    invece di lasciare l'utente a cercarlo fra sei sezioni chiuse. */
-const GRUPPI={contratto:0,orari:1,retribuzione:2,busta:3,turni:4,dati:5};
+const GRUPPI={retribuzione:0,busta:1,turni:2,dati:3,contratto:4,orari:4,avanzate:4};
 function apriImpostazioni(quale){
   document.getElementById('settings').click();
   const g=document.querySelectorAll('#sheet-set .grp');
@@ -1521,7 +1573,7 @@ document.getElementById('settings').onclick=()=>{
   document.getElementById('s-bi').value=s.bpImpIrpef||'';
   document.getElementById('s-bm').value=s.bpMagg||'';
   document.getElementById('s-bs').value=s.bpScaglione||0;
-  document.getElementById('s-bmese').value=s.bpMese||'';
+  riempiMesiBusta();
   aggiornaVociUtili(); aggiornaMaggRif(); statoImpostazioni();
   document.getElementById('s-rit').value=s.ritardo??0;
   document.getElementById('s-gb').value=s.giornoBusta??10;
@@ -1562,6 +1614,25 @@ Object.entries(setMap).forEach(([id,[key,kind]])=>{
 /* Nasconde le voci che non hanno effetto con la configurazione attuale. */
 /* Quando i turni del mese di riferimento sono caricati, le maggiorazioni le
    calcolo io: il campo a mano sparisce e mostro anche il lordo che ne deriva. */
+/* La tendina propone i mesi per cui ho i turni: sono gli unici per cui
+   posso calcolare le maggiorazioni e verificare il lordo. */
+function riempiMesiBusta(){
+  const sel=document.getElementById('s-bmese'); if(!sel) return;
+  const scelto=state.settings.bpMese||'';
+  const mesi=[...new Set(Object.keys(state.shifts).map(k=>k.slice(0,7)))].sort().reverse();
+  if(scelto&&!mesi.includes(scelto)) mesi.unshift(scelto);
+  sel.innerHTML='';
+  const vuoto=document.createElement('option');
+  vuoto.value=''; vuoto.textContent=mesi.length?'— scegli il mese —':'nessun turno caricato';
+  sel.appendChild(vuoto);
+  mesi.forEach(k=>{
+    const [y,m]=k.split('-').map(Number);
+    const o=document.createElement('option');
+    o.value=k; o.textContent=`${MESI[m-1]} ${y}`;
+    sel.appendChild(o);
+  });
+  sel.value=scelto;
+}
 function aggiornaMaggRif(){
   const riga=document.getElementById('row-bm'), box=document.getElementById('bm-auto');
   if(!riga||!box) return;
@@ -2179,10 +2250,8 @@ function statoImpostazioni(){
     const e=document.getElementById(id); if(!e) return;
     e.textContent=txt; e.className=cls||'';
   };
-  put('st-contratto',`${S.oreContratto||173}h al mese · ${S.workDays}+${S.restDays} giorni`);
-
   const or=t=>{const p=presetOf(t);return p[0].slice(0,2)+'–'+(p[1]==='00:00'?'24':p[1].slice(0,2))};
-  put('st-orari',`${or('mattina')} · ${or('pomeriggio')} · ${or('notte')} · ${or('deas')}`);
+  put('st-avanz',`${S.oreContratto||173}h · ${S.workDays}+${S.restDays} · ${or('mattina')} ${or('pomeriggio')} ${or('notte')}`);
 
   const oggi=new Date(), lordo=lordoDi(oggi.getFullYear(),oggi.getMonth());
   const nSc=(S.scatti||[]).length;
@@ -2207,11 +2276,7 @@ function statoImpostazioni(){
 
 /* ---------- navigazione fra i mesi ---------- */
 let annoPicker=null;
-function vaiAlMese(y,m){
-  view=new Date(y,m,1); render();
-  const t=document.getElementById('mname');
-  if(t){t.animate?t.animate([{opacity:.4},{opacity:1}],{duration:180}):0}
-}
+function vaiAlMese(y,m){ cambiaMese(0,y,m); }
 function renderMesi(){
   if(annoPicker===null) annoPicker=view.getFullYear();
   document.getElementById('anno-lb').textContent=annoPicker;
@@ -2237,43 +2302,108 @@ document.getElementById('anno-next').onclick=()=>{annoPicker++;renderMesi()};
 document.getElementById('mese-close').onclick=closeSheets;
 document.getElementById('mese-oggi').onclick=()=>{const o=new Date();vaiAlMese(o.getFullYear(),o.getMonth());closeSheets()};
 
-/* Scorrimento laterale: il gesto naturale su telefono. Ignoro i movimenti
-   prevalentemente verticali, altrimenti cambierei mese scorrendo la pagina. */
+/* Scorrimento fra i mesi che segue il dito: durante il trascinamento il
+   contenuto si sposta davvero, al rilascio prosegue o torna indietro. */
 (function(){
   const zona=document.getElementById('app');
-  if(!zona) return;
-  let x0=0,y0=0,t0=0,attivo=false;
+  const slitta=document.querySelector('.col-b');
+  if(!zona||!slitta) return;
+  let x0=0,y0=0,t0=0,stato=0,dx=0,largh=0;   /* stato: 0 fermo, 1 in valutazione, 2 sto trascinando */
+
+  const posa=v=>{slitta.style.transform=v?`translateX(${v}px)`:'';};
+  const conTransizione=(on)=>{
+    slitta.style.transition=on?'transform .34s cubic-bezier(.32,.72,0,1),opacity .34s ease':'';
+  };
+  const resistenza=d=>{
+    const max=largh*0.55;
+    return Math.abs(d)<max?d:Math.sign(d)*(max+(Math.abs(d)-max)*0.25);
+  };
+
   zona.addEventListener('touchstart',e=>{
-    if(e.touches.length!==1||document.querySelector('.sheet.on')) {attivo=false;return}
-    if(e.target.closest('.sheet,#pdf-prev,.dett,textarea,input,select')) {attivo=false;return}
-    const t=e.touches[0]; x0=t.clientX; y0=t.clientY; t0=Date.now(); attivo=true;
+    stato=0;
+    if(e.touches.length!==1||document.querySelector('.sheet.on')) return;
+    if(e.target.closest('.sheet,#pdf-prev,.dett,textarea,input,select,.tabs')) return;
+    const t=e.touches[0]; x0=t.clientX; y0=t.clientY; t0=Date.now();
+    largh=slitta.offsetWidth||320; dx=0; stato=1;
+    conTransizione(false);
   },{passive:true});
-  zona.addEventListener('touchend',e=>{
-    if(!attivo) return;
-    attivo=false;
-    const t=e.changedTouches[0];
-    const dx=t.clientX-x0, dy=t.clientY-y0, dt=Date.now()-t0;
-    if(dt>700||Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.6) return;
-    view.setMonth(view.getMonth()+(dx<0?1:-1));
-    render();
+
+  zona.addEventListener('touchmove',e=>{
+    if(!stato) return;
+    const t=e.touches[0], ax=t.clientX-x0, ay=t.clientY-y0;
+    if(stato===1){
+      /* decido una volta sola se è un gesto orizzontale o una scrollata */
+      if(Math.abs(ax)<8&&Math.abs(ay)<8) return;
+      stato=Math.abs(ax)>Math.abs(ay)*1.3?2:0;
+      if(!stato) return;
+    }
+    dx=resistenza(ax);
+    posa(dx);
+    slitta.style.opacity=String(1-Math.min(Math.abs(dx)/largh,.45));
+  },{passive:true});
+
+  zona.addEventListener('touchend',()=>{
+    if(stato!==2){stato=0;return}
+    stato=0;
+    const dt=Date.now()-t0;
+    const basta=Math.abs(dx)>largh*0.22||(Math.abs(dx)>50&&dt<300);
+    conTransizione(true);
+    if(!basta){ posa(0); slitta.style.opacity='1'; return }
+    const verso=dx<0?1:-1;
+    posa(-verso*largh*0.5);
+    slitta.style.opacity='0';
+    setTimeout(()=>{
+      view.setMonth(view.getMonth()+verso);
+      render();
+      conTransizione(false);
+      posa(verso*largh*0.35);            /* entra dal lato opposto */
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        conTransizione(true); posa(0); slitta.style.opacity='1';
+      }));
+    },170);
+  },{passive:true});
+
+  zona.addEventListener('touchcancel',()=>{
+    if(stato===2){conTransizione(true);posa(0);slitta.style.opacity='1'}
+    stato=0;
   },{passive:true});
 })();
+
 /* Da tastiera: frecce sinistra e destra */
 document.addEventListener('keydown',e=>{
   if(document.querySelector('.sheet.on')) return;
   if(/input|textarea|select/i.test((e.target.tagName||''))) return;
-  if(e.key==='ArrowLeft'){view.setMonth(view.getMonth()-1);render()}
-  if(e.key==='ArrowRight'){view.setMonth(view.getMonth()+1);render()}
+  if(e.key==='ArrowLeft') cambiaMese(-1);
+  if(e.key==='ArrowRight') cambiaMese(1);
 });
 
 /* ---------- schede ---------- */
 let scheda='cal';
+const ORDINE_SCHEDE=['cal','tur','pag','bac'];
+/* Sposta la pastiglia di vetro sotto la scheda attiva. */
+function muoviThumb(){
+  const th=document.getElementById('tab-thumb');
+  const att=document.querySelector('.tab.on');
+  if(!th||!att) return;
+  th.style.width=att.offsetWidth+'px';
+  th.style.transform=`translateX(${att.offsetLeft-4}px)`;
+}
 function mostraScheda(k){
+  if(k===scheda) return;
+  const verso=ORDINE_SCHEDE.indexOf(k)>ORDINE_SCHEDE.indexOf(scheda)?'da-destra':'da-sinistra';
   scheda=k;
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===k));
-  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.dataset.pane===k));
+  document.querySelectorAll('.pane').forEach(p=>{
+    p.classList.remove('da-destra','da-sinistra');
+    const attiva=p.dataset.pane===k;
+    if(attiva) p.classList.add(verso);
+    p.classList.toggle('on',attiva);
+  });
+  muoviThumb();
 }
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>mostraScheda(b.dataset.tab));
+window.addEventListener('resize',muoviThumb);
+setTimeout(muoviThumb,60);
 
 /* Solo per dirlo con la parola giusta: i dati stanno nel browser di questo
    dispositivo, che sia telefono, tablet o computer. */
