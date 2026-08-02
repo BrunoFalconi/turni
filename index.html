@@ -193,7 +193,12 @@ input[type=time]{font-family:var(--mono)}
 .alert{display:block;width:100%;text-align:left;background:#FF7A6B14;border:1px solid #FF7A6B3d;border-radius:12px;padding:11px 13px;margin-bottom:6px;font-size:13px;line-height:1.45;color:var(--text)}
 .alert b{color:var(--extra);font-weight:600;display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;margin-bottom:3px}
 .warn{position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--extra)}
-.calc .issue{color:var(--extra);display:block;margin-top:6px}
+.issue{color:var(--extra);display:block;margin-top:8px;line-height:1.5}
+/* nella scheda Paga l'avviso deve saltare all'occhio: è l'unica cosa
+   che dice all'utente cosa fare */
+.pay-note .issue{background:#FF7A6B14;border:1px solid #FF7A6B3d;border-radius:10px;
+  padding:10px 12px;font-size:12.5px;margin-top:10px}
+.pay-empty-btn{margin-top:12px}
 /* ---- bacheca condivisa ---- */
 .bac-day{background:var(--surface);border-radius:12px;padding:14px;margin-bottom:8px}
 .bac-day-title{font-family:var(--display);font-size:15px;font-weight:600;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--surface-2)}
@@ -393,14 +398,13 @@ input[type=time]{font-family:var(--mono)}
   <h2>Impostazioni</h2>
 
   <details class="grp" open>
-    <summary>Il tuo contratto<i>ore, giorni, scadenze</i></summary>
+    <summary>Il tuo contratto<i>ore e giorni</i></summary>
     <div class="set-row"><span>Ore contrattuali mensili</span><div class="in"><input type="number" id="s-orec" min="1" step="1" inputmode="numeric"></div></div>
-    <div class="set-row"><span>Ore contrattuali a settimana</span><div class="in"><input type="number" id="s-week" min="0" step="0.5" inputmode="decimal"></div></div>
     <div class="set-row"><span>Giorni di lavoro a settimana</span><div class="in"><input type="number" id="s-wd" min="0" max="7" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>Riposi a settimana</span><div class="in"><input type="number" id="s-rd" min="0" max="7" step="1" inputmode="numeric"></div></div>
-    <div class="set-row"><span>Il periodo di paga parte dal giorno</span><div class="in"><input type="number" id="s-pd" min="1" max="28" step="1" inputmode="numeric"></div></div>
-    <div class="set-row"><span>I turni escono entro il giorno</span><div class="in"><input type="number" id="s-gt" min="1" max="28" step="1" inputmode="numeric"></div></div>
-    <div class="set-row"><span>La busta arriva entro il giorno</span><div class="in"><input type="number" id="s-gb" min="1" max="28" step="1" inputmode="numeric"></div></div>
+    
+    
+    
   </details>
 
   <details class="grp">
@@ -409,7 +413,7 @@ input[type=time]{font-family:var(--mono)}
     <div class="set-row"><span>Pomeriggio</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-p1"><input type="time" id="p-p2"></div></div>
     <div class="set-row"><span>Notte</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-n1"><input type="time" id="p-n2"></div></div>
     <div class="set-row"><span>DEAS</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-d1"><input type="time" id="p-d2"></div></div>
-    <div class="set-row"><span>Pausa predefinita (min)</span><div class="in"><input type="number" id="s-break" min="0" step="5" inputmode="numeric"></div></div>
+    
     <div class="set-row"><span>Fascia notturna dalle</span><div class="in"><input type="time" id="s-n1"></div></div>
     <div class="set-row"><span>alle</span><div class="in"><input type="time" id="s-n2"></div></div>
   </details>
@@ -423,12 +427,10 @@ input[type=time]{font-family:var(--mono)}
     <div class="set-row"><span>Ore oltre il monte ore</span><div class="in" style="width:160px"><select id="s-sa">
       <option value="0">già nel fisso (forfait)</option><option value="1">pagate a parte</option>
     </select></div></div>
-    <div class="set-row"><span>Maggiorazione straordinario %</span><div class="in"><input type="number" id="s-ps" min="0" step="1" inputmode="numeric"></div></div>
-    <div class="set-row"><span>Straordinario oltre (ore/giorno)</span><div class="in"><input type="number" id="s-day" min="0" step="0.5" inputmode="decimal"></div></div>
-    <div class="set-row"><span>Maggiorazioni riferite a</span><div class="in" style="width:160px"><select id="s-rit">
-      <option value="0">stesso mese della busta</option><option value="1">mese precedente</option><option value="2">due mesi prima</option>
-    </select></div></div>
-    <div class="set-row"><span>Santo patrono (mese-giorno)</span><div class="in"><input type="text" id="s-pat" placeholder="06-29"></div></div>
+    
+    
+    
+    
     <button class="btn ghost" style="width:100%;margin-top:12px" id="sca">Aumenti e scatti di stipendio</button>
   </details>
 
@@ -438,11 +440,26 @@ input[type=time]{font-family:var(--mono)}
     <div class="set-row"><span>Totale competenze (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bc" placeholder="es. 3057,89"></div></div>
     <div class="set-row"><span>Imponibile IRPEF (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bi" placeholder="es. 2736,85"></div></div>
     <div class="set-row"><span>Maggiorazioni in questa busta (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bm" placeholder="es. 519,43"></div></div>
+    
+    <div class="calc" id="prof-info" style="margin:12px 0 0"></div>
+    <button class="btn ghost" style="width:100%;margin-top:10px" id="ced">Cedolini dei mesi scorsi</button>
+  </details>
+
+  <details class="grp">
+    <summary>Avanzate<i>si toccano di rado</i></summary>
+    <div class="set-row"><span>Il periodo di paga parte dal giorno</span><div class="in"><input type="number" id="s-pd" min="1" max="28" step="1" inputmode="numeric"></div></div>
+    <div class="set-row"><span>I turni escono entro il giorno</span><div class="in"><input type="number" id="s-gt" min="1" max="28" step="1" inputmode="numeric"></div></div>
+    <div class="set-row"><span>La busta arriva entro il giorno</span><div class="in"><input type="number" id="s-gb" min="1" max="28" step="1" inputmode="numeric"></div></div>
+    <div class="set-row"><span>Straordinario oltre (ore/giorno)</span><div class="in"><input type="number" id="s-day" min="0" step="0.5" inputmode="decimal"></div></div>
+    <div class="set-row"><span>Maggiorazione straordinario %</span><div class="in"><input type="number" id="s-ps" min="0" step="1" inputmode="numeric"></div></div>
+    <div class="set-row"><span>Maggiorazioni riferite a</span><div class="in" style="width:160px"><select id="s-rit">
+      <option value="0">stesso mese della busta</option><option value="1">mese precedente</option><option value="2">due mesi prima</option>
+    </select></div></div>
+    <div class="set-row"><span>Santo patrono (mese-giorno)</span><div class="in"><input type="text" id="s-pat" placeholder="06-29"></div></div>
+    <div class="set-row"><span>Pausa predefinita (min)</span><div class="in"><input type="number" id="s-break" min="0" step="5" inputmode="numeric"></div></div>
     <div class="set-row"><span>Scaglione IRPEF</span><div class="in"><select id="s-bs">
       <option value="0">Automatico</option><option value="23">23%</option><option value="35">35%</option><option value="43">43%</option>
     </select></div></div>
-    <div class="calc" id="prof-info" style="margin:12px 0 0"></div>
-    <button class="btn ghost" style="width:100%;margin-top:10px" id="ced">Cedolini dei mesi scorsi</button>
   </details>
 
   <details class="grp">
@@ -578,7 +595,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='34 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='37 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -840,7 +857,7 @@ function render(){
 
   const target=lordoDi(y,m)>0&&Number(state.settings.oreContratto)>0
     ? Math.round(Number(state.settings.oreContratto)*60)
-    : Math.round(state.settings.weekHours*60*days/7);
+    : Math.round((Number(state.settings.oreContratto)||173)*60);
   const base=Math.min(tot,target), over=Math.max(0,tot-target);
   document.getElementById('bar-1').style.width=(target?base/target*100:0)+'%';
   document.getElementById('bar-2').style.width=(target?Math.min(over/target*100,100-base/target*100):0)+'%';
@@ -943,7 +960,7 @@ function renderPay(y,m){
   if(P.B.festNott) r.push([`Festive notturne ${fmtPlain(P.B.festNott)} · +${S.pctFestNott}%`,eur(P.magFN)]);
   if(P.oreStra>0.02) r.push([`Straordinario ${P.oreStra.toFixed(1)}h`,eur(P.stra)]);
   document.getElementById('pay-rows').innerHTML=r.map(([a,b])=>`<div>${a}<i>${b}</i></div>`).join('');
-  const avvisi=[];
+  const avvisi=[]; let dettaglio='';
   const mag=P.magNott+P.magFest+P.magFN+P.stra, N=nettoDa(mag,y,m);
   const netBox=document.getElementById('pay-net'), netV=document.getElementById('pay-net-v');
   netBox.style.display='';
@@ -952,6 +969,17 @@ function renderPay(y,m){
     netV.style.cssText='';
     netBox.querySelector('span').textContent=N.fonte==='cedolini'?'Netto (dai cedolini)':'Netto stimato';
     netBox.onclick=null; netBox.style.cursor='';
+    /* mostro il conto: senza, un netto sbagliato resta inspiegabile */
+    const pcq=x=>(x*100).toFixed(1).replace('.',',')+'%';
+    if(N.fonte==='cedolini'){
+      dettaglio=`Netto = <b>${eur(N.F.a)}</b> fissi + <b>${pcq(N.F.b)}</b> di ${eur(mag)} di maggiorazioni, `+
+        `misurato su ${N.F.n} cedolini di questo periodo di stipendio.`;
+      if(N.F.a>P.lordo) avvisi.push(`La parte fissa misurata (${eur(N.F.a)}) supera il lordo del mese (${eur(P.lordo)}): i netti dei cedolini non sono coerenti con questo stipendio. Controllali in ⚙ → La tua busta paga → Cedolini.`);
+    }else{
+      const PR=profilo();
+      dettaglio=`Netto = <b>${eur(PR.base+(N.delta||0))}</b> fissi + <b>${pcq(PR.k)}</b> di ${eur(mag)} di maggiorazioni`+
+        (N.delta?`, con ${N.delta>0?'+':''}${eur(N.delta)} per la differenza di lordo rispetto alla busta di riferimento`:'')+'.';
+    }
   }else{
     /* la diagnosi va scritta qui: è dove l'utente sta guardando */
     netBox.querySelector('span').textContent='Netto';
@@ -965,7 +993,8 @@ function renderPay(y,m){
   if(lordoApprossimato(y,m))
     avvisi.push(`Questo mese è precedente al primo aumento registrato: sto usando ${eur(P.lordo)}. Metti il lordo di allora in ⚙ → Retribuzione.`);
   document.getElementById('pay-note').innerHTML=
-    `Base ${eur(P.ph)} l'ora (${eur(P.lordo)} ÷ ${S.oreContratto}h). Stima al lordo: non sostituisce la busta paga.`+
+    `Base ${eur(P.ph)} l'ora (${eur(P.lordo)} ÷ ${S.oreContratto}h). Stima: non sostituisce la busta paga.`+
+    (dettaglio?`<br>${dettaglio}`:'')+
     avvisi.map(a=>`<span class="issue">${a}</span>`).join('');
 }
 
@@ -1282,7 +1311,7 @@ document.getElementById('prev').onclick=()=>{view.setMonth(view.getMonth()-1);re
 document.getElementById('next').onclick=()=>{view.setMonth(view.getMonth()+1);render()};
 
 /* ---------- impostazioni ---------- */
-const setMap={'s-week':['weekHours','num'],'s-day':['dayThreshold','num'],'s-n1':['night1','str'],'s-n2':['night2','str'],'s-break':['defaultBreak','num'],'s-wd':['workDays','num'],'s-rd':['restDays','num'],'s-lordo':['lordoFisso','num'],'s-orec':['oreContratto','num'],'s-pn':['pctNotturno','num'],'s-pf':['pctFestivo','num'],'s-pfn':['pctFestNott','num'],'s-ps':['pctStraord','num'],'s-sa':['straordAparte','num'],'s-pat':['patrono','str'],'s-bn':['bpNetto','num'],'s-bc':['bpComp','num'],'s-bi':['bpImpIrpef','num'],'s-bm':['bpMagg','num'],'s-bs':['bpScaglione','num'],'s-rit':['ritardo','num'],'s-gb':['giornoBusta','num'],'s-gt':['giornoTurni','num'],'s-pd':['periodoDa','num']};
+const setMap={'s-day':['dayThreshold','num'],'s-n1':['night1','str'],'s-n2':['night2','str'],'s-break':['defaultBreak','num'],'s-wd':['workDays','num'],'s-rd':['restDays','num'],'s-lordo':['lordoFisso','num'],'s-orec':['oreContratto','num'],'s-pn':['pctNotturno','num'],'s-pf':['pctFestivo','num'],'s-pfn':['pctFestNott','num'],'s-ps':['pctStraord','num'],'s-sa':['straordAparte','num'],'s-pat':['patrono','str'],'s-bn':['bpNetto','num'],'s-bc':['bpComp','num'],'s-bi':['bpImpIrpef','num'],'s-bm':['bpMagg','num'],'s-bs':['bpScaglione','num'],'s-rit':['ritardo','num'],'s-gb':['giornoBusta','num'],'s-gt':['giornoTurni','num'],'s-pd':['periodoDa','num']};
 /* Apre le impostazioni posizionandosi sul gruppo che interessa,
    invece di lasciare l'utente a cercarlo fra sei sezioni chiuse. */
 const GRUPPI={contratto:0,orari:1,retribuzione:2,busta:3,turni:4,dati:5};
@@ -1296,7 +1325,6 @@ function apriImpostazioni(quale){
 }
 document.getElementById('settings').onclick=()=>{
   const s=state.settings;
-  document.getElementById('s-week').value=s.weekHours;
   document.getElementById('s-wd').value=s.workDays;
   document.getElementById('s-rd').value=s.restDays;
   document.getElementById('s-day').value=s.dayThreshold;
@@ -1316,6 +1344,7 @@ document.getElementById('settings').onclick=()=>{
   document.getElementById('s-bi').value=s.bpImpIrpef||'';
   document.getElementById('s-bm').value=s.bpMagg||'';
   document.getElementById('s-bs').value=s.bpScaglione||0;
+  aggiornaVociUtili();
   document.getElementById('s-rit').value=s.ritardo??0;
   document.getElementById('s-gb').value=s.giornoBusta??10;
   document.getElementById('s-gt').value=s.giornoTurni??15;
@@ -1338,7 +1367,7 @@ Object.entries(setMap).forEach(([id,[key,kind]])=>{
   document.getElementById(id).addEventListener('input',e=>{
     state.settings[key]=kind==='num'?numIta(e.target.value):e.target.value;
     for(const y in festCache) delete festCache[y];
-    renderProfilo(); save(); render();
+    renderProfilo(); aggiornaVociUtili(); save(); render();
   });
 });
 ['m','p','n','d'].forEach((k,i)=>{
@@ -1352,6 +1381,12 @@ Object.entries(setMap).forEach(([id,[key,kind]])=>{
 });
 /* Un gruppo alla volta: aprirne uno chiude gli altri, così il pannello
    resta corto invece di diventare un muro di campi. */
+/* Nasconde le voci che non hanno effetto con la configurazione attuale. */
+function aggiornaVociUtili(){
+  const aParte=Number(state.settings.straordAparte)===1;
+  const r=document.getElementById('s-ps'); if(!r) return;
+  const riga=r.closest('.set-row'); if(riga) riga.style.display=aParte?'':'none';
+}
 document.querySelectorAll('#sheet-set .grp').forEach(g=>{
   g.addEventListener('toggle',()=>{
     if(!g.open) return;
