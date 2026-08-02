@@ -425,7 +425,7 @@ input[type=time]{font-family:var(--mono)}
 
   <details class="grp">
     <summary style="--gc:var(--notte)"><b>Retribuzione</b><i id="st-retrib"></i></summary>
-    <div class="set-row"><span>Lordo fisso mensile (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-lordo" placeholder="es. 2538,46"></div></div>
+    <div class="set-row"><span>Lordo fisso mensile (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-lordo" placeholder="2538,46"></div></div>
     <div class="set-row"><span>Maggiorazione notturna %</span><div class="in"><input type="number" id="s-pn" min="0" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>Maggiorazione festiva %</span><div class="in"><input type="number" id="s-pf" min="0" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>Festiva notturna %</span><div class="in"><input type="number" id="s-pfn" min="0" step="1" inputmode="numeric"></div></div>
@@ -441,10 +441,11 @@ input[type=time]{font-family:var(--mono)}
 
   <details class="grp">
     <summary style="--gc:var(--deas)"><b>La tua busta paga</b><i id="st-busta"></i></summary>
-    <div class="set-row"><span>Netto del mese (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bn" placeholder="es. 2174,00"></div></div>
-    <div class="set-row"><span>Totale competenze (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bc" placeholder="es. 3057,89"></div></div>
-    <div class="set-row"><span>Imponibile IRPEF (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bi" placeholder="es. 2736,85"></div></div>
-    <div class="set-row"><span>Maggiorazioni in questa busta (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bm" placeholder="es. 519,43"></div></div>
+    <div class="set-row"><span>Busta di riferimento</span><div class="in" style="width:150px"><input type="month" id="s-bmese"></div></div>
+    <div class="set-row"><span>Netto del mese (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bn" placeholder="2174,00"></div></div>
+    <div class="set-row"><span>Totale competenze (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bc" placeholder="3057,89"></div></div>
+    <div class="set-row"><span>Imponibile IRPEF (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bi" placeholder="2736,85"></div></div>
+    <div class="set-row"><span>Maggiorazioni in questa busta (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bm" placeholder="519,43"></div></div>
     
     <div class="calc" id="prof-info" style="margin:12px 0 0"></div>
     <button class="btn ghost" style="width:100%;margin-top:10px" id="ced">Cedolini dei mesi scorsi</button>
@@ -527,7 +528,7 @@ input[type=time]{font-family:var(--mono)}
   <div id="sca-list" style="max-height:34vh;overflow-y:auto;margin-bottom:12px"></div>
   <div class="fields">
     <div class="field"><label for="sca-da">In vigore da</label><input type="month" id="sca-da"></div>
-    <div class="field"><label for="sca-lordo">Nuovo lordo (€)</label><input type="text" inputmode="decimal" id="sca-lordo" placeholder="es. 2600,00"></div>
+    <div class="field"><label for="sca-lordo">Nuovo lordo (€)</label><input type="text" inputmode="decimal" id="sca-lordo" placeholder="2600,00"></div>
   </div>
   <div class="actions">
     <button class="btn" id="sca-add">Aggiungi</button>
@@ -541,7 +542,7 @@ input[type=time]{font-family:var(--mono)}
   <div id="ced-list" style="max-height:34vh;overflow-y:auto;margin-bottom:12px"></div>
   <div class="fields">
     <div class="field"><label for="ced-mese">Mese</label><select id="ced-mese"></select></div>
-    <div class="field"><label for="ced-netto">Netto incassato (€)</label><input type="text" inputmode="decimal" id="ced-netto" placeholder="es. 2174,00"></div>
+    <div class="field"><label for="ced-netto">Netto incassato (€)</label><input type="text" inputmode="decimal" id="ced-netto" placeholder="2174,00"></div>
   </div>
   <div class="actions">
     <button class="btn" id="ced-add">Aggiungi</button>
@@ -600,7 +601,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='38 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='39 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -655,7 +656,7 @@ const DEFAULTS={
   workDays:5, restDays:2,
   lordoFisso:0, oreContratto:173, pctNotturno:50, pctFestivo:50, pctFestNott:55, pctStraord:0, straordAparte:0,
   patrono:'', cedolini:[], scatti:[],
-  bpNetto:0, bpComp:0, bpImpIrpef:0, bpMagg:0, bpScaglione:0, ritardo:0, giornoBusta:10, giornoTurni:15, periodoDa:1, payV:2, nome:'',
+  bpNetto:0, bpComp:0, bpImpIrpef:0, bpMagg:0, bpScaglione:0, bpMese:'', ritardo:0, giornoBusta:10, giornoTurni:15, periodoDa:1, payV:2, nome:'',
   presets:{mattina:['08:00','16:00'],pomeriggio:['16:00','00:00'],notte:['00:00','08:00'],deas:['09:00','18:00']}
 };
 
@@ -1176,7 +1177,7 @@ function profilo(){
   /* Il lordo fisso di quella busta si ricava: competenze meno maggiorazioni.
      Serve per adattare la stima ai mesi con uno stipendio diverso. */
   const lordoRif=C-M;
-  return {N,C,I,M,c,i,k,annuo,lordoRif,base:N-M*k};
+  return {N,C,I,M,c,i,k,annuo,lordoRif,mese:S.bpMese||'',base:N-M*k};
 }
 /* Dice esattamente perché il profilo non si calcola, invece di lasciare
    l'utente a controllare quattro campi a caso. */
@@ -1223,11 +1224,16 @@ function renderProfilo(){
           `${Number(S.bpScaglione)?'':` (imponibile annuo ${eur(P.annuo)})`}<br>`+
           `Di ogni euro lordo in più ti resta <b>${pc(P.k)}</b><br>`+
           `Netto base senza maggiorazioni <b>${eur(P.base)}</b>`;
-  const oggiD=new Date();
-  const lf=lordoDi(oggiD.getFullYear(),oggiD.getMonth());
+  /* Se so di che mese è la busta, confronto col lordo registrato per quel mese:
+     è il controllo che smaschera un lordo sbagliato o uno scatto con la data errata. */
+  let rifY,rifM;
+  if(/^\d{4}-\d{2}$/.test(P.mese)){const t=P.mese.split('-').map(Number);rifY=t[0];rifM=t[1]-1}
+  else {const o=new Date();rifY=o.getFullYear();rifM=o.getMonth()}
+  const lf=lordoDi(rifY,rifM);
+  if(P.mese) txt=`Busta di <b>${MESI[rifM].toLowerCase()} ${rifY}</b><br>`+txt;
   if(lf){
     const atteso=lf+P.M, scarto=Math.abs(P.C-atteso)/atteso;
-    if(scarto>0.05) txt+=`<span class="issue">Le competenze non tornano col lordo fisso (${eur(atteso)} attesi contro ${eur(P.C)}): o il lordo fisso è sbagliato, o quella busta aveva assenze e arretrati. Verifica che la paga oraria qui sotto coincida con quella scritta sulle righe «Magg.» della busta.</span>`;
+    if(scarto>0.05) txt+=`<span class="issue">Per ${P.mese?MESI[rifM].toLowerCase()+' '+rifY:'questo mese'} hai registrato un lordo di ${eur(lf)}, ma dalla busta risulta ${eur(P.lordoRif)} (competenze ${eur(P.C)} meno maggiorazioni ${eur(P.M)}). Correggi il lordo in Retribuzione, oppure controlla la data dell'aumento.</span>`;
   }
   el.innerHTML=txt;
 }
@@ -1316,7 +1322,7 @@ document.getElementById('prev').onclick=()=>{view.setMonth(view.getMonth()-1);re
 document.getElementById('next').onclick=()=>{view.setMonth(view.getMonth()+1);render()};
 
 /* ---------- impostazioni ---------- */
-const setMap={'s-day':['dayThreshold','num'],'s-n1':['night1','str'],'s-n2':['night2','str'],'s-break':['defaultBreak','num'],'s-wd':['workDays','num'],'s-rd':['restDays','num'],'s-lordo':['lordoFisso','num'],'s-orec':['oreContratto','num'],'s-pn':['pctNotturno','num'],'s-pf':['pctFestivo','num'],'s-pfn':['pctFestNott','num'],'s-ps':['pctStraord','num'],'s-sa':['straordAparte','num'],'s-pat':['patrono','str'],'s-bn':['bpNetto','num'],'s-bc':['bpComp','num'],'s-bi':['bpImpIrpef','num'],'s-bm':['bpMagg','num'],'s-bs':['bpScaglione','num'],'s-rit':['ritardo','num'],'s-gb':['giornoBusta','num'],'s-gt':['giornoTurni','num'],'s-pd':['periodoDa','num']};
+const setMap={'s-day':['dayThreshold','num'],'s-n1':['night1','str'],'s-n2':['night2','str'],'s-break':['defaultBreak','num'],'s-wd':['workDays','num'],'s-rd':['restDays','num'],'s-lordo':['lordoFisso','num'],'s-orec':['oreContratto','num'],'s-pn':['pctNotturno','num'],'s-pf':['pctFestivo','num'],'s-pfn':['pctFestNott','num'],'s-ps':['pctStraord','num'],'s-sa':['straordAparte','num'],'s-pat':['patrono','str'],'s-bn':['bpNetto','num'],'s-bc':['bpComp','num'],'s-bi':['bpImpIrpef','num'],'s-bm':['bpMagg','num'],'s-bs':['bpScaglione','num'],'s-bmese':['bpMese','str'],'s-rit':['ritardo','num'],'s-gb':['giornoBusta','num'],'s-gt':['giornoTurni','num'],'s-pd':['periodoDa','num']};
 /* Apre le impostazioni posizionandosi sul gruppo che interessa,
    invece di lasciare l'utente a cercarlo fra sei sezioni chiuse. */
 const GRUPPI={contratto:0,orari:1,retribuzione:2,busta:3,turni:4,dati:5};
@@ -1349,6 +1355,7 @@ document.getElementById('settings').onclick=()=>{
   document.getElementById('s-bi').value=s.bpImpIrpef||'';
   document.getElementById('s-bm').value=s.bpMagg||'';
   document.getElementById('s-bs').value=s.bpScaglione||0;
+  document.getElementById('s-bmese').value=s.bpMese||'';
   aggiornaVociUtili(); statoImpostazioni();
   document.getElementById('s-rit').value=s.ritardo??0;
   document.getElementById('s-gb').value=s.giornoBusta??10;
@@ -1985,7 +1992,9 @@ function statoImpostazioni(){
   const P=profilo(), dubbio=P?profiloDubbio():null;
   const nCed=(S.cedolini||[]).length;
   const vuota=!Number(S.bpNetto)&&!Number(S.bpComp)&&!Number(S.bpImpIrpef);
-  put('st-busta', P?(dubbio?'valori da verificare':`contributi ${(P.c*100).toFixed(1)}% · resta ${(P.k*100).toFixed(0)}%`+
+  const mRif=/^\d{4}-\d{2}$/.test(S.bpMese||'')
+    ? MESI[+S.bpMese.slice(5)-1].slice(0,3).toLowerCase()+' '+S.bpMese.slice(2,4)+' · ' : '';
+  put('st-busta', P?(dubbio?'valori da verificare':mRif+`contributi ${(P.c*100).toFixed(1)}% · resta ${(P.k*100).toFixed(0)}%`+
                      (nCed?` · ${nCed} ${nCed===1?'cedolino':'cedolini'}`:''))
                    :(vuota?'da compilare':'dati da correggere'),
       P?(dubbio?'warn-t':'ok-t'):'warn-t');
