@@ -578,7 +578,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='32 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='33 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -953,7 +953,8 @@ function renderPay(y,m){
   }else{
     /* meglio dire cosa manca che sparire in silenzio */
     netBox.querySelector('span').textContent='Netto';
-    netV.textContent='mancano i dati della busta →';
+    netV.textContent=profiloProblema()?'controlla i dati della busta →':'mancano i dati della busta →';
+    netV.title=profiloProblema()||'';
     netV.style.cssText='font-size:12px;color:var(--muted);font-family:var(--body);font-weight:400';
     netBox.style.cursor='pointer';
     netBox.onclick=()=>document.getElementById('settings').click();
@@ -1140,12 +1141,48 @@ function profilo(){
   const lordoRif=C-M;
   return {N,C,I,M,c,i,k,annuo,lordoRif,base:N-M*k};
 }
+/* Dice esattamente perché il profilo non si calcola, invece di lasciare
+   l'utente a controllare quattro campi a caso. */
+function profiloProblema(){
+  const S=state.settings;
+  const N=Number(S.bpNetto)||0, C=Number(S.bpComp)||0, I=Number(S.bpImpIrpef)||0, M=Number(S.bpMagg)||0;
+  const vuoti=[];
+  if(!N) vuoti.push('Netto del mese');
+  if(!C) vuoti.push('Totale competenze');
+  if(!I) vuoti.push('Imponibile IRPEF');
+  if(vuoti.length) return `${vuoti.length===1?'Manca il campo':'Mancano i campi'}: <b>${vuoti.join('</b>, <b>')}</b>.`;
+  if(I>=C) return `L'imponibile IRPEF (${eur(I)}) non può essere maggiore o uguale al totale competenze (${eur(C)}): la differenza fra i due è la somma dei contributi. Controlla di non averli invertiti.`;
+  if(N>C) return `Il netto (${eur(N)}) non può superare le competenze lorde (${eur(C)}).`;
+  if(M>=C) return `Le maggiorazioni (${eur(M)}) non possono valere quanto tutte le competenze.`;
+  return null;
+}
+/* Valori accettabili ma poco credibili: l'app calcola, però avvisa.
+   I contributi di un dipendente stanno in genere fra il 9% e il 13%. */
+function profiloDubbio(){
+  const S=state.settings;
+  const N=Number(S.bpNetto)||0, C=Number(S.bpComp)||0, I=Number(S.bpImpIrpef)||0;
+  if(!N||!C||!I||I>=C) return null;
+  const c=(C-I)/C;
+  if(c>0.20) return `I contributi risultano il ${(c*100).toFixed(1)}% delle competenze, ben oltre il normale (circa 10%). Controlla l'imponibile IRPEF: non è l'imponibile INPS né il netto.`;
+  if(c<0.04) return `I contributi risultano solo il ${(c*100).toFixed(1)}% delle competenze, troppo poco. L'imponibile IRPEF va preso dalla voce F02000, non dall'imponibile INPS.`;
+  const netMin=N/C;
+  if(netMin>0.85) return `Il netto è l'${(netMin*100).toFixed(0)}% del lordo: insolitamente alto. Verifica di aver messo il netto vero e non un imponibile.`;
+  return null;
+}
 function renderProfilo(){
   const el=document.getElementById('prof-info'); if(!el) return;
   const P=profilo(), S=state.settings;
-  if(!P){el.textContent='Copia i quattro importi dalla busta: il netto e il totale competenze stanno in basso a destra, l\'imponibile IRPEF e le righe "Magg." fra le voci del mese.';return}
+  if(!P){
+    const g=profiloProblema();
+    el.innerHTML=(g?`<span class="issue">${g}</span>`:'')+
+      'Copia i quattro importi dalla busta: <b>netto</b> e <b>totale competenze</b> stanno in basso a destra, '+
+      "<b>imponibile IRPEF</b> fra le voci del mese (codice F02000), le <b>maggiorazioni</b> sono le righe che iniziano per «Magg.».";
+    return;
+  }
   const pc=x=>(x*100).toFixed(2).replace('.',',')+'%';
-  let txt=`Contributi <b>${pc(P.c)}</b> · IRPEF marginale <b>${pc(P.i)}</b>`+
+  const dubbio=profiloDubbio();
+  let txt=(dubbio?`<span class="issue">${dubbio}</span>`:'')+
+          `Contributi <b>${pc(P.c)}</b> · IRPEF marginale <b>${pc(P.i)}</b>`+
           `${Number(S.bpScaglione)?'':` (imponibile annuo ${eur(P.annuo)})`}<br>`+
           `Di ogni euro lordo in più ti resta <b>${pc(P.k)}</b><br>`+
           `Netto base senza maggiorazioni <b>${eur(P.base)}</b>`;
@@ -1153,7 +1190,7 @@ function renderProfilo(){
   const lf=lordoDi(oggiD.getFullYear(),oggiD.getMonth());
   if(lf){
     const atteso=lf+P.M, scarto=Math.abs(P.C-atteso)/atteso;
-    if(scarto>0.05) txt+=`<span class="issue">Le competenze non tornano col lordo fisso (${eur(atteso)} attesi): quel mese aveva assenze o arretrati. Meglio usare una busta ordinaria.</span>`;
+    if(scarto>0.05) txt+=`<span class="issue">Le competenze non tornano col lordo fisso (${eur(atteso)} attesi contro ${eur(P.C)}): o il lordo fisso è sbagliato, o quella busta aveva assenze e arretrati. Verifica che la paga oraria qui sotto coincida con quella scritta sulle righe «Magg.» della busta.</span>`;
   }
   el.innerHTML=txt;
 }
