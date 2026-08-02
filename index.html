@@ -13,12 +13,12 @@
 
 :root{
   color-scheme:dark;
-  --bg:#0E1420;
-  --surface:#182031;
-  --surface-2:#1F2940;
-  --line:#38445F;
-  --text:#E9EDF6;
-  --muted:#9DAAC6;
+  --bg:#0D121C;
+  --surface:#161D2B;
+  --surface-2:#1D2536;
+  --line:#2B3448;
+  --text:#EAEEF7;
+  --muted:#8E9BB4;
   --mattina:#F2B33D;
   --pomeriggio:#3FB6A8;
   --notte:#7F6CF2;
@@ -39,7 +39,7 @@ body{margin:0}
   min-height:100vh;
   max-width:520px;
   margin:0 auto;
-  padding:calc(18px + env(safe-area-inset-top)) 16px 120px;
+  padding:calc(20px + env(safe-area-inset-top)) 18px 120px;
   position:relative;
   overflow-x:hidden;
 }
@@ -63,34 +63,34 @@ textarea{font-family:var(--mono);line-height:1.7;resize:vertical;letter-spacing:
 input[type=time]{font-family:var(--mono)}
 
 /* ---- intestazione mese ---- */
-.month-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.month-name{font-family:var(--display);font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1}
+.month-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.month-name{font-family:var(--display);font-size:27px;font-weight:700;letter-spacing:-.02em;line-height:1}
 .month-name span{color:var(--muted);font-weight:500}
-.nav-btn{width:38px;height:38px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-size:18px;color:var(--muted);transition:background .15s}
-.nav-btn:active{background:var(--surface-2)}
-.icon-btn{width:38px;height:38px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-size:16px}
+.nav-btn{width:36px;height:36px;border-radius:50%;background:transparent;display:grid;place-items:center;font-size:18px;color:var(--muted);transition:background .15s}
+.nav-btn:active{background:var(--surface)}
+.icon-btn{width:36px;height:36px;border-radius:50%;background:transparent;display:grid;place-items:center;font-size:16px}
 
 /* ---- riepilogo ---- */
-.summary{background:var(--surface);border-radius:18px;padding:18px 18px 16px;margin-bottom:18px}
+.summary{padding:2px 2px 4px;margin-bottom:22px}
 .totals{display:flex;gap:22px;align-items:flex-end}
 .tot-main{flex:1}
-.tot-label{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
-.tot-value{font-family:var(--mono);font-size:34px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.tot-label{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.tot-value{font-family:var(--mono);font-size:42px;letter-spacing:-.02em;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
 .tot-value small{font-size:16px;color:var(--muted);font-weight:400}
 .tot-side .tot-value{font-size:22px}
 .tot-extra .tot-value{color:var(--extra)}
-.bar{height:6px;border-radius:3px;background:var(--surface-2);margin-top:16px;overflow:hidden;display:flex}
+.bar{height:3px;border-radius:2px;background:#ffffff14;margin-top:20px;overflow:hidden;display:flex}
 .bar i{display:block;height:100%;background:var(--text);transition:width .35s ease}
 .bar i.over{background:var(--extra)}
-.bar-note{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:7px}
+.bar-note{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:9px}
 .chips-legend{display:flex;gap:14px;margin-top:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 .chips-legend b{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:1px}
 
 /* ---- calendario ---- */
-.week-head{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px}
-.week-head div{text-align:center;font-size:11px;color:var(--muted);letter-spacing:.06em}
-.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.cell{position:relative;aspect-ratio:1/1.12;border-radius:12px;background:var(--surface);padding:6px 5px 5px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;transition:background .15s}
+.week-head{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:9px}
+.week-head div{text-align:center;font-size:10px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cell{position:relative;aspect-ratio:1/1.08;border-radius:11px;background:var(--surface);padding:7px 5px 6px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;transition:background .15s}
 .cell.empty{background:transparent;pointer-events:none}
 .cell:active{background:var(--surface-2)}
 .cell.sel{box-shadow:inset 0 0 0 2px var(--text)}
@@ -104,14 +104,14 @@ input[type=time]{font-family:var(--mono)}
 .hrs{font-family:var(--mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 
 /* ---- elenco turni ---- */
-.list-title{font-family:var(--display);font-size:16px;font-weight:600;margin:26px 0 10px}
-.row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border-radius:12px;margin-bottom:6px;width:100%;text-align:left}
+.list-title{font-family:var(--display);font-size:15px;font-weight:600;margin:4px 0 6px;color:var(--muted);letter-spacing:.02em}
+.row{display:flex;align-items:center;gap:13px;padding:13px 2px;background:transparent;border-bottom:1px solid var(--line);border-radius:0;margin-bottom:0;width:100%;text-align:left}
 .row .dot{width:10px;height:10px;border-radius:3px;flex:none}
 .row .d{font-family:var(--mono);font-size:13px;width:44px;flex:none;color:var(--muted)}
 .row .t{flex:1;font-size:14px}
 .row .t em{font-style:normal;color:var(--muted);font-family:var(--mono);font-size:12px;display:block;margin-top:2px}
 .row .h{font-family:var(--mono);font-size:14px;font-variant-numeric:tabular-nums}
-.empty-state{background:var(--surface);border-radius:14px;padding:22px;text-align:center;color:var(--muted);font-size:14px;line-height:1.5}
+.empty-state{background:transparent;border:1px dashed var(--line);border-radius:14px;padding:26px 20px;text-align:center;color:var(--muted);font-size:14px;line-height:1.5}
 
 /* ---- pannello ---- */
 .scrim{position:fixed;inset:0;background:#0007;backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
@@ -136,7 +136,7 @@ input[type=time]{font-family:var(--mono)}
   border:1px solid var(--line);flex:0 0 auto;padding:14px 18px}
 .btn.danger{background:var(--surface-2);color:var(--extra);-webkit-text-fill-color:var(--extra);
   border:1px solid #FF7A6B44}
-.fab{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);font-weight:600;font-size:15px;padding:15px 26px;border-radius:30px;box-shadow:0 8px 26px #0009;z-index:10}
+.fab{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);font-weight:600;font-size:14px;padding:13px 22px;border-radius:24px;box-shadow:0 6px 22px #000a;z-index:10}
 .toast{position:fixed;bottom:96px;left:50%;transform:translate(-50%,14px);background:var(--surface-2);border:1px solid var(--line);color:var(--text);font-size:13px;padding:10px 16px;border-radius:20px;opacity:0;pointer-events:none;transition:.2s;z-index:30}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .set-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
@@ -194,11 +194,11 @@ input[type=time]{font-family:var(--mono)}
 .pay-btn{width:100%;margin-top:14px;padding:12px;border-radius:11px;background:var(--surface-2);font-size:14px;font-weight:600}
 .pay-note{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.45}
 .cell.fest .num{color:#FF9A8B}
-.weeks{margin-top:20px;display:flex;flex-direction:column;gap:7px}
+.weeks{margin-top:24px;display:flex;flex-direction:column;gap:8px;opacity:.85}
 .wk{display:flex;align-items:center;gap:9px}
 .wk .lb{font-family:var(--mono);font-size:12px;color:var(--muted);width:40px;flex:none}
 .wk .pips{display:flex;gap:3px;flex:1}
-.wk .pips i{flex:1;height:7px;border-radius:2px;background:#ffffff14}
+.wk .pips i{flex:1;height:5px;border-radius:2px;background:#ffffff10}
 .wk .cnt{font-family:var(--mono);font-size:12px;color:var(--muted);width:56px;text-align:right;flex:none}
 .wk .cnt.bad{color:var(--extra)}
 .wk .cnt.ok{color:var(--pomeriggio)}
@@ -245,10 +245,12 @@ input[type=time]{font-family:var(--mono)}
 .grp>*:last-child{margin-bottom:16px}
 .grp .set-row:last-of-type{border-bottom:none}
 .grp .set-row{padding:11px 0}
-.tabs{display:flex;gap:4px;background:var(--surface);border-radius:13px;padding:4px;margin:0 0 16px}
-.tab{flex:1;padding:10px 6px;border-radius:10px;font-size:14px;font-weight:600;
-  color:var(--muted);-webkit-text-fill-color:var(--muted);transition:background .16s,color .16s}
-.tab.on{background:var(--surface-2);color:var(--text);-webkit-text-fill-color:var(--text)}
+.tabs{display:flex;gap:2px;background:transparent;border-bottom:1px solid var(--line);border-radius:0;padding:0;margin:0 0 18px}
+.tab{flex:1;padding:11px 4px 10px;border-radius:0;font-size:13.5px;font-weight:600;position:relative;
+  color:var(--muted);-webkit-text-fill-color:var(--muted);transition:color .16s}
+.tab.on{color:var(--text);-webkit-text-fill-color:var(--text)}
+.tab.on::after{content:'';position:absolute;left:14%;right:14%;bottom:-1px;height:2px;
+  background:var(--text);border-radius:2px}
 .tab .bad{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--extra);margin-left:5px;vertical-align:2px}
 .pane{display:none}
 .pane.on{display:block;animation:fade .18s ease}
@@ -309,24 +311,18 @@ input[type=time]{font-family:var(--mono)}
         <div class="tot-label">Ore lavorate</div>
         <div class="tot-value" id="tot-h">0<small>h</small></div>
       </div>
-      <div class="tot-side tot-extra">
+      <div class="tot-side tot-extra" id="box-x">
         <div class="tot-label">Straord.</div>
         <div class="tot-value" id="tot-x">0<small>h</small></div>
       </div>
-      <div class="tot-side">
+      <div class="tot-side" id="box-n">
         <div class="tot-label">Notturne</div>
         <div class="tot-value" id="tot-n">0<small>h</small></div>
       </div>
     </div>
     <div class="bar"><i id="bar-1"></i><i class="over" id="bar-2"></i></div>
     <div class="bar-note"><span id="bar-left">—</span><span id="bar-right">—</span></div>
-    <div class="chips-legend">
-      <span><b style="background:var(--mattina)"></b>Mattina</span>
-      <span><b style="background:var(--pomeriggio)"></b>Pomeriggio</span>
-      <span><b style="background:var(--notte)"></b>Notte</span>
-      <span><b style="background:var(--deas)"></b>DEAS</span>
-      <span><b style="background:var(--ferie)"></b>Ferie / permesso</span>
-    </div>
+
     </div>
   </div>
 
@@ -622,7 +618,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='48 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='49 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -858,7 +854,13 @@ function render(){
       const w1=Math.min(gross,1440-a);
       let bars=`<i style="left:${a/14.4}%;width:${w1/14.4}%;background:${c}"></i>`;
       if(gross>w1) bars+=`<i style="left:0;width:${(gross-w1)/14.4}%;background:${c};opacity:.5"></i>`;
-      inner+=`<span class="hrs">${fmtPlain(worked(s))}</span><span class="strip">${bars}</span>`;
+      /* il numero di ore si scrive solo se diverso dallo standard di quel turno:
+         ripeterlo su ogni casella è rumore */
+      const pr=presetOf(s.type);
+      const std=(()=>{let a=toMin(pr[0]),b=toMin(pr[1]);if(b<=a)b+=1440;
+        return b-a-(typeOf(s.type).brk??state.settings.defaultBreak??0)})();
+      const w=worked(s);
+      inner+=(w!==std?`<span class="hrs">${fmtPlain(w)}</span>`:'')+`<span class="strip">${bars}</span>`;
     }else if(s){
       inner+=`<span class="tag" style="color:${typeOf(s.type).color}">${s.type.slice(0,3).toUpperCase()}</span>`;
     }
@@ -881,6 +883,8 @@ function render(){
   document.getElementById('tot-h').innerHTML=fmt(tot);
   document.getElementById('tot-x').innerHTML=fmt(ex);
   document.getElementById('tot-n').innerHTML=fmt(nt);
+  document.getElementById('box-x').style.display=ex?'':'none';
+  document.getElementById('box-n').style.display=nt?'':'none';
 
   const target=lordoDi(y,m)>0&&Number(state.settings.oreContratto)>0
     ? Math.round(Number(state.settings.oreContratto)*60)
