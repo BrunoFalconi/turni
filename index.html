@@ -602,7 +602,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='45 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='46 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -986,9 +986,10 @@ function renderPay(y,m){
     }else if(N.fonte==='cedolini'){
       dettaglio=`Netto = <b>${eur(N.F.a)}</b> fissi + <b>${pcq(N.F.b)}</b> di ${eur(mag)} di maggiorazioni, `+
         (N.F.ancora
-          ? `ancorato al tuo cedolino di ${MESI[+N.F.punti[0].mese.slice(5)-1].toLowerCase()}`+
+          ? `ancorato al tuo cedolino di ${MESI[+N.F.punti[0].mese.slice(5)-1].toLowerCase()} ${N.F.punti[0].mese.slice(0,4)}`+
+            (N.F.lontano>=4?` — distante ${N.F.lontano} mesi da questo, quindi meno affidabile: aggiungi un cedolino più vicino`:'')+
             (N.F.scartati
-              ? `. ${N.F.scartati===1?'Un altro cedolino di questo periodo non sta':'Altri '+N.F.scartati+' cedolini di questo periodo non stanno'} sulla stessa retta: uso solo il più recente. Un terzo cedolino chiarirebbe quale sia quello anomalo.`
+              ? `. ${N.F.scartati===1?'Un altro cedolino di questo periodo non sta':'Altri '+N.F.scartati+' cedolini di questo periodo non stanno'} sulla stessa retta, quindi uso solo quello più vicino nel tempo.`
               : `. Aggiungine un altro e misuro anche la percentuale.`)
           : `misurato su ${N.F.n} cedolini di questo periodo di stipendio.`);
       if(N.F.a>P.lordo) avvisi.push(`La parte fissa misurata (${eur(N.F.a)}) supera il lordo del mese (${eur(P.lordo)}): i netti dei cedolini non sono coerenti con questo stipendio. Controllali in ⚙ → La tua busta paga → Cedolini.`);
@@ -2383,14 +2384,21 @@ function magDelMese(mese){
    recente, usando la pendenza teorica. Serve quando ho un solo cedolino,
    o quando la retta su più punti non è credibile: in entrambi i casi un
    dato vero vale più di una stima. */
-function ancoraSu(dati,esclusi){
+function ancoraSu(dati,esclusi,mese){
   const PR=profilo();
   if(!PR||!dati.length) return null;
-  const ult=dati.slice().sort((a,b)=>a.mese<b.mese?-1:1).pop();
-  const b=PR.k, a=ult.netto-ult.mag*b;
+  /* Scelgo il cedolino più vicino nel tempo al mese richiesto: fra due mesi
+     lontani cambiano detrazioni e addizionali, quindi il vicino vale di più. */
+  const dist=c=>{
+    if(!mese) return 0;
+    const a=c.mese.split('-').map(Number), b=mese.split('-').map(Number);
+    return Math.abs((a[0]*12+a[1])-(b[0]*12+b[1]));
+  };
+  const scelto=dati.slice().sort((x,y)=>dist(x)-dist(y)||(x.mese<y.mese?1:-1))[0];
+  const b=PR.k, a=scelto.netto-scelto.mag*b;
   if(a<=0) return null;
-  return {a,b,n:1,esclusi,ancora:true,scartati:dati.length-1,
-          punti:[{...ult,stima:ult.netto,scarto:0}],errMax:0,errMedio:0};
+  return {a,b,n:1,esclusi,ancora:true,scartati:dati.length-1,lontano:dist(scelto),
+          punti:[{...scelto,stima:scelto.netto,scarto:0}],errMax:0,errMedio:0};
 }
 function fitNetto(periodoChiesto){
   /* Dopo un aumento la parte fissa cambia: mescolare cedolini di periodi
@@ -2408,7 +2416,7 @@ function fitNetto(periodoChiesto){
   /* Con un solo cedolino non posso ricavare la pendenza, ma posso ancorare
      la parte fissa: uso la percentuale del profilo e faccio passare la retta
      esattamente per quel mese. Meglio di una stima pura. */
-  if(dati.length===1) return ancoraSu(dati,esclusi)||{scarsi:true,esclusi,n:1};
+  if(dati.length===1) return ancoraSu(dati,esclusi,periodo&&null)||{scarsi:true,esclusi,n:1};
   if(!dati.length) return esclusi?{scarsi:true,esclusi,n:0}:null;
   const n=dati.length;
   const sx=dati.reduce((a,p)=>a+p.mag,0), sy=dati.reduce((a,p)=>a+p.netto,0);
@@ -2456,7 +2464,7 @@ function nettoDa(mag,y,m){
   /* la retta non regge, ma se ho cedolini di questo periodo li uso lo stesso
      come ancoraggio: meglio un dato vero che una stima teorica */
   if(F&&F.punti&&F.punti.length){
-    const A=ancoraSu(F.punti,F.esclusi);
+    const A=ancoraSu(F.punti,F.esclusi,mese);
     if(A) return {v:A.a+A.b*mag, fonte:'cedolini', F:A};
   }
   const PR=profilo();
