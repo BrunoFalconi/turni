@@ -70,6 +70,25 @@ input[type=time]{font-family:var(--mono)}
 .nav-btn:active{background:var(--surface)}
 .icon-btn{width:36px;height:36px;border-radius:50%;background:transparent;display:grid;place-items:center;font-size:16px}
 
+.month-name{display:flex;align-items:center;gap:7px;padding:2px 0}
+.month-name::after{content:'';width:7px;height:7px;border-right:2px solid var(--muted);
+  border-bottom:2px solid var(--muted);transform:translateY(-3px) rotate(45deg)}
+.month-name:active{opacity:.6}
+.nav-right{display:flex;align-items:center;gap:2px}
+@media (max-width:640px){ .nav-right #prev,.nav-right #next{display:none} }
+.anno-bar{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:14px}
+.anno-bar span{font-family:var(--mono);font-size:17px;font-weight:600;min-width:60px;text-align:center}
+.mesi{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.mesi button{padding:14px 4px;border-radius:12px;background:var(--surface-2);font-size:14px;
+  border:1px solid transparent;position:relative}
+.mesi button.pieno{border-color:var(--line)}
+.mesi button.on{background:var(--text);color:var(--bg);-webkit-text-fill-color:var(--bg);font-weight:600}
+.mesi button.oggi{box-shadow:inset 0 0 0 1.5px var(--mattina)}
+.mesi button i{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:var(--pomeriggio)}
+.mesi button.on i{background:var(--bg)}
+.mesi button.vuoto{opacity:.4}
+
 /* ---- riepilogo ---- */
 .summary{padding:2px 2px 4px;margin-bottom:22px}
 .totals{display:flex;gap:22px;align-items:flex-end}
@@ -297,11 +316,11 @@ input[type=time]{font-family:var(--mono)}
   <div class="wrap">
   <div class="col-a">
   <div class="month-bar">
-    <button class="nav-btn" id="prev" aria-label="Mese precedente">‹</button>
-    <div class="month-name" id="mname"></div>
-    <div style="display:flex;gap:6px">
-      <button class="icon-btn" id="settings" aria-label="Impostazioni">⚙</button>
+    <button class="month-name" id="mname" aria-label="Scegli il mese"></button>
+    <div class="nav-right">
+      <button class="nav-btn" id="prev" aria-label="Mese precedente">‹</button>
       <button class="nav-btn" id="next" aria-label="Mese successivo">›</button>
+      <button class="icon-btn" id="settings" aria-label="Impostazioni">⚙</button>
     </div>
   </div>
 
@@ -508,6 +527,20 @@ input[type=time]{font-family:var(--mono)}
   <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
 </div>
 
+<div class="sheet" id="sheet-mese">
+  <h2>Vai al mese</h2>
+  <div class="anno-bar">
+    <button class="nav-btn" id="anno-prev" aria-label="Anno precedente">‹</button>
+    <span id="anno-lb"></span>
+    <button class="nav-btn" id="anno-next" aria-label="Anno successivo">›</button>
+  </div>
+  <div class="mesi" id="mesi"></div>
+  <div class="actions" style="margin-top:16px">
+    <button class="btn" id="mese-oggi">Vai a oggi</button>
+    <button class="btn ghost" id="mese-close">Chiudi</button>
+  </div>
+</div>
+
 <div class="sheet" id="sheet-bk">
   <h2>Ripristina backup</h2>
   <div class="calc" id="bk-info" style="margin-bottom:14px"></div>
@@ -618,7 +651,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='49 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='50 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -2171,6 +2204,67 @@ function statoImpostazioni(){
 
   put('st-dati',`versione ${VERSIONE.split(' ')[0]} · ${store.mode==='claude'?'archivio Claude':nomeDispositivo().replace('questo ','')}`);
 }
+
+/* ---------- navigazione fra i mesi ---------- */
+let annoPicker=null;
+function vaiAlMese(y,m){
+  view=new Date(y,m,1); render();
+  const t=document.getElementById('mname');
+  if(t){t.animate?t.animate([{opacity:.4},{opacity:1}],{duration:180}):0}
+}
+function renderMesi(){
+  if(annoPicker===null) annoPicker=view.getFullYear();
+  document.getElementById('anno-lb').textContent=annoPicker;
+  const box=document.getElementById('mesi'); box.innerHTML='';
+  const oggi=new Date();
+  /* segno i mesi che hanno turni: così si vede subito dove c'è qualcosa */
+  const pieni=new Set(Object.keys(state.shifts).map(k=>k.slice(0,7)));
+  MESI.forEach((nome,i)=>{
+    const k=`${annoPicker}-${pad(i+1)}`;
+    const b=document.createElement('button');
+    const ha=pieni.has(k);
+    b.className=(ha?'pieno':'vuoto')+
+      (annoPicker===view.getFullYear()&&i===view.getMonth()?' on':'')+
+      (annoPicker===oggi.getFullYear()&&i===oggi.getMonth()?' oggi':'');
+    b.innerHTML=nome.slice(0,3)+(ha?'<i></i>':'');
+    b.onclick=()=>{vaiAlMese(annoPicker,i);closeSheets()};
+    box.appendChild(b);
+  });
+}
+document.getElementById('mname').onclick=()=>{annoPicker=view.getFullYear();renderMesi();showSheet('sheet-mese')};
+document.getElementById('anno-prev').onclick=()=>{annoPicker--;renderMesi()};
+document.getElementById('anno-next').onclick=()=>{annoPicker++;renderMesi()};
+document.getElementById('mese-close').onclick=closeSheets;
+document.getElementById('mese-oggi').onclick=()=>{const o=new Date();vaiAlMese(o.getFullYear(),o.getMonth());closeSheets()};
+
+/* Scorrimento laterale: il gesto naturale su telefono. Ignoro i movimenti
+   prevalentemente verticali, altrimenti cambierei mese scorrendo la pagina. */
+(function(){
+  const zona=document.getElementById('app');
+  if(!zona) return;
+  let x0=0,y0=0,t0=0,attivo=false;
+  zona.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1||document.querySelector('.sheet.on')) {attivo=false;return}
+    if(e.target.closest('.sheet,#pdf-prev,.dett,textarea,input,select')) {attivo=false;return}
+    const t=e.touches[0]; x0=t.clientX; y0=t.clientY; t0=Date.now(); attivo=true;
+  },{passive:true});
+  zona.addEventListener('touchend',e=>{
+    if(!attivo) return;
+    attivo=false;
+    const t=e.changedTouches[0];
+    const dx=t.clientX-x0, dy=t.clientY-y0, dt=Date.now()-t0;
+    if(dt>700||Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.6) return;
+    view.setMonth(view.getMonth()+(dx<0?1:-1));
+    render();
+  },{passive:true});
+})();
+/* Da tastiera: frecce sinistra e destra */
+document.addEventListener('keydown',e=>{
+  if(document.querySelector('.sheet.on')) return;
+  if(/input|textarea|select/i.test((e.target.tagName||''))) return;
+  if(e.key==='ArrowLeft'){view.setMonth(view.getMonth()-1);render()}
+  if(e.key==='ArrowRight'){view.setMonth(view.getMonth()+1);render()}
+});
 
 /* ---------- schede ---------- */
 let scheda='cal';
