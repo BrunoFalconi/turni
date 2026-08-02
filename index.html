@@ -208,26 +208,31 @@ input[type=time]{font-family:var(--mono)}
 .bac-shift .time{font-family:var(--mono);font-size:13px;color:var(--muted)}
 /* ---- impostazioni a gruppi richiudibili ---- */
 .grp{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;
-  margin-bottom:8px;overflow:hidden}
-.grp>summary{list-style:none;cursor:pointer;padding:14px 16px;font-size:15px;font-weight:600;
-  display:flex;align-items:center;gap:8px;position:relative;user-select:none}
+  margin-bottom:7px;overflow:hidden;transition:border-color .18s,background .18s}
+.grp[open]{border-color:#ffffff26;background:#1B2437}
+.grp>summary{list-style:none;cursor:pointer;padding:13px 40px 13px 14px;position:relative;
+  display:grid;grid-template-columns:26px 1fr;column-gap:12px;align-items:center;user-select:none}
 .grp>summary::-webkit-details-marker{display:none}
+/* pastiglia colorata: dà a ogni gruppo un'identità riconoscibile a colpo d'occhio */
+.grp>summary::before{content:'';grid-row:1/3;width:26px;height:26px;border-radius:9px;
+  background:var(--gc,var(--muted));opacity:.22;box-shadow:inset 0 0 0 1.5px var(--gc,var(--muted))}
+.grp>summary b{font-size:15px;font-weight:600;line-height:1.25}
 .grp>summary i{font-style:normal;font-weight:400;font-size:12px;color:var(--muted);
-  margin-left:auto;margin-right:18px;text-align:right}
-.grp>summary::after{content:'';position:absolute;right:16px;top:50%;width:7px;height:7px;
+  line-height:1.35;margin-top:1px;font-family:var(--mono)}
+.grp>summary i.warn-t{color:var(--extra)}
+.grp>summary i.ok-t{color:var(--pomeriggio)}
+.grp>summary::after{content:'';position:absolute;right:17px;top:50%;width:7px;height:7px;
   border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
-  transform:translateY(-70%) rotate(45deg);transition:transform .18s}
+  transform:translateY(-70%) rotate(45deg);transition:transform .2s}
 .grp[open]>summary::after{transform:translateY(-20%) rotate(-135deg)}
 .grp[open]>summary{border-bottom:1px solid var(--line)}
 .grp>summary:hover{background:#ffffff08}
+.grp>summary:active{background:#ffffff12}
 .grp>*:not(summary){margin-left:16px;margin-right:16px}
-.grp>*:not(summary):first-of-type{margin-top:4px}
+.grp>*:not(summary):first-of-type{margin-top:6px}
 .grp>*:last-child{margin-bottom:16px}
 .grp .set-row:last-of-type{border-bottom:none}
 .grp .set-row{padding:11px 0}
-@media (max-width:420px){
-  .grp>summary i{display:none}
-}
 .tabs{display:flex;gap:4px;background:var(--surface);border-radius:13px;padding:4px;margin:0 0 16px}
 .tab{flex:1;padding:10px 6px;border-radius:10px;font-size:14px;font-weight:600;
   color:var(--muted);-webkit-text-fill-color:var(--muted);transition:background .16s,color .16s}
@@ -398,7 +403,7 @@ input[type=time]{font-family:var(--mono)}
   <h2>Impostazioni</h2>
 
   <details class="grp" open>
-    <summary>Il tuo contratto<i>ore e giorni</i></summary>
+    <summary style="--gc:var(--mattina)"><b>Il tuo contratto</b><i id="st-contratto"></i></summary>
     <div class="set-row"><span>Ore contrattuali mensili</span><div class="in"><input type="number" id="s-orec" min="1" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>Giorni di lavoro a settimana</span><div class="in"><input type="number" id="s-wd" min="0" max="7" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>Riposi a settimana</span><div class="in"><input type="number" id="s-rd" min="0" max="7" step="1" inputmode="numeric"></div></div>
@@ -408,7 +413,7 @@ input[type=time]{font-family:var(--mono)}
   </details>
 
   <details class="grp">
-    <summary>Orari dei turni<i>mattina, pomeriggio, notte, DEAS</i></summary>
+    <summary style="--gc:var(--pomeriggio)"><b>Orari dei turni</b><i id="st-orari"></i></summary>
     <div class="set-row"><span>Mattina</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-m1"><input type="time" id="p-m2"></div></div>
     <div class="set-row"><span>Pomeriggio</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-p1"><input type="time" id="p-p2"></div></div>
     <div class="set-row"><span>Notte</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-n1"><input type="time" id="p-n2"></div></div>
@@ -419,7 +424,7 @@ input[type=time]{font-family:var(--mono)}
   </details>
 
   <details class="grp">
-    <summary>Retribuzione<i>lordo e maggiorazioni</i></summary>
+    <summary style="--gc:var(--notte)"><b>Retribuzione</b><i id="st-retrib"></i></summary>
     <div class="set-row"><span>Lordo fisso mensile (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-lordo" placeholder="es. 2538,46"></div></div>
     <div class="set-row"><span>Maggiorazione notturna %</span><div class="in"><input type="number" id="s-pn" min="0" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>Maggiorazione festiva %</span><div class="in"><input type="number" id="s-pf" min="0" step="1" inputmode="numeric"></div></div>
@@ -435,7 +440,7 @@ input[type=time]{font-family:var(--mono)}
   </details>
 
   <details class="grp">
-    <summary>La tua busta paga<i>per stimare il netto</i></summary>
+    <summary style="--gc:var(--deas)"><b>La tua busta paga</b><i id="st-busta"></i></summary>
     <div class="set-row"><span>Netto del mese (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bn" placeholder="es. 2174,00"></div></div>
     <div class="set-row"><span>Totale competenze (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bc" placeholder="es. 3057,89"></div></div>
     <div class="set-row"><span>Imponibile IRPEF (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bi" placeholder="es. 2736,85"></div></div>
@@ -446,7 +451,7 @@ input[type=time]{font-family:var(--mono)}
   </details>
 
   <details class="grp">
-    <summary>Avanzate<i>si toccano di rado</i></summary>
+    <summary style="--gc:var(--malattia)"><b>Avanzate</b><i>si toccano di rado</i></summary>
     <div class="set-row"><span>Il periodo di paga parte dal giorno</span><div class="in"><input type="number" id="s-pd" min="1" max="28" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>I turni escono entro il giorno</span><div class="in"><input type="number" id="s-gt" min="1" max="28" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>La busta arriva entro il giorno</span><div class="in"><input type="number" id="s-gb" min="1" max="28" step="1" inputmode="numeric"></div></div>
@@ -463,7 +468,7 @@ input[type=time]{font-family:var(--mono)}
   </details>
 
   <details class="grp">
-    <summary>Turni<i>importa, incolla, esporta</i></summary>
+    <summary style="--gc:var(--ferie)"><b>Turni</b><i id="st-turni"></i></summary>
     <button class="btn" style="width:100%;margin-bottom:8px" id="seq">Incolla sequenza turni</button>
     <div class="actions" style="margin-bottom:8px">
       <button class="btn ghost" style="flex:1" id="imp">Importa da Excel</button>
@@ -475,7 +480,7 @@ input[type=time]{font-family:var(--mono)}
   </details>
 
   <details class="grp">
-    <summary>Backup e dati<i>salva, ripristina, cancella</i></summary>
+    <summary style="--gc:var(--extra)"><b>Backup e dati</b><i id="st-dati"></i></summary>
     <div class="actions" style="margin-bottom:8px">
       <button class="btn ghost" style="flex:1" id="bk-save">Salva backup</button>
       <button class="btn ghost" style="flex:1" id="bk-load">Ripristina</button>
@@ -595,7 +600,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='37 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='38 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -1344,7 +1349,7 @@ document.getElementById('settings').onclick=()=>{
   document.getElementById('s-bi').value=s.bpImpIrpef||'';
   document.getElementById('s-bm').value=s.bpMagg||'';
   document.getElementById('s-bs').value=s.bpScaglione||0;
-  aggiornaVociUtili();
+  aggiornaVociUtili(); statoImpostazioni();
   document.getElementById('s-rit').value=s.ritardo??0;
   document.getElementById('s-gb').value=s.giornoBusta??10;
   document.getElementById('s-gt').value=s.giornoTurni??15;
@@ -1367,7 +1372,7 @@ Object.entries(setMap).forEach(([id,[key,kind]])=>{
   document.getElementById(id).addEventListener('input',e=>{
     state.settings[key]=kind==='num'?numIta(e.target.value):e.target.value;
     for(const y in festCache) delete festCache[y];
-    renderProfilo(); aggiornaVociUtili(); save(); render();
+    renderProfilo(); aggiornaVociUtili(); statoImpostazioni(); save(); render();
   });
 });
 ['m','p','n','d'].forEach((k,i)=>{
@@ -1959,6 +1964,37 @@ document.getElementById('bk-go').onclick=()=>{
   daRipristinare=null; save(); closeSheets(); render();
   toast(`Ripristinati ${Object.keys(state.shifts).length} turni`);
 };
+
+/* Ogni intestazione mostra com'è messo quel gruppo: si capisce a colpo
+   d'occhio cosa è già a posto e cosa manca, senza aprire nulla. */
+function statoImpostazioni(){
+  const S=state.settings, put=(id,txt,cls)=>{
+    const e=document.getElementById(id); if(!e) return;
+    e.textContent=txt; e.className=cls||'';
+  };
+  put('st-contratto',`${S.oreContratto||173}h al mese · ${S.workDays}+${S.restDays} giorni`);
+
+  const or=t=>{const p=presetOf(t);return p[0].slice(0,2)+'–'+(p[1]==='00:00'?'24':p[1].slice(0,2))};
+  put('st-orari',`${or('mattina')} · ${or('pomeriggio')} · ${or('notte')} · ${or('deas')}`);
+
+  const oggi=new Date(), lordo=lordoDi(oggi.getFullYear(),oggi.getMonth());
+  const nSc=(S.scatti||[]).length;
+  put('st-retrib', lordo?`${eur(lordo)} · +${S.pctNotturno}/${S.pctFestivo}/${S.pctFestNott}%`+(nSc?` · ${nSc} ${nSc===1?'scatto':'scatti'}`:'')
+                        :'lordo da inserire', lordo?'':'warn-t');
+
+  const P=profilo(), dubbio=P?profiloDubbio():null;
+  const nCed=(S.cedolini||[]).length;
+  const vuota=!Number(S.bpNetto)&&!Number(S.bpComp)&&!Number(S.bpImpIrpef);
+  put('st-busta', P?(dubbio?'valori da verificare':`contributi ${(P.c*100).toFixed(1)}% · resta ${(P.k*100).toFixed(0)}%`+
+                     (nCed?` · ${nCed} ${nCed===1?'cedolino':'cedolini'}`:''))
+                   :(vuota?'da compilare':'dati da correggere'),
+      P?(dubbio?'warn-t':'ok-t'):'warn-t');
+
+  const nT=Object.keys(state.shifts).length, nR=Object.keys(state.roster||{}).length;
+  put('st-turni', nT?`${nT} giorni${nR?` · ${nR} colleghi`:''}`:'nessun turno caricato', nT?'':'warn-t');
+
+  put('st-dati',`versione ${VERSIONE.split(' ')[0]} · ${store.mode==='claude'?'archivio Claude':nomeDispositivo().replace('questo ','')}`);
+}
 
 /* ---------- schede ---------- */
 let scheda='cal';
