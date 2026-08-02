@@ -602,7 +602,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='42 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='43 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -989,6 +989,23 @@ function renderPay(y,m){
       const PR=profilo();
       dettaglio=`Netto = <b>${eur(PR.base+(N.delta||0))}</b> fissi + <b>${pcq(PR.k)}</b> di ${eur(mag)} di maggiorazioni`+
         (N.delta?`, con ${N.delta>0?'+':''}${eur(N.delta)} per la differenza di lordo rispetto alla busta di riferimento`:'')+'.';
+      /* Ci sono cedolini ma non li sto usando: devo dire perché, altrimenti
+         l'utente li inserisce e non capisce cosa sia cambiato. */
+      const tuttiCed=(S.cedolini||[]).length;
+      if(tuttiCed){
+        const per=scattoDi(y,m);
+        const inPeriodo=(S.cedolini||[]).filter(c=>{
+          const t=c.mese.split('-').map(Number);
+          return scattoDi(t[0],t[1]-1)===per;
+        });
+        if(!inPeriodo.length){
+          const eti=per?`dopo l'aumento di ${MESI[+per.slice(5)-1].toLowerCase()} ${per.slice(0,4)}`:'prima del primo aumento';
+          avvisi.push(`Hai ${tuttiCed} ${tuttiCed===1?'cedolino':'cedolini'}, ma nessuno del periodo di stipendio di questo mese (${eti}). Per usarli servono cedolini di quel periodo.`);
+        }else{
+          const F=fitNetto(per), g=fitProblema(F);
+          if(g) avvisi.push(`Non uso i tuoi cedolini per questo mese: ${g}.`);
+        }
+      }
     }
   }else{
     /* la diagnosi va scritta qui: è dove l'utente sta guardando */
