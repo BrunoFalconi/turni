@@ -602,7 +602,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='43 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='45 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -974,15 +974,22 @@ function renderPay(y,m){
   if(N){
     netV.textContent=eur(N.v);
     netV.style.cssText='';
-    netBox.querySelector('span').textContent=N.fonte==='cedolini'
-      ? (N.F.ancora?'Netto (dal tuo cedolino)':'Netto (dai cedolini)') : 'Netto stimato';
+    netBox.querySelector('span').textContent=
+      N.fonte==='reale' ? 'Netto incassato'
+      : N.fonte==='cedolini' ? (N.F.ancora?'Netto (dal tuo cedolino)':'Netto (dai cedolini)')
+      : 'Netto stimato';
     netBox.onclick=null; netBox.style.cursor='';
     /* mostro il conto: senza, un netto sbagliato resta inspiegabile */
     const pcq=x=>(x*100).toFixed(1).replace('.',',')+'%';
-    if(N.fonte==='cedolini'){
+    if(N.fonte==='reale'){
+      dettaglio=`È il netto che hai inserito per questo mese: non è una stima.`;
+    }else if(N.fonte==='cedolini'){
       dettaglio=`Netto = <b>${eur(N.F.a)}</b> fissi + <b>${pcq(N.F.b)}</b> di ${eur(mag)} di maggiorazioni, `+
         (N.F.ancora
-          ? `ancorato al tuo cedolino di ${MESI[+N.F.punti[0].mese.slice(5)-1].toLowerCase()}. Aggiungine un altro e misuro anche la percentuale.`
+          ? `ancorato al tuo cedolino di ${MESI[+N.F.punti[0].mese.slice(5)-1].toLowerCase()}`+
+            (N.F.scartati
+              ? `. ${N.F.scartati===1?'Un altro cedolino di questo periodo non sta':'Altri '+N.F.scartati+' cedolini di questo periodo non stanno'} sulla stessa retta: uso solo il più recente. Un terzo cedolino chiarirebbe quale sia quello anomalo.`
+              : `. Aggiungine un altro e misuro anche la percentuale.`)
           : `misurato su ${N.F.n} cedolini di questo periodo di stipendio.`);
       if(N.F.a>P.lordo) avvisi.push(`La parte fissa misurata (${eur(N.F.a)}) supera il lordo del mese (${eur(P.lordo)}): i netti dei cedolini non sono coerenti con questo stipendio. Controllali in ⚙ → La tua busta paga → Cedolini.`);
     }else{
@@ -2372,6 +2379,19 @@ function magDelMese(mese){
   return {mag:P.magNott+P.magFest+P.magFN+P.stra, completo:P.compilati>=P.days,
           compilati:P.compilati, days:P.days};
 }
+/* Ancoraggio: faccio passare la retta esattamente per il cedolino più
+   recente, usando la pendenza teorica. Serve quando ho un solo cedolino,
+   o quando la retta su più punti non è credibile: in entrambi i casi un
+   dato vero vale più di una stima. */
+function ancoraSu(dati,esclusi){
+  const PR=profilo();
+  if(!PR||!dati.length) return null;
+  const ult=dati.slice().sort((a,b)=>a.mese<b.mese?-1:1).pop();
+  const b=PR.k, a=ult.netto-ult.mag*b;
+  if(a<=0) return null;
+  return {a,b,n:1,esclusi,ancora:true,scartati:dati.length-1,
+          punti:[{...ult,stima:ult.netto,scarto:0}],errMax:0,errMedio:0};
+}
 function fitNetto(periodoChiesto){
   /* Dopo un aumento la parte fissa cambia: mescolare cedolini di periodi
      diversi darebbe una retta senza senso. Tengo solo quelli attuali. */
@@ -2388,13 +2408,7 @@ function fitNetto(periodoChiesto){
   /* Con un solo cedolino non posso ricavare la pendenza, ma posso ancorare
      la parte fissa: uso la percentuale del profilo e faccio passare la retta
      esattamente per quel mese. Meglio di una stima pura. */
-  if(dati.length===1){
-    const PR=profilo();
-    if(!PR) return {scarsi:true,esclusi,n:1};
-    const b=PR.k, a=dati[0].netto-dati[0].mag*b;
-    return {a,b,n:1,esclusi,ancora:true,punti:[{...dati[0],stima:dati[0].netto,scarto:0}],
-            errMax:0,errMedio:0};
-  }
+  if(dati.length===1) return ancoraSu(dati,esclusi)||{scarsi:true,esclusi,n:1};
   if(!dati.length) return esclusi?{scarsi:true,esclusi,n:0}:null;
   const n=dati.length;
   const sx=dati.reduce((a,p)=>a+p.mag,0), sy=dati.reduce((a,p)=>a+p.netto,0);
@@ -2431,9 +2445,20 @@ function fitProblema(F){
 function nettoDa(mag,y,m){
   const oggi=new Date();
   if(y===undefined){y=oggi.getFullYear();m=oggi.getMonth()}
+  /* Se per questo mese mi hai dato il netto vero, quello è la risposta:
+     nessuna stima può batterlo. */
+  const mese=`${y}-${pad(m+1)}`;
+  const suo=(state.settings.cedolini||[]).find(c=>c.mese===mese);
+  if(suo&&Number(suo.netto)) return {v:Number(suo.netto), fonte:'reale'};
   const periodo=scattoDi(y,m);
   const F=fitNetto(periodo);
   if(F&&!fitProblema(F)) return {v:F.a+F.b*mag, fonte:'cedolini', F};
+  /* la retta non regge, ma se ho cedolini di questo periodo li uso lo stesso
+     come ancoraggio: meglio un dato vero che una stima teorica */
+  if(F&&F.punti&&F.punti.length){
+    const A=ancoraSu(F.punti,F.esclusi);
+    if(A) return {v:A.a+A.b*mag, fonte:'cedolini', F:A};
+  }
   const PR=profilo();
   if(!PR) return null;
   /* differenza di lordo fra questo mese e la busta di riferimento,
