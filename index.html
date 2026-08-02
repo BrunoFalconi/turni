@@ -578,7 +578,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='31 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='32 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -683,10 +683,21 @@ function typeOf(id){return TYPES.find(t=>t.id===id)||TYPES[0]}
    Per ogni mese vale l'ultimo importo entrato in vigore entro quel mese. */
 function lordoDi(y,m){
   const mese=`${y}-${pad(m+1)}`;
-  const lista=(state.settings.scatti||[]).filter(x=>x&&x.da&&x.da<=mese)
+  const tutti=(state.settings.scatti||[]).filter(x=>x&&x.da&&Number(x.lordo))
     .sort((a,b)=>a.da<b.da?-1:1);
-  if(lista.length) return Number(lista[lista.length-1].lordo)||0;
-  return Number(state.settings.lordoFisso)||0;   /* nessuno scatto: il valore di base */
+  const validi=tutti.filter(x=>x.da<=mese);
+  if(validi.length) return Number(validi[validi.length-1].lordo);
+  const base=Number(state.settings.lordoFisso)||0;
+  if(base) return base;
+  /* mese anteriore a ogni scatto e senza lordo di base: uso il primo
+     conosciuto, così il calcolo non sparisce del tutto. Lo segnalo. */
+  return tutti.length?Number(tutti[0].lordo):0;
+}
+function lordoApprossimato(y,m){
+  const mese=`${y}-${pad(m+1)}`;
+  if(Number(state.settings.lordoFisso)) return false;
+  const tutti=(state.settings.scatti||[]).filter(x=>x&&x.da&&Number(x.lordo));
+  return tutti.length>0 && !tutti.some(x=>x.da<=mese);
 }
 function scattoDi(y,m){
   const mese=`${y}-${pad(m+1)}`;
@@ -842,7 +853,15 @@ function render(){
   if(tabTur) tabTur.innerHTML='Turni'+(nAvvisi?'<span class="bad" title="'+nAvvisi+(nAvvisi===1?' avviso':' avvisi')+'"></span>':'');
   const haPaga=document.getElementById('pay').style.display!=='none';
   const vuoto=document.getElementById('pay-empty');
-  if(vuoto) vuoto.style.display=haPaga?'none':'';
+  if(vuoto){
+    vuoto.style.display=haPaga?'none':'';
+    if(!haPaga){
+      const haScatti=(state.settings.scatti||[]).length>0;
+      vuoto.innerHTML=haScatti
+        ? `Per ${MESI[m].toLowerCase()} ${y} non conosco il lordo.<br>Apri <b>⚙ → Retribuzione</b> e inserisci il <b>lordo fisso mensile</b>: vale per i mesi precedenti ai tuoi aumenti.`
+        : `Per vedere il compenso apri <b>⚙ → Retribuzione</b> e inserisci il <b>lordo fisso mensile</b>.`;
+    }
+  }
 
   const list=document.getElementById('list'); list.innerHTML='';
   if(!rows.length){
@@ -939,8 +958,11 @@ function renderPay(y,m){
     netBox.style.cursor='pointer';
     netBox.onclick=()=>document.getElementById('settings').click();
   }
-  document.getElementById('pay-note').textContent=
-    `Base ${eur(P.ph)} l'ora (${eur(P.lordo)} ÷ ${S.oreContratto}h). Stima al lordo: non sostituisce la busta paga.`;
+  document.getElementById('pay-note').innerHTML=
+    `Base ${eur(P.ph)} l'ora (${eur(P.lordo)} ÷ ${S.oreContratto}h). Stima al lordo: non sostituisce la busta paga.`+
+    (lordoApprossimato(y,m)
+      ? `<span class="issue">Questo mese è precedente al primo aumento registrato: sto usando ${eur(P.lordo)}. Metti il lordo di allora nelle impostazioni.</span>`
+      : '');
 }
 
 /* ---------- settimane e avvisi ---------- */
