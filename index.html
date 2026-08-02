@@ -201,6 +201,28 @@ input[type=time]{font-family:var(--mono)}
 .bac-shift .dot{width:10px;height:10px;border-radius:3px;flex:none}
 .bac-shift .name{flex:1;font-size:14px;color:var(--text)}
 .bac-shift .time{font-family:var(--mono);font-size:13px;color:var(--muted)}
+/* ---- impostazioni a gruppi richiudibili ---- */
+.grp{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;
+  margin-bottom:8px;overflow:hidden}
+.grp>summary{list-style:none;cursor:pointer;padding:14px 16px;font-size:15px;font-weight:600;
+  display:flex;align-items:center;gap:8px;position:relative;user-select:none}
+.grp>summary::-webkit-details-marker{display:none}
+.grp>summary i{font-style:normal;font-weight:400;font-size:12px;color:var(--muted);
+  margin-left:auto;margin-right:18px;text-align:right}
+.grp>summary::after{content:'';position:absolute;right:16px;top:50%;width:7px;height:7px;
+  border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+  transform:translateY(-70%) rotate(45deg);transition:transform .18s}
+.grp[open]>summary::after{transform:translateY(-20%) rotate(-135deg)}
+.grp[open]>summary{border-bottom:1px solid var(--line)}
+.grp>summary:hover{background:#ffffff08}
+.grp>*:not(summary){margin-left:16px;margin-right:16px}
+.grp>*:not(summary):first-of-type{margin-top:4px}
+.grp>*:last-child{margin-bottom:16px}
+.grp .set-row:last-of-type{border-bottom:none}
+.grp .set-row{padding:11px 0}
+@media (max-width:420px){
+  .grp>summary i{display:none}
+}
 .tabs{display:flex;gap:4px;background:var(--surface);border-radius:13px;padding:4px;margin:0 0 16px}
 .tab{flex:1;padding:10px 6px;border-radius:10px;font-size:14px;font-weight:600;
   color:var(--muted);-webkit-text-fill-color:var(--muted);transition:background .16s,color .16s}
@@ -369,65 +391,87 @@ input[type=time]{font-family:var(--mono)}
 
 <div class="sheet" id="sheet-set">
   <h2>Impostazioni</h2>
-  <div class="set-row"><span>Ore contrattuali a settimana</span><div class="in"><input type="number" id="s-week" min="0" step="0.5" inputmode="decimal"></div></div>
-  <div class="set-row"><span>Giorni di lavoro a settimana</span><div class="in"><input type="number" id="s-wd" min="0" max="7" step="1" inputmode="numeric"></div></div>
-  <div class="set-row"><span>Riposi a settimana</span><div class="in"><input type="number" id="s-rd" min="0" max="7" step="1" inputmode="numeric"></div></div>
-  <div class="set-row"><span>Straordinario oltre (ore/giorno)</span><div class="in"><input type="number" id="s-day" min="0" step="0.5" inputmode="decimal"></div></div>
-  <div class="set-row"><span>Fascia notturna dalle</span><div class="in"><input type="time" id="s-n1"></div></div>
-  <div class="set-row"><span>alle</span><div class="in"><input type="time" id="s-n2"></div></div>
-  <div class="set-row"><span>Lordo fisso mensile (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-lordo" placeholder="es. 2174,00"></div></div>
-  <div class="set-row"><span>Ore contrattuali mensili</span><div class="in"><input type="number" id="s-orec" min="1" step="1" inputmode="numeric"></div></div>
-  <div class="set-row"><span>Maggiorazione notturna %</span><div class="in"><input type="number" id="s-pn" min="0" step="1" inputmode="numeric"></div></div>
-  <div class="set-row"><span>Maggiorazione festiva %</span><div class="in"><input type="number" id="s-pf" min="0" step="1" inputmode="numeric"></div></div>
-  <div class="set-row"><span>Festiva notturna %</span><div class="in"><input type="number" id="s-pfn" min="0" step="1" inputmode="numeric"></div></div>
-  <div class="set-row"><span>Ore oltre il monte ore</span><div class="in" style="width:160px"><select id="s-sa">
-    <option value="0">già nel fisso (forfait)</option><option value="1">pagate a parte</option>
-  </select></div></div>
-  <div class="set-row"><span>Maggiorazione straordinario %</span><div class="in"><input type="number" id="s-ps" min="0" step="1" inputmode="numeric"></div></div>
-  <div class="set-row" style="border:none;padding-bottom:2px"><span style="color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase">Dalla tua busta paga</span></div>
-  <div class="set-row"><span>Netto del mese (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bn" placeholder="es. 2174,00"></div></div>
-  <div class="set-row"><span>Totale competenze (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bc" placeholder="es. 2174,00"></div></div>
-  <div class="set-row"><span>Imponibile IRPEF (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bi" placeholder="es. 2174,00"></div></div>
-  <div class="set-row"><span>Maggiorazioni in questa busta (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bm" placeholder="es. 2174,00"></div></div>
-  <div class="set-row"><span>Scaglione IRPEF</span><div class="in"><select id="s-bs">
-    <option value="0">Automatico</option><option value="23">23%</option><option value="35">35%</option><option value="43">43%</option>
-  </select></div></div>
-  <div class="set-row"><span>Maggiorazioni riferite a</span><div class="in" style="width:160px"><select id="s-rit">
-    <option value="0">stesso mese della busta</option><option value="1">mese precedente</option><option value="2">due mesi prima</option>
-  </select></div></div>
-  <div class="set-row"><span>Il periodo di paga parte dal giorno</span><div class="in"><input type="number" id="s-pd" min="1" max="28" step="1" inputmode="numeric"></div></div>
-  <div class="set-row"><span>I turni escono entro il giorno</span><div class="in"><input type="number" id="s-gt" min="1" max="28" step="1" inputmode="numeric"></div></div>
-  <div class="set-row"><span>La busta arriva entro il giorno</span><div class="in"><input type="number" id="s-gb" min="1" max="28" step="1" inputmode="numeric"></div></div>
-  <div class="calc" id="prof-info" style="margin:12px 0"></div>
-  <div class="set-row"><span>Santo patrono (mese-giorno)</span><div class="in"><input type="text" id="s-pat" placeholder="06-29"></div></div>
-  <div class="set-row"><span>Pausa predefinita (min)</span><div class="in"><input type="number" id="s-break" min="0" step="5" inputmode="numeric"></div></div>
-  <div class="set-row"><span>Orario mattina</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-m1"><input type="time" id="p-m2"></div></div>
-  <div class="set-row"><span>Orario pomeriggio</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-p1"><input type="time" id="p-p2"></div></div>
-  <div class="set-row"><span>Orario notte</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-n1"><input type="time" id="p-n2"></div></div>
-  <div class="set-row"><span>Orario DEAS</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-d1"><input type="time" id="p-d2"></div></div>
-  <div style="height:18px"></div>
-  <div class="calc" id="store-info"></div>
-  <button class="btn ghost" style="width:100%;margin-bottom:10px" id="ricarica">Forza aggiornamento</button>
-  <button class="btn" style="width:100%;margin-bottom:10px" id="ced">Cedolini dei mesi scorsi</button>
-  <button class="btn ghost" style="width:100%;margin-bottom:10px" id="sca">Aumenti e scatti di stipendio</button>
-  <button class="btn" style="width:100%;margin-bottom:10px" id="seq">Incolla sequenza turni</button>
-  <div class="actions" style="margin-bottom:10px">
-    <button class="btn ghost" style="flex:1" id="imp">Importa da Excel</button>
-    <button class="btn ghost" style="flex:1" id="tpl">Scarica modello</button>
-  </div>
-  <div class="actions" style="margin-bottom:10px">
-    <button class="btn ghost" style="flex:1" id="bk-save">Salva backup</button>
-    <button class="btn ghost" style="flex:1" id="bk-load">Ripristina backup</button>
+
+  <details class="grp" open>
+    <summary>Il tuo contratto<i>ore, giorni, scadenze</i></summary>
+    <div class="set-row"><span>Ore contrattuali mensili</span><div class="in"><input type="number" id="s-orec" min="1" step="1" inputmode="numeric"></div></div>
+    <div class="set-row"><span>Ore contrattuali a settimana</span><div class="in"><input type="number" id="s-week" min="0" step="0.5" inputmode="decimal"></div></div>
+    <div class="set-row"><span>Giorni di lavoro a settimana</span><div class="in"><input type="number" id="s-wd" min="0" max="7" step="1" inputmode="numeric"></div></div>
+    <div class="set-row"><span>Riposi a settimana</span><div class="in"><input type="number" id="s-rd" min="0" max="7" step="1" inputmode="numeric"></div></div>
+    <div class="set-row"><span>Il periodo di paga parte dal giorno</span><div class="in"><input type="number" id="s-pd" min="1" max="28" step="1" inputmode="numeric"></div></div>
+    <div class="set-row"><span>I turni escono entro il giorno</span><div class="in"><input type="number" id="s-gt" min="1" max="28" step="1" inputmode="numeric"></div></div>
+    <div class="set-row"><span>La busta arriva entro il giorno</span><div class="in"><input type="number" id="s-gb" min="1" max="28" step="1" inputmode="numeric"></div></div>
+  </details>
+
+  <details class="grp">
+    <summary>Orari dei turni<i>mattina, pomeriggio, notte, DEAS</i></summary>
+    <div class="set-row"><span>Mattina</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-m1"><input type="time" id="p-m2"></div></div>
+    <div class="set-row"><span>Pomeriggio</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-p1"><input type="time" id="p-p2"></div></div>
+    <div class="set-row"><span>Notte</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-n1"><input type="time" id="p-n2"></div></div>
+    <div class="set-row"><span>DEAS</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-d1"><input type="time" id="p-d2"></div></div>
+    <div class="set-row"><span>Pausa predefinita (min)</span><div class="in"><input type="number" id="s-break" min="0" step="5" inputmode="numeric"></div></div>
+    <div class="set-row"><span>Fascia notturna dalle</span><div class="in"><input type="time" id="s-n1"></div></div>
+    <div class="set-row"><span>alle</span><div class="in"><input type="time" id="s-n2"></div></div>
+  </details>
+
+  <details class="grp">
+    <summary>Retribuzione<i>lordo e maggiorazioni</i></summary>
+    <div class="set-row"><span>Lordo fisso mensile (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-lordo" placeholder="es. 2538,46"></div></div>
+    <div class="set-row"><span>Maggiorazione notturna %</span><div class="in"><input type="number" id="s-pn" min="0" step="1" inputmode="numeric"></div></div>
+    <div class="set-row"><span>Maggiorazione festiva %</span><div class="in"><input type="number" id="s-pf" min="0" step="1" inputmode="numeric"></div></div>
+    <div class="set-row"><span>Festiva notturna %</span><div class="in"><input type="number" id="s-pfn" min="0" step="1" inputmode="numeric"></div></div>
+    <div class="set-row"><span>Ore oltre il monte ore</span><div class="in" style="width:160px"><select id="s-sa">
+      <option value="0">già nel fisso (forfait)</option><option value="1">pagate a parte</option>
+    </select></div></div>
+    <div class="set-row"><span>Maggiorazione straordinario %</span><div class="in"><input type="number" id="s-ps" min="0" step="1" inputmode="numeric"></div></div>
+    <div class="set-row"><span>Straordinario oltre (ore/giorno)</span><div class="in"><input type="number" id="s-day" min="0" step="0.5" inputmode="decimal"></div></div>
+    <div class="set-row"><span>Maggiorazioni riferite a</span><div class="in" style="width:160px"><select id="s-rit">
+      <option value="0">stesso mese della busta</option><option value="1">mese precedente</option><option value="2">due mesi prima</option>
+    </select></div></div>
+    <div class="set-row"><span>Santo patrono (mese-giorno)</span><div class="in"><input type="text" id="s-pat" placeholder="06-29"></div></div>
+    <button class="btn ghost" style="width:100%;margin-top:12px" id="sca">Aumenti e scatti di stipendio</button>
+  </details>
+
+  <details class="grp">
+    <summary>La tua busta paga<i>per stimare il netto</i></summary>
+    <div class="set-row"><span>Netto del mese (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bn" placeholder="es. 2174,00"></div></div>
+    <div class="set-row"><span>Totale competenze (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bc" placeholder="es. 3057,89"></div></div>
+    <div class="set-row"><span>Imponibile IRPEF (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bi" placeholder="es. 2736,85"></div></div>
+    <div class="set-row"><span>Maggiorazioni in questa busta (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bm" placeholder="es. 519,43"></div></div>
+    <div class="set-row"><span>Scaglione IRPEF</span><div class="in"><select id="s-bs">
+      <option value="0">Automatico</option><option value="23">23%</option><option value="35">35%</option><option value="43">43%</option>
+    </select></div></div>
+    <div class="calc" id="prof-info" style="margin:12px 0 0"></div>
+    <button class="btn ghost" style="width:100%;margin-top:10px" id="ced">Cedolini dei mesi scorsi</button>
+  </details>
+
+  <details class="grp">
+    <summary>Turni<i>importa, incolla, esporta</i></summary>
+    <button class="btn" style="width:100%;margin-bottom:8px" id="seq">Incolla sequenza turni</button>
+    <div class="actions" style="margin-bottom:8px">
+      <button class="btn ghost" style="flex:1" id="imp">Importa da Excel</button>
+      <button class="btn ghost" style="flex:1" id="tpl">Scarica modello</button>
+    </div>
+    <button class="btn ghost" style="width:100%;margin-bottom:8px" id="ics">Invia al calendario iPhone</button>
+    <button class="btn ghost" style="width:100%;margin-bottom:8px" id="pdf">Turnario del mese in PDF</button>
+    <button class="btn ghost" style="width:100%" id="copy">Copia riepilogo del mese</button>
+  </details>
+
+  <details class="grp">
+    <summary>Backup e dati<i>salva, ripristina, cancella</i></summary>
+    <div class="actions" style="margin-bottom:8px">
+      <button class="btn ghost" style="flex:1" id="bk-save">Salva backup</button>
+      <button class="btn ghost" style="flex:1" id="bk-load">Ripristina</button>
+    </div>
+    <div class="calc" id="store-info" style="margin:10px 0"></div>
+    <button class="btn ghost" style="width:100%;margin-bottom:8px" id="ricarica">Forza aggiornamento</button>
+    <button class="btn danger" style="width:100%" id="wipe">Cancella tutti i dati</button>
+  </details>
+
+  <div class="actions" style="margin-top:16px">
+    <button class="btn" id="set-close">Fatto</button>
   </div>
   <input type="file" id="bk-file" accept=".json,application/json" style="display:none">
-  <button class="btn ghost" style="width:100%;margin-bottom:10px" id="ics">Invia al calendario iPhone</button>
-  <button class="btn ghost" style="width:100%;margin-bottom:10px" id="pdf">Turnario del mese in PDF</button>
-  <div class="actions">
-    <button class="btn" id="set-close">Fatto</button>
-    <button class="btn ghost" id="copy">Copia riepilogo</button>
-  </div>
-  <div style="height:10px"></div>
-  <button class="btn danger" style="width:100%" id="wipe">Cancella tutti i dati</button>
   <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
 </div>
 
@@ -453,6 +497,7 @@ input[type=time]{font-family:var(--mono)}
     <button class="btn ghost" id="pdf-close">Chiudi</button>
   </div>
 </div>
+
 
 <div class="sheet" id="sheet-sca">
   <h2>Aumenti e scatti</h2>
@@ -533,7 +578,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='30 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='31 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -1230,6 +1275,15 @@ Object.entries(setMap).forEach(([id,[key,kind]])=>{
       if(!Array.isArray(state.settings.presets[id])) state.settings.presets[id]=[...DEFAULTS.presets[id]];
       state.settings.presets[id][j]=e.target.value; save();
     });
+  });
+});
+/* Un gruppo alla volta: aprirne uno chiude gli altri, così il pannello
+   resta corto invece di diventare un muro di campi. */
+document.querySelectorAll('#sheet-set .grp').forEach(g=>{
+  g.addEventListener('toggle',()=>{
+    if(!g.open) return;
+    document.querySelectorAll('#sheet-set .grp').forEach(a=>{if(a!==g) a.open=false});
+    try{ g.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(e){}
   });
 });
 document.getElementById('set-close').onclick=closeSheets;
