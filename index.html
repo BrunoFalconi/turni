@@ -445,7 +445,8 @@ input[type=time]{font-family:var(--mono)}
     <div class="set-row"><span>Netto del mese (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bn" placeholder="2174,00"></div></div>
     <div class="set-row"><span>Totale competenze (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bc" placeholder="3057,89"></div></div>
     <div class="set-row"><span>Imponibile IRPEF (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bi" placeholder="2736,85"></div></div>
-    <div class="set-row"><span>Maggiorazioni in questa busta (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bm" placeholder="519,43"></div></div>
+    <div class="set-row" id="row-bm"><span>Maggiorazioni in questa busta (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bm" placeholder="519,43"></div></div>
+    <div class="calc" id="bm-auto" style="display:none;margin:10px 0 0"></div>
     
     <div class="calc" id="prof-info" style="margin:12px 0 0"></div>
     <button class="btn ghost" style="width:100%;margin-top:10px" id="ced">Cedolini dei mesi scorsi</button>
@@ -601,7 +602,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='39 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='42 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -973,13 +974,16 @@ function renderPay(y,m){
   if(N){
     netV.textContent=eur(N.v);
     netV.style.cssText='';
-    netBox.querySelector('span').textContent=N.fonte==='cedolini'?'Netto (dai cedolini)':'Netto stimato';
+    netBox.querySelector('span').textContent=N.fonte==='cedolini'
+      ? (N.F.ancora?'Netto (dal tuo cedolino)':'Netto (dai cedolini)') : 'Netto stimato';
     netBox.onclick=null; netBox.style.cursor='';
     /* mostro il conto: senza, un netto sbagliato resta inspiegabile */
     const pcq=x=>(x*100).toFixed(1).replace('.',',')+'%';
     if(N.fonte==='cedolini'){
       dettaglio=`Netto = <b>${eur(N.F.a)}</b> fissi + <b>${pcq(N.F.b)}</b> di ${eur(mag)} di maggiorazioni, `+
-        `misurato su ${N.F.n} cedolini di questo periodo di stipendio.`;
+        (N.F.ancora
+          ? `ancorato al tuo cedolino di ${MESI[+N.F.punti[0].mese.slice(5)-1].toLowerCase()}. Aggiungine un altro e misuro anche la percentuale.`
+          : `misurato su ${N.F.n} cedolini di questo periodo di stipendio.`);
       if(N.F.a>P.lordo) avvisi.push(`La parte fissa misurata (${eur(N.F.a)}) supera il lordo del mese (${eur(P.lordo)}): i netti dei cedolini non sono coerenti con questo stipendio. Controllali in ⚙ → La tua busta paga → Cedolini.`);
     }else{
       const PR=profilo();
@@ -1165,10 +1169,40 @@ function paga(y,m){
 
 /* Ricava il profilo fiscale personale dai soli importi della busta.
    Nessuna percentuale da interpretare: le aliquote escono dai numeri. */
+/* Quanto pesano le maggiorazioni di un mese rispetto al lordo, ricavato
+   dai turni: K = somma(ore × percentuale) ÷ ore contrattuali.
+   Da qui: competenze = lordo × (1+K), quindi il lordo si ricava dividendo. */
+function fattoreMagg(y,m){
+  const S=state.settings, oreC=Number(S.oreContratto)||173;
+  const F=fasceMese(y,m);
+  if(!F.compilati) return null;
+  const h=x=>x/60;
+  const K=(h(F.B.nott)*(Number(S.pctNotturno)||0)
+          +h(F.B.fest)*(Number(S.pctFestivo)||0)
+          +h(F.B.festNott)*(Number(S.pctFestNott)||0))/100/oreC;
+  return {K, ore:h(F.B.nott+F.B.fest+F.B.festNott), completo:F.compilati>=F.days,
+          compilati:F.compilati, days:F.days};
+}
+/* Le maggiorazioni della busta di riferimento: calcolate dai turni se
+   quel mese è caricato, altrimenti prese dal campo compilato a mano. */
+function maggRiferimento(){
+  const S=state.settings, C=Number(S.bpComp)||0;
+  if(/^\d{4}-\d{2}$/.test(S.bpMese||'')&&C){
+    const [y,m]=S.bpMese.split('-').map(Number);
+    const f=fattoreMagg(y,m-1);
+    if(f&&f.K>0){
+      const lordo=C/(1+f.K);
+      return {mag:C-lordo, lordo, auto:true, ...f};
+    }
+    if(f) return {mag:0, lordo:C, auto:true, ...f};   /* mese senza maggiorazioni */
+  }
+  return {mag:Number(S.bpMagg)||0, lordo:C-(Number(S.bpMagg)||0), auto:false};
+}
 function profilo(){
   const S=state.settings;
-  const N=Number(S.bpNetto)||0, C=Number(S.bpComp)||0, I=Number(S.bpImpIrpef)||0, M=Number(S.bpMagg)||0;
+  const N=Number(S.bpNetto)||0, C=Number(S.bpComp)||0, I=Number(S.bpImpIrpef)||0;
   if(!N||!C||!I||I>=C) return null;
+  const R=maggRiferimento(), M=R.mag;
   const c=(C-I)/C;                       /* contributi = competenze meno imponibile IRPEF */
   const annuo=I*12;
   const i=(Number(S.bpScaglione)||0)>0 ? Number(S.bpScaglione)/100
@@ -1176,8 +1210,8 @@ function profilo(){
   const k=(1-c)*(1-i);                   /* quanto resta di ogni euro lordo in più */
   /* Il lordo fisso di quella busta si ricava: competenze meno maggiorazioni.
      Serve per adattare la stima ai mesi con uno stipendio diverso. */
-  const lordoRif=C-M;
-  return {N,C,I,M,c,i,k,annuo,lordoRif,mese:S.bpMese||'',base:N-M*k};
+  const lordoRif=R.lordo;
+  return {N,C,I,M,c,i,k,annuo,lordoRif,magAuto:R.auto,magInfo:R,mese:S.bpMese||'',base:N-M*k};
 }
 /* Dice esattamente perché il profilo non si calcola, invece di lasciare
    l'utente a controllare quattro campi a caso. */
@@ -1191,7 +1225,7 @@ function profiloProblema(){
   if(vuoti.length) return `${vuoti.length===1?'Manca il campo':'Mancano i campi'}: <b>${vuoti.join('</b>, <b>')}</b>.`;
   if(I>=C) return `L'imponibile IRPEF (${eur(I)}) non può essere maggiore o uguale al totale competenze (${eur(C)}): la differenza fra i due è la somma dei contributi. Controlla di non averli invertiti.`;
   if(N>C) return `Il netto (${eur(N)}) non può superare le competenze lorde (${eur(C)}).`;
-  if(M>=C) return `Le maggiorazioni (${eur(M)}) non possono valere quanto tutte le competenze.`;
+  if(!/^\d{4}-\d{2}$/.test(S.bpMese||'')&&M>=C) return `Le maggiorazioni (${eur(M)}) non possono valere quanto tutte le competenze.`;
   return null;
 }
 /* Valori accettabili ma poco credibili: l'app calcola, però avvisa.
@@ -1219,7 +1253,21 @@ function renderProfilo(){
   }
   const pc=x=>(x*100).toFixed(2).replace('.',',')+'%';
   const dubbio=profiloDubbio();
-  let txt=(dubbio?`<span class="issue">${dubbio}</span>`:'')+
+  /* Lo scaglione dedotto da un mese solo è fragile vicino alle soglie:
+     un mese magro o ricco sposta l'aliquota di dieci punti. */
+  let vicino='';
+  if(!Number(S.bpScaglione)){
+    const soglie=[[28000,23,35],[50000,35,43]];
+    for(const [t,giu,su] of soglie){
+      if(Math.abs(P.annuo-t)/t<0.12){
+        vicino=`Il tuo imponibile proiettato (${eur(P.annuo)}) è vicino alla soglia dei ${eur(t)} fra il ${giu}% e il ${su}%. `+
+          `Da questa busta risulta il ${P.i*100===giu?giu:su}%, ma un mese più ricco o più magro darebbe l'altro. `+
+          `Se conosci il tuo scaglione, impostalo a mano in Avanzate.`;
+        break;
+      }
+    }
+  }
+  let txt=(dubbio?`<span class="issue">${dubbio}</span>`:'')+(vicino?`<span class="issue">${vicino}</span>`:'')+
           `Contributi <b>${pc(P.c)}</b> · IRPEF marginale <b>${pc(P.i)}</b>`+
           `${Number(S.bpScaglione)?'':` (imponibile annuo ${eur(P.annuo)})`}<br>`+
           `Di ogni euro lordo in più ti resta <b>${pc(P.k)}</b><br>`+
@@ -1233,7 +1281,13 @@ function renderProfilo(){
   if(P.mese) txt=`Busta di <b>${MESI[rifM].toLowerCase()} ${rifY}</b><br>`+txt;
   if(lf){
     const atteso=lf+P.M, scarto=Math.abs(P.C-atteso)/atteso;
-    if(scarto>0.05) txt+=`<span class="issue">Per ${P.mese?MESI[rifM].toLowerCase()+' '+rifY:'questo mese'} hai registrato un lordo di ${eur(lf)}, ma dalla busta risulta ${eur(P.lordoRif)} (competenze ${eur(P.C)} meno maggiorazioni ${eur(P.M)}). Correggi il lordo in Retribuzione, oppure controlla la data dell'aumento.</span>`;
+    if(scarto>0.05){
+      const quale=P.mese?MESI[rifM].toLowerCase()+' '+rifY:'questo mese';
+      const causa=P.M===0
+        ? `Molto probabilmente <b>quella busta aveva delle maggiorazioni</b> e hai lasciato il campo a zero: cerca le righe che iniziano per «Magg.» e sommale.`
+        : `Controlla che le maggiorazioni siano tutte quelle della busta, che il lordo in Retribuzione sia giusto, e che la data dell'aumento sia corretta.`;
+      txt+=`<span class="issue">Per ${quale} hai registrato un lordo di ${eur(lf)}, ma dalla busta risulta ${eur(P.lordoRif)} (${eur(P.C)} di competenze meno ${eur(P.M)} di maggiorazioni). ${causa}</span>`;
+    }
   }
   el.innerHTML=txt;
 }
@@ -1356,7 +1410,7 @@ document.getElementById('settings').onclick=()=>{
   document.getElementById('s-bm').value=s.bpMagg||'';
   document.getElementById('s-bs').value=s.bpScaglione||0;
   document.getElementById('s-bmese').value=s.bpMese||'';
-  aggiornaVociUtili(); statoImpostazioni();
+  aggiornaVociUtili(); aggiornaMaggRif(); statoImpostazioni();
   document.getElementById('s-rit').value=s.ritardo??0;
   document.getElementById('s-gb').value=s.giornoBusta??10;
   document.getElementById('s-gt').value=s.giornoTurni??15;
@@ -1379,7 +1433,7 @@ Object.entries(setMap).forEach(([id,[key,kind]])=>{
   document.getElementById(id).addEventListener('input',e=>{
     state.settings[key]=kind==='num'?numIta(e.target.value):e.target.value;
     for(const y in festCache) delete festCache[y];
-    renderProfilo(); aggiornaVociUtili(); statoImpostazioni(); save(); render();
+    renderProfilo(); aggiornaVociUtili(); aggiornaMaggRif(); statoImpostazioni(); save(); render();
   });
 });
 ['m','p','n','d'].forEach((k,i)=>{
@@ -1394,6 +1448,40 @@ Object.entries(setMap).forEach(([id,[key,kind]])=>{
 /* Un gruppo alla volta: aprirne uno chiude gli altri, così il pannello
    resta corto invece di diventare un muro di campi. */
 /* Nasconde le voci che non hanno effetto con la configurazione attuale. */
+/* Quando i turni del mese di riferimento sono caricati, le maggiorazioni le
+   calcolo io: il campo a mano sparisce e mostro anche il lordo che ne deriva. */
+function aggiornaMaggRif(){
+  const riga=document.getElementById('row-bm'), box=document.getElementById('bm-auto');
+  if(!riga||!box) return;
+  const S=state.settings, C=Number(S.bpComp)||0;
+  const R=maggRiferimento();
+  if(!R.auto||!C){
+    riga.style.display=''; box.style.display='none';
+    return;
+  }
+  riga.style.display='none'; box.style.display='';
+  const [y,m]=S.bpMese.split('-').map(Number);
+  const reg=lordoDi(y,m-1), scarto=reg?Math.abs(reg-R.lordo)/R.lordo:1;
+  box.innerHTML=
+    `Dai tuoi turni di ${MESI[m-1].toLowerCase()}: <b>${R.ore.toFixed(0)}h</b> maggiorate `+
+    `= <b>${eur(R.mag)}</b><br>Il lordo fisso di quel mese risulta quindi <b>${eur(R.lordo)}</b>.`+
+    (R.completo?'':`<span class="issue">Di ${MESI[m-1].toLowerCase()} hai caricato solo ${R.compilati} giorni su ${R.days}: il calcolo è parziale.</span>`)+
+    (reg&&scarto>0.02
+      ? `<span class="issue">In Retribuzione hai registrato ${eur(reg)} per quel mese.</span>`
+      : '')+
+    `<button class="btn ghost" style="width:100%;margin-top:10px" id="bm-usa">Usa ${eur(R.lordo)} come lordo</button>`;
+  const b=document.getElementById('bm-usa');
+  if(b) b.onclick=()=>{
+    const dentroScatto=(state.settings.scatti||[]).some(x=>x.da<=S.bpMese);
+    if(dentroScatto){
+      state.settings.scatti=state.settings.scatti.map(x=>
+        x.da===scattoDi(y,m-1)?{...x,lordo:+R.lordo.toFixed(2)}:x);
+    } else state.settings.lordoFisso=+R.lordo.toFixed(2);
+    document.getElementById('s-lordo').value=(+R.lordo.toFixed(2)).toFixed(2).replace('.',',');
+    save(); renderProfilo(); aggiornaMaggRif(); statoImpostazioni(); render();
+    toast('Lordo aggiornato');
+  };
+}
 function aggiornaVociUtili(){
   const aParte=Number(state.settings.straordAparte)===1;
   const r=document.getElementById('s-ps'); if(!r) return;
@@ -2280,7 +2368,17 @@ function fitNetto(periodoChiesto){
   }).filter(Boolean);
   const dati=tutti.filter(c=>c.periodo===periodo);
   const esclusi=tutti.length-dati.length;
-  if(dati.length<2) return (dati.length||esclusi)?{scarsi:true,esclusi,n:dati.length}:null;
+  /* Con un solo cedolino non posso ricavare la pendenza, ma posso ancorare
+     la parte fissa: uso la percentuale del profilo e faccio passare la retta
+     esattamente per quel mese. Meglio di una stima pura. */
+  if(dati.length===1){
+    const PR=profilo();
+    if(!PR) return {scarsi:true,esclusi,n:1};
+    const b=PR.k, a=dati[0].netto-dati[0].mag*b;
+    return {a,b,n:1,esclusi,ancora:true,punti:[{...dati[0],stima:dati[0].netto,scarto:0}],
+            errMax:0,errMedio:0};
+  }
+  if(!dati.length) return esclusi?{scarsi:true,esclusi,n:0}:null;
   const n=dati.length;
   const sx=dati.reduce((a,p)=>a+p.mag,0), sy=dati.reduce((a,p)=>a+p.netto,0);
   const sxx=dati.reduce((a,p)=>a+p.mag*p.mag,0), sxy=dati.reduce((a,p)=>a+p.mag*p.netto,0);
@@ -2295,6 +2393,11 @@ function fitNetto(periodoChiesto){
    la misura va usata solo se supera dei controlli di plausibilità. */
 function fitProblema(F){
   if(!F) return 'servono almeno due cedolini';
+  if(F.ancora){
+    /* la pendenza è quella teorica, controllo solo che la parte fissa abbia senso */
+    if(F.a<=0) return 'il netto del cedolino non è coerente con le maggiorazioni di quel mese';
+    return null;
+  }
   if(F.scarsi) return F.esclusi
     ? `dopo l'ultimo aumento hai solo ${F.n} ${F.n===1?'cedolino':'cedolini'} (${F.esclusi} ${F.esclusi===1?'è precedente':'sono precedenti'} e non ${F.esclusi===1?'vale':'valgono'} più)`
     : 'servono almeno due cedolini';
@@ -2356,7 +2459,13 @@ function renderCedolini(){
   });
   if(!sel.children.length){const o=document.createElement('option');o.textContent='nessun mese disponibile';sel.appendChild(o)}
 
-  if(!F||F.scarsi) info.innerHTML=(F&&F.esclusi
+  if(F&&F.ancora){
+    const m0=F.punti[0];
+    info.innerHTML=`Con <b>1</b> cedolino ancoro la parte fissa a <b>${eur(F.a)}</b>, `+
+      `usando il ${(F.b*100).toFixed(1)}% ricavato dalla tua busta di riferimento.<br>`+
+      `${MESI[+m0.mese.slice(5)-1]} tornerà esatto; per misurare anche la percentuale aggiungi un secondo cedolino con maggiorazioni diverse.`;
+  }
+  else if(!F||F.scarsi) info.innerHTML=(F&&F.esclusi
       ? `<span class="issue">${F.esclusi} cedolini sono precedenti all'ultimo aumento: non li uso, perché la parte fissa è cambiata.</span>`
       : '')+'Servono almeno <b>due</b> cedolini con maggiorazioni diverse fra loro. Da lì in poi il netto lo misuro invece di stimarlo.';
   else if(F.piatto) info.innerHTML='<span class="issue">I cedolini inseriti hanno le stesse maggiorazioni: non riesco a separare la parte fissa da quella variabile. Aggiungine uno di un mese diverso.</span>';
