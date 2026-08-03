@@ -290,34 +290,53 @@ input[type=time]{font-family:var(--mono)}
 /* Controllo a segmenti con vetro smerigliato: la pastiglia attiva scorre
    sotto le etichette invece di comparire e sparire. */
 .tabs{display:flex;gap:0;position:relative;border-radius:14px;padding:4px;margin:0 0 18px;
-  background:rgba(255,255,255,.045);
-  -webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);
-  border:1px solid rgba(255,255,255,.07);
-  box-shadow:0 1px 0 rgba(255,255,255,.05) inset}
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.028));
+  -webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);
+  border:1px solid rgba(255,255,255,.075);
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 6px 18px rgba(0,0,0,.18)}
 .tab-thumb{position:absolute;top:4px;bottom:4px;left:4px;border-radius:11px;
-  background:rgba(255,255,255,.11);
-  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-  border:1px solid rgba(255,255,255,.10);
-  box-shadow:0 2px 10px rgba(0,0,0,.28), 0 1px 0 rgba(255,255,255,.10) inset;
-  transition:transform .42s cubic-bezier(.32,.72,0,1), width .42s cubic-bezier(.32,.72,0,1);
-  pointer-events:none;will-change:transform}
+  background:linear-gradient(180deg,rgba(255,255,255,.155),rgba(255,255,255,.075));
+  -webkit-backdrop-filter:blur(14px) saturate(200%);backdrop-filter:blur(14px) saturate(200%);
+  border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 3px 14px rgba(0,0,0,.32),
+             0 1px 0 rgba(255,255,255,.22) inset,
+             0 -1px 0 rgba(255,255,255,.05) inset;
+  transition:transform .52s cubic-bezier(.22,1.02,.3,1), width .52s cubic-bezier(.22,1.02,.3,1);
+  pointer-events:none;will-change:transform;transform-origin:center}
+/* riflesso speculare sul bordo alto, come il vetro illuminato da sopra */
+.tab-thumb::before{content:'';position:absolute;inset:0 0 auto 0;height:45%;border-radius:11px 11px 40% 40%;
+  background:linear-gradient(180deg,rgba(255,255,255,.13),transparent);pointer-events:none}
 .tab{flex:1;padding:10px 4px;border-radius:11px;font-size:13.5px;font-weight:600;position:relative;z-index:1;
   color:var(--muted);-webkit-text-fill-color:var(--muted);
   transition:color .28s ease,-webkit-text-fill-color .28s ease}
-.tab.on{color:var(--text);-webkit-text-fill-color:var(--text)}
+.tab.on{color:var(--text);-webkit-text-fill-color:var(--text);text-shadow:0 1px 6px rgba(0,0,0,.25)}
 .tab .bad{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--extra);margin-left:5px;vertical-align:2px}
-.col-b{will-change:transform}
+.col-b{will-change:transform;position:relative}
 .pane{display:none}
-.pane.on{display:block;animation:vetro .34s cubic-bezier(.32,.72,0,1)}
-.pane.on.da-destra{animation-name:vetro-dx}
-@keyframes vetro{from{opacity:0;transform:translateY(6px) scale(.988);filter:blur(6px)}
-                 to{opacity:1;transform:none;filter:none}}
-@keyframes vetro-dx{from{opacity:0;transform:translateX(22px) scale(.99);filter:blur(5px)}
-                    to{opacity:1;transform:none;filter:none}}
-.pane.on.da-sinistra{animation-name:vetro-sx}
-@keyframes vetro-sx{from{opacity:0;transform:translateX(-22px) scale(.99);filter:blur(5px)}
-                    to{opacity:1;transform:none;filter:none}}
-@media (prefers-reduced-motion:reduce){.pane.on{animation:none}.tab-thumb{transition:none}}
+.pane.on{display:block;animation:entra-dx .46s cubic-bezier(.22,1,.32,1) both}
+.pane.on.da-sinistra{animation-name:entra-sx}
+/* La scheda uscente resta a schermo mentre entra la nuova: si attraversano,
+   invece di sostituirsi. È quello che fa sembrare il materiale continuo. */
+.pane.esce{display:block;position:absolute;inset:0 0 auto 0;pointer-events:none;z-index:0;
+  animation:esce-sx .34s cubic-bezier(.4,0,.9,.4) both}
+.pane.esce.verso-destra{animation-name:esce-dx}
+.pane.on{position:relative;z-index:1}
+@keyframes entra-dx{
+  0%{opacity:0;transform:translate3d(26px,0,0) scale(.975);filter:blur(9px)}
+  55%{opacity:1;filter:blur(0)}
+  100%{opacity:1;transform:none;filter:none}}
+@keyframes entra-sx{
+  0%{opacity:0;transform:translate3d(-26px,0,0) scale(.975);filter:blur(9px)}
+  55%{opacity:1;filter:blur(0)}
+  100%{opacity:1;transform:none;filter:none}}
+@keyframes esce-sx{
+  0%{opacity:1;transform:none;filter:none}
+  100%{opacity:0;transform:translate3d(-18px,0,0) scale(.985);filter:blur(7px)}}
+@keyframes esce-dx{
+  0%{opacity:1;transform:none;filter:none}
+  100%{opacity:0;transform:translate3d(18px,0,0) scale(.985);filter:blur(7px)}}
+@media (prefers-reduced-motion:reduce){
+  .pane.on{animation:none}.pane.esce{display:none}.tab-thumb{transition:none}}
 
 /* ---- schermi larghi: due colonne affiancate ---- */
 @media (min-width:900px){
@@ -692,7 +711,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='59 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='60 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -2415,25 +2434,44 @@ document.addEventListener('keydown',e=>{
 let scheda='cal';
 const ORDINE_SCHEDE=['cal','pag','bac'];
 /* Sposta la pastiglia di vetro sotto la scheda attiva. */
-function muoviThumb(){
+let squishTimer;
+function muoviThumb(deforma){
   const th=document.getElementById('tab-thumb');
   const att=document.querySelector('.tab.on');
   if(!th||!att) return;
+  const x=att.offsetLeft-4;
   th.style.width=att.offsetWidth+'px';
-  th.style.transform=`translateX(${att.offsetLeft-4}px)`;
+  /* si allunga nella direzione del movimento e poi torna: dà l'impressione
+     di un materiale che cede, non di un rettangolo che trasla */
+  if(deforma){
+    th.style.transform=`translateX(${x}px) scaleX(1.07) scaleY(.96)`;
+    clearTimeout(squishTimer);
+    squishTimer=setTimeout(()=>{th.style.transform=`translateX(${x}px)`;},170);
+  } else th.style.transform=`translateX(${x}px)`;
 }
 function mostraScheda(k){
   if(k===scheda) return;
-  const verso=ORDINE_SCHEDE.indexOf(k)>ORDINE_SCHEDE.indexOf(scheda)?'da-destra':'da-sinistra';
+  const avanti=ORDINE_SCHEDE.indexOf(k)>ORDINE_SCHEDE.indexOf(scheda);
+  const uscente=document.querySelector('.pane.on');
   scheda=k;
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===k));
-  document.querySelectorAll('.pane').forEach(p=>{
-    p.classList.remove('da-destra','da-sinistra');
-    const attiva=p.dataset.pane===k;
-    if(attiva) p.classList.add(verso);
-    p.classList.toggle('on',attiva);
-  });
-  muoviThumb();
+
+  if(uscente){
+    /* la vecchia scheda continua a essere disegnata mentre esce */
+    uscente.classList.remove('on','da-sinistra');
+    uscente.classList.add('esce');
+    uscente.classList.toggle('verso-destra',!avanti);
+    const fine=()=>{uscente.classList.remove('esce','verso-destra')};
+    uscente.addEventListener('animationend',fine,{once:true});
+    setTimeout(fine,420);                    /* rete di sicurezza */
+  }
+  const entrante=document.querySelector(`.pane[data-pane="${k}"]`);
+  if(entrante){
+    entrante.classList.remove('esce','verso-destra','da-sinistra');
+    if(!avanti) entrante.classList.add('da-sinistra');
+    entrante.classList.add('on');
+  }
+  muoviThumb(true);
 }
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>mostraScheda(b.dataset.tab));
 window.addEventListener('resize',muoviThumb);
