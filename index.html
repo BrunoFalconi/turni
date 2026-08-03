@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Turni">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACOUlEQVR42u3dsU3EQBCGUd+KmIgQJCpAohsiJEoguxLIKAGJiG6QaAEKISAl8vy27PH7CtjA+zS2daf16fLqdpL+a7gEgkNwCA7BITgEh+AQHIJDcEhwCA7BITgEh+AQHIJDXbtILfTzduNqbqfrp+/6Iqf6H4yx6EpkkNG44u4MMvjI4yCjvQ9vK0rjMDaOMDxMDsEhOASH4BAcgkNwCA7BITgkOASH4BAcgkNwCA7BITgEhwSH4BAcgkNwaNc4ImeDaLXm7ZfJoQVwGB69x0Z1cvDRWEbgtsJHVxlT5MC4v5zY0YlFGIc8kAoOCQ7BITgEh+AQHIJDcAgOHaDYZ7zu319cze30+XiuLxL44Q2LrkQGGY0r7s4gg488DjLa+/C2ojQOY+MIw8PkEByCQ3AIDsEhOASH4BAcgkOCQ3AIDsEhOASH4BAcgkNwSHAIDsEhOASHdo0jcjaIVmvefpkcWgCH4dF7bFQnBx+NZQRuK3x0lTEFv9TkxI5OLMI45IFUcEhwCA7BITgEh+AQHIJDcAgOwSE4JDgEh+AQHIJDcAgOwSE4BIcEh+AQHIJDcGjXOCJng2i15u2XyaEFcBgevcdGdXLw0VhG4LbCR1cZU/BLTU7s6MQijEMeSAWHBIfgEByCQ3AIDsEhOASH4BAcEhyCQ3AIDsGhrfULL31m+dq5K6UAAAAASUVORK5CYII=">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACOUlEQVR42u3dsU3EQBCGUd+KmIgQJCpAohsiJEoguxLIKAGJiG6QaAEKISAl8vy27PH7CtjA+zS2daf16fLqdpL+a7gEgkNwCA7BITgEh+AQHIJDcEhwCA7BITgEh+AQHIJDXbtILfTzduNqbqfrp+/6Iqf6H4yx6EpkkNG44u4MMvjI4yCjvQ9vK0rjMDaOMDxMDsEhOASH4BAcgkNwCA7BITgkOASH4BAcgkNwCA7BITgEhwSH4BAcgkNwaNc4ImeDaLXm7ZfJoQVwGB69x0Z1cvDRWEbgtsJHVxlT5MC4v5zY0YlFGIc8kAoOCQ7BITgEh+AQHIJDcAgOwSE4JDgEh+AQHIJDcAgOwSE4BIcEh+AQHIJDcGjXOCJng2i15u2XyaEFcBgevcdGdXLw0VhG4LbCR1cZU/BLTU7s6MQijEMeSAWHBIfgEByCQ3AIDsEhOASH4BAcgkOCQ3AIDsGhrfULL31m+dq5K6UAAAAASUVORK5CYII=">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
 
@@ -134,7 +134,6 @@ input[type=time]{font-family:var(--mono)}
 .cell .num{font-family:var(--mono);font-size:14px;font-variant-numeric:tabular-nums;color:var(--text)}
 .cell.off .num{color:var(--muted)}
 .cell.today .num{background:var(--text);color:var(--bg);border-radius:6px;padding:0 4px}
-/* la firma: la striscia delle 24 ore */
 .strip{width:100%;height:5px;border-radius:3px;background:#ffffff0f;position:relative;overflow:hidden;margin-top:auto}
 .strip i{position:absolute;top:0;bottom:0;border-radius:3px}
 .tag{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--muted);margin-top:auto;padding-bottom:2px}
@@ -249,21 +248,15 @@ input[type=time]{font-family:var(--mono)}
 .alert b{color:var(--extra);font-weight:600;display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;margin-bottom:3px}
 .warn{position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--extra)}
 .issue{color:var(--extra);display:block;margin-top:8px;line-height:1.5}
-/* nella scheda Paga l'avviso deve saltare all'occhio: è l'unica cosa
-   che dice all'utente cosa fare */
 .pay-note .issue{background:#FF7A6B14;border:1px solid #FF7A6B3d;border-radius:10px;
   padding:10px 12px;font-size:12.5px;margin-top:10px}
 .pay-empty-btn{margin-top:12px}
-/* ---- bacheca condivisa ---- */
 .bac-day{background:var(--surface);border-radius:12px;padding:14px;margin-bottom:8px}
 .bac-day-title{font-family:var(--display);font-size:15px;font-weight:600;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--surface-2)}
 .bac-shift{display:flex;align-items:center;gap:10px;padding:4px 0}
 .bac-shift .dot{width:10px;height:10px;border-radius:3px;flex:none}
 .bac-shift .name{flex:1;font-size:14px;color:var(--text)}
 .bac-shift .time{font-family:var(--mono);font-size:13px;color:var(--muted)}
-/* ---- impostazioni a gruppi richiudibili ---- */
-/* Nessun riquadro: solo righe separate da una linea sottile, come le
-   impostazioni di sistema. Il gruppo aperto si distingue dal titolo chiaro. */
 .grp{border-bottom:1px solid var(--line)}
 .grp:last-of-type{border-bottom:none}
 .grp>summary{list-style:none;cursor:pointer;padding:15px 26px 15px 0;position:relative;
@@ -287,8 +280,6 @@ input[type=time]{font-family:var(--mono)}
 .grp .set-row{padding:11px 0;border-bottom:1px solid #ffffff0a}
 .grp-intro{font-size:12.5px;color:var(--muted);line-height:1.5;margin:0 0 6px}
 .grp-intro b{color:var(--text);font-weight:600}
-/* Controllo a segmenti: la pastiglia attiva scorre sotto le etichette
-   invece di comparire e sparire. */
 .tabs{display:flex;gap:0;position:relative;border-radius:14px;padding:4px;margin:0 0 18px;
   background:rgba(255,255,255,.045);
   -webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);
@@ -310,7 +301,6 @@ input[type=time]{font-family:var(--mono)}
 .pane.on{display:block}
 @media (prefers-reduced-motion:reduce){.tab-thumb{transition:none}}
 
-/* ---- schermi larghi: due colonne affiancate ---- */
 @media (min-width:900px){
   #app{max-width:1180px;padding:28px 28px 60px}
   .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:26px;align-items:start}
@@ -325,7 +315,6 @@ input[type=time]{font-family:var(--mono)}
   .tot-side .tot-value{font-size:26px}
   .list-title{font-size:18px}
   .row{padding:13px 16px}
-  /* i pannelli diventano finestre centrate invece che fogli dal basso */
   .sheet{top:50%;bottom:auto;left:50%;right:auto;transform:translate(-50%,-46%) scale(.97);
     width:560px;max-width:92vw;border-radius:20px;max-height:86vh;padding:24px 24px 22px;
     opacity:0;transition:opacity .18s ease,transform .18s ease;
@@ -476,10 +465,6 @@ input[type=time]{font-family:var(--mono)}
     <div class="set-row"><span>Ore oltre il monte ore</span><div class="in" style="width:160px"><select id="s-sa">
       <option value="0">già nel fisso (forfait)</option><option value="1">pagate a parte</option>
     </select></div></div>
-    
-    
-    
-    
     <button class="btn ghost" style="width:100%;margin-top:12px" id="sca">Aumenti e scatti di stipendio</button>
   </details>
 
@@ -492,7 +477,6 @@ input[type=time]{font-family:var(--mono)}
     <div class="set-row"><span>Imponibile IRPEF (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bi" placeholder="2736,85"></div></div>
     <div class="set-row" id="row-bm"><span>Maggiorazioni in questa busta (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bm" placeholder="519,43"></div></div>
     <div class="calc" id="bm-auto" style="display:none;margin:10px 0 0"></div>
-    
     <div class="calc" id="prof-info" style="margin:12px 0 0"></div>
     <button class="btn ghost" style="width:100%;margin-top:10px" id="ced">Cedolini dei mesi scorsi</button>
   </details>
@@ -525,18 +509,12 @@ input[type=time]{font-family:var(--mono)}
     <div class="set-row"><span>Ore contrattuali mensili</span><div class="in"><input type="number" id="s-orec" min="1" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>Giorni di lavoro a settimana</span><div class="in"><input type="number" id="s-wd" min="0" max="7" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>Riposi a settimana</span><div class="in"><input type="number" id="s-rd" min="0" max="7" step="1" inputmode="numeric"></div></div>
-    
-    
-    
-  
     <div class="set-row"><span>Mattina</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-m1"><input type="time" id="p-m2"></div></div>
     <div class="set-row"><span>Pomeriggio</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-p1"><input type="time" id="p-p2"></div></div>
     <div class="set-row"><span>Notte</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-n1"><input type="time" id="p-n2"></div></div>
     <div class="set-row"><span>DEAS</span><div class="in" style="display:flex;gap:4px;width:150px"><input type="time" id="p-d1"><input type="time" id="p-d2"></div></div>
-    
     <div class="set-row"><span>Fascia notturna dalle</span><div class="in"><input type="time" id="s-n1"></div></div>
     <div class="set-row"><span>alle</span><div class="in"><input type="time" id="s-n2"></div></div>
-  
     <div class="set-row"><span>Il periodo di paga parte dal giorno</span><div class="in"><input type="number" id="s-pd" min="1" max="28" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>I turni escono entro il giorno</span><div class="in"><input type="number" id="s-gt" min="1" max="28" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>La busta arriva entro il giorno</span><div class="in"><input type="number" id="s-gb" min="1" max="28" step="1" inputmode="numeric"></div></div>
@@ -602,7 +580,6 @@ input[type=time]{font-family:var(--mono)}
     <button class="btn ghost" id="pdf-close">Chiudi</button>
   </div>
 </div>
-
 
 <div class="sheet" id="sheet-sca">
   <h2>Aumenti e scatti</h2>
@@ -683,11 +660,8 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='66 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='68 · 3 agosto 2026';
 
-/* Bonifica: un service worker rimasto registrato da una versione precedente
-   continuerebbe a servire i vecchi file anche dopo un aggiornamento.
-   Lo rimuovo insieme alle sue cache. I turni non sono lì dentro. */
 if(typeof navigator!=='undefined'&&navigator.serviceWorker){
   navigator.serviceWorker.getRegistrations()
     .then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
@@ -695,8 +669,6 @@ if(typeof navigator!=='undefined'&&navigator.serviceWorker){
     caches.keys().then(ks=>ks.forEach(k=>caches.delete(k))).catch(()=>{});
 }
 
-/* L'archivio: dentro Claude usa window.storage, sul telefono la memoria del browser,
-   e in mancanza di entrambi tiene i dati solo per la sessione. */
 const mem={};
 const store={
   mode: typeof window!=='undefined'&&window.storage?'claude':(()=>{
@@ -705,17 +677,23 @@ const store={
   })(),
   async get(k){
     if(this.mode==='claude') return await window.storage.get(k);
-    if(this.mode==='browser'){const v=localStorage.getItem(k);return v?{key:k,value:v}:null}
+    if(this.mode==='browser'){
+      try{const v=localStorage.getItem(k);return v?{key:k,value:v}:null}catch(e){return null}
+    }
     return mem[k]?{key:k,value:mem[k]}:null;
   },
   async set(k,v){
     if(this.mode==='claude') return await window.storage.set(k,v);
-    if(this.mode==='browser') localStorage.setItem(k,v); else mem[k]=v;
+    if(this.mode==='browser'){
+      try{localStorage.setItem(k,v)}catch(e){}
+    } else {mem[k]=v;}
     return {key:k,value:v};
   },
   async del(k){
     if(this.mode==='claude') return await window.storage.delete(k);
-    if(this.mode==='browser') localStorage.removeItem(k); else delete mem[k];
+    if(this.mode==='browser'){
+      try{localStorage.removeItem(k)}catch(e){}
+    } else {delete mem[k];}
   }
 };
 const TYPES=[
@@ -728,7 +706,6 @@ const TYPES=[
   {id:'ferie',      label:'Ferie',      color:'var(--ferie)',      work:false},
   {id:'malattia',   label:'Malattia',   color:'var(--malattia)',   work:false},
 ];
-/* turni ammessi il giorno prima di una notte */
 const BEFORE_NIGHT=['notte','deas'];
 const MESI=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const GIORNI=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
@@ -744,17 +721,16 @@ const DEFAULTS={
 
 let state={shifts:{},roster:{},settings:{...DEFAULTS}};
 let view=new Date(); view.setDate(1);
-let editing=null;   // stringa data 'YYYY-MM-DD'
+let editing=null;
 let draft=null;
 
-/* ---------- utilità ---------- */
 const pad=n=>String(n).padStart(2,'0');
 const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const toMin=t=>{const[h,m]=t.split(':').map(Number);return h*60+m};
 const fmt=m=>{if(!m)return'0<small>h</small>';const h=Math.floor(m/60),r=m%60;return r?`${h}<small>h</small>${pad(r)}`:`${h}<small>h</small>`};
 const fmtPlain=m=>{const h=Math.floor(m/60),r=m%60;return r?`${h}h ${pad(r)}`:`${h}h`};
 
-function span(s){ // minuti lordi e confini in minuti dall'inizio del giorno
+function span(s){
   let a=toMin(s.start), b=toMin(s.end);
   if(b<=a) b+=1440;
   return {a,b,gross:b-a};
@@ -764,8 +740,6 @@ function worked(s){
   return Math.max(0, span(s).gross - (Number(s.break)||0));
 }
 function isWork(s){const t=TYPES.find(t=>t.id===s.type);return t&&t.work}
-/* Il riposo è l'unico giorno "non dovuto": ferie, permessi e malattia
-   occupano invece un giorno di lavoro, sono retribuiti e scalano dal monte. */
 function isRiposo(s){return s.type==='riposo'}
 function isAssenza(s){return !isWork(s)&&!isRiposo(s)}
 function nightMin(s){
@@ -784,8 +758,6 @@ function overtime(s){
   return Math.max(0, w - state.settings.dayThreshold*60);
 }
 function typeOf(id){return TYPES.find(t=>t.id===id)||TYPES[0]}
-/* Il lordo cambia nel tempo: scatti, aumenti, passaggi di livello.
-   Per ogni mese vale l'ultimo importo entrato in vigore entro quel mese. */
 function lordoDi(y,m){
   const mese=`${y}-${pad(m+1)}`;
   const tutti=(state.settings.scatti||[]).filter(x=>x&&x.da&&Number(x.lordo))
@@ -794,8 +766,6 @@ function lordoDi(y,m){
   if(validi.length) return Number(validi[validi.length-1].lordo);
   const base=Number(state.settings.lordoFisso)||0;
   if(base) return base;
-  /* mese anteriore a ogni scatto e senza lordo di base: uso il primo
-     conosciuto, così il calcolo non sparisce del tutto. Lo segnalo. */
   return tutti.length?Number(tutti[0].lordo):0;
 }
 function lordoApprossimato(y,m){
@@ -814,9 +784,7 @@ function presetOf(id){
   return (Array.isArray(p)&&p[0]&&p[1])?p:(DEFAULTS.presets[id]||['08:00','16:00']);
 }
 
-/* ---------- regole del ciclo ---------- */
 function dayAdd(key,n){const d=new Date(key+'T00:00:00');d.setDate(d.getDate()+n);return ymd(d)}
-/* prima di una notte può esserci solo un'altra notte o un riposo */
 function issuesFor(key,override){
   const s=override||state.shifts[key]; if(!s) return [];
   const out=[];
@@ -843,12 +811,11 @@ function weekStats(start){
     filled++;
     if(isWork(s)){work++;mins+=worked(s)}
     else if(isRiposo(s)) rest++;
-    else ass++;                        /* ferie, permesso, malattia */
+    else ass++;
   }
   return {days,work,rest,ass,mins,complete:filled===7};
 }
 
-/* ---------- archivio ---------- */
 async function load(){
   try{
     const r=await store.get(KEY);
@@ -859,7 +826,6 @@ async function load(){
       state.roster=d.roster||{};
       state.settings={...DEFAULTS,...saved};
       let changed=false;
-      /* la versione va letta dal dato salvato, non da quello già unito */
       if((saved.payV||0)<DEFAULTS.payV){
         state.settings.ritardo=DEFAULTS.ritardo;
         state.settings.payV=DEFAULTS.payV;
@@ -870,7 +836,6 @@ async function load(){
         state.settings.presetsV=DEFAULTS.presetsV;
         changed=true;
       }
-      /* rete di sicurezza: se manca l'orario di un turno lo reintegro senza toccare gli altri */
       for(const k in DEFAULTS.presets){
         const p=state.settings.presets[k];
         if(!Array.isArray(p)||p.length<2||!p[0]||!p[1]){
@@ -880,7 +845,7 @@ async function load(){
       }
       if(changed) save();
     }
-  }catch(e){/* prima apertura: nessun dato salvato */}
+  }catch(e){}
   render();
   const b=document.getElementById('boot'); if(b) b.remove();
   controllaAggiornamenti();
@@ -895,7 +860,6 @@ function save(){
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1900)}
 
-/* ---------- calendario ---------- */
 function render(){
   const y=view.getFullYear(), m=view.getMonth();
   document.getElementById('mname').innerHTML=`${MESI[m]} <span>${y}</span>`;
@@ -905,11 +869,8 @@ function render(){
   const grid=document.getElementById('grid'); grid.innerHTML='';
   const todayS=ymd(new Date());
 
-  /* Costruisco l'elenco dei giorni: la coda del mese scorso, il mese, e
-     quanto basta a chiudere l'ultima settimana. Le caselle vuote non dicevano
-     nulla, mentre il ciclo dei turni non si interrompe il primo del mese. */
   const celle=[];
-  const prima=new Date(y,m,0).getDate();            /* ultimo giorno del mese precedente */
+  const prima=new Date(y,m,0).getDate();
   for(let i=offset;i>0;i--) celle.push({d:prima-i+1,y:m===0?y-1:y,m:m===0?11:m-1,altro:true});
   for(let d=1;d<=days;d++) celle.push({d,y,m,altro:false});
   const resto=(7-celle.length%7)%7;
@@ -927,8 +888,6 @@ function render(){
       const w1=Math.min(gross,1440-a);
       let bars=`<i style="left:${a/14.4}%;width:${w1/14.4}%;background:${c}"></i>`;
       if(gross>w1) bars+=`<i style="left:0;width:${(gross-w1)/14.4}%;background:${c};opacity:.5"></i>`;
-      /* il numero di ore si scrive solo se diverso dallo standard di quel turno:
-         ripeterlo su ogni casella è rumore */
       const pr=presetOf(s.type);
       const std=(()=>{let a=toMin(pr[0]),b=toMin(pr[1]);if(b<=a)b+=1440;
         return b-a-(typeOf(s.type).brk??state.settings.defaultBreak??0)})();
@@ -946,7 +905,6 @@ function render(){
     grid.appendChild(cell);
   });
 
-  /* riepilogo */
   let tot=0,ex=0,nt=0,worked_days=0,rest_days=0,abs_days=0;
   const rows=[];
   for(let d=1;d<=days;d++){
@@ -1021,8 +979,7 @@ function renderBacheca(){
     return;
   }
 
-  /* Ordine in cui verranno mostrati i turni nel singolo giorno */
-  const order=['notte','mattina','pomeriggio','deas'];   /* stesso ordine del PDF */
+  const order=['notte','mattina','pomeriggio','deas'];
   let html='';
   let hasShifts=false;
 
@@ -1056,8 +1013,6 @@ function renderBacheca(){
   if(note) note.textContent=`${nomi.length} colleghi nel reparto. Riposi, assenze e ferie sono nascosti.`;
 }
 
-/* Elenco giorno per giorno di cosa genera le maggiorazioni: è l'unico modo
-   per confrontare riga per riga con la busta e trovare dove si discosta. */
 function renderDettaglio(y,m){
   const box=document.getElementById('pay-dett'); if(!box) return;
   const S=state.settings, ph=lordoDi(y,m)/(Number(S.oreContratto)||173);
@@ -1085,8 +1040,7 @@ function renderDettaglio(y,m){
       `<div class="pay-note">● giorno festivo o domenica. Le ore sono al netto della pausa non pagata.</div>`
     : '<div class="pay-note">Nessuna maggiorazione in questo mese.</div>';
 }
-/* Oggi e domani: è la domanda che ci si fa aprendo l'app. Non dipende dal
-   mese che stai guardando, resta fisso mentre sfogli. */
+
 function renderOggi(){
   const box=document.getElementById('oggi'); if(!box) return;
   const oggi=new Date();
@@ -1106,6 +1060,7 @@ function renderOggi(){
   box.innerHTML=righe+(vuoto&&!Object.keys(state.shifts).length
     ? '<div class="vuoto">Nessun turno caricato. Apri le impostazioni per importare il turnario.</div>' : '');
 }
+
 function renderPay(y,m){
   const box=document.getElementById('pay'), P=paga(y,m);
   if(!P){box.style.display='none';return}
@@ -1129,7 +1084,6 @@ function renderPay(y,m){
       : N.fonte==='cedolini' ? (N.F.ancora?'Netto (dal tuo cedolino)':'Netto (dai cedolini)')
       : 'Netto stimato';
     netBox.onclick=null; netBox.style.cursor='';
-    /* mostro il conto: senza, un netto sbagliato resta inspiegabile */
     const pcq=x=>(x*100).toFixed(1).replace('.',',')+'%';
     if(N.fonte==='reale'){
       dettaglio=`È il netto che hai inserito per questo mese: non è una stima.`;
@@ -1147,8 +1101,6 @@ function renderPay(y,m){
       const PR=profilo();
       dettaglio=`Netto = <b>${eur(PR.base+(N.delta||0))}</b> fissi + <b>${pcq(PR.k)}</b> di ${eur(mag)} di maggiorazioni`+
         (N.delta?`, con ${N.delta>0?'+':''}${eur(N.delta)} per la differenza di lordo rispetto alla busta di riferimento`:'')+'.';
-      /* Ci sono cedolini ma non li sto usando: devo dire perché, altrimenti
-         l'utente li inserisce e non capisce cosa sia cambiato. */
       const tuttiCed=(S.cedolini||[]).length;
       if(tuttiCed){
         const per=scattoDi(y,m);
@@ -1166,7 +1118,6 @@ function renderPay(y,m){
       }
     }
   }else{
-    /* la diagnosi va scritta qui: è dove l'utente sta guardando */
     netBox.querySelector('span').textContent='Netto';
     const g=profiloProblema();
     netV.textContent=g?'non calcolabile':'dati mancanti';
@@ -1184,14 +1135,11 @@ function renderPay(y,m){
     avvisi.map(a=>`<span class="issue">${a}</span>`).join('');
 }
 
-/* ---------- settimane e avvisi ---------- */
 function eachWeek(y,m,fn){
   const last=new Date(y,m+1,0);
   let cur=weekStart(new Date(y,m,1));
   while(cur<=last){ fn(cur,weekStats(cur)); cur=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate()+7); }
 }
-/* Una settimana è in regola se i giorni dovuti sono coperti da lavoro
-   o da assenze retribuite, e i riposi sono almeno quelli previsti. */
 function weekOff(w){
   return w.complete && (w.work+w.ass!==state.settings.workDays || w.rest<state.settings.restDays);
 }
@@ -1242,8 +1190,6 @@ function renderAlerts(y,m){
   return quanti;
 }
 
-/* ---------- festivi e compenso ---------- */
-/* Pasqua con l'algoritmo di Gauss, il lunedì dopo è Pasquetta */
 function easterMonday(y){
   const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,
         f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,
@@ -1264,8 +1210,6 @@ function isFest(key){
   return festOf(+key.slice(0,4)).has(key) || new Date(key+'T00:00:00').getDay()===0;
 }
 const eur=v=>'€ '+(Math.round(v*100)/100).toFixed(2).replace('.',',');
-/* Accetta 2174 · 2174,00 · 2.174,00 · 2.174 · 2174.00 senza sorprese:
-   il punto delle migliaia altrimenti diventa un punto decimale. */
 function numIta(v){
   let t=String(v??'').trim().replace(/[€\s]/g,'');
   if(!t) return 0;
@@ -1277,9 +1221,6 @@ function numIta(v){
   return isNaN(n)?0:n;
 }
 
-/* Divide un turno in quattro fasce di retribuzione. Ogni minuto finisce in una
-   sola fascia, perché le maggiorazioni non si sommano fra loro: quella festiva
-   notturna (55%) sostituisce le altre due, non si aggiunge. */
 function fasce(key,s){
   const z={ord:0,nott:0,fest:0,festNott:0,tot:0};
   if(!isWork(s)||!s.start||!s.end) return z;
@@ -1288,7 +1229,7 @@ function fasce(key,s){
   const isNight=m=>{const t=((m%1440)+1440)%1440; return n1<n2?(t>=n1&&t<n2):(t>=n1||t<n2)};
   const festDay={};
   const isFestMin=m=>{
-    const g=Math.floor(m/1440), k=g?dayAdd(key,g):key;   /* dopo la mezzanotte il giorno cambia */
+    const g=Math.floor(m/1440), k=g?dayAdd(key,g):key;
     if(festDay[k]===undefined) festDay[k]=isFest(k);
     return festDay[k];
   };
@@ -1296,7 +1237,6 @@ function fasce(key,s){
     const f=isFestMin(m), n=isNight(m);
     if(f&&n) z.festNott++; else if(f) z.fest++; else if(n) z.nott++; else z.ord++;
   }
-  /* la pausa non è pagata: la tolgo partendo dalle ore meno maggiorate */
   let p=Number(s.break)||0;
   for(const k of ['ord','fest','nott','festNott']){
     const q=Math.min(p,z[k]); z[k]-=q; p-=q; if(!p) break;
@@ -1304,8 +1244,6 @@ function fasce(key,s){
   z.tot=z.ord+z.nott+z.fest+z.festNott;
   return z;
 }
-/* Il periodo di paga può non coincidere col mese solare: se parte dal 26,
-   la busta di agosto copre dal 26 luglio al 25 agosto. */
 function periodoDi(y,m){
   const p=Number(state.settings.periodoDa)||1;
   return p<=1 ? {da:new Date(y,m,1), a:new Date(y,m+1,0)}
@@ -1315,7 +1253,7 @@ function fasceMese(y,m){
   const B={ord:0,nott:0,fest:0,festNott:0,tot:0};
   const {da,a}=periodoDi(y,m);
   let compilati=0, days=0;
-  for(const d=new Date(da); d<=a; d.setDate(d.getDate()+1)){
+  for(let d=new Date(da); d<=a; d.setDate(d.getDate()+1)){
     days++;
     const s=state.shifts[ymd(d)];
     if(!s) continue;
@@ -1334,19 +1272,12 @@ function paga(y,m){
   const magNott=h(B.nott)*ph*(Number(S.pctNotturno)||0)/100;
   const magFest=h(B.fest)*ph*(Number(S.pctFestivo)||0)/100;
   const magFN=h(B.festNott)*ph*(Number(S.pctFestNott)||0)/100;
-  /* Molti contratti hanno lo straordinario forfettizzato dentro il fisso:
-     in quel caso le ore oltre il monte ore non vanno pagate a parte. */
   const oreStra=Math.max(0,h(B.tot)-oreC);
   const stra=Number(S.straordAparte)?oreStra*ph*(1+(Number(S.pctStraord)||0)/100):0;
   return {ph,lordo,B,compilati,days,da:F.da,a:F.a,magNott,magFest,magFN,oreStra,stra,
           totale:lordo+magNott+magFest+magFN+stra};
 }
 
-/* Ricava il profilo fiscale personale dai soli importi della busta.
-   Nessuna percentuale da interpretare: le aliquote escono dai numeri. */
-/* Quanto pesano le maggiorazioni di un mese rispetto al lordo, ricavato
-   dai turni: K = somma(ore × percentuale) ÷ ore contrattuali.
-   Da qui: competenze = lordo × (1+K), quindi il lordo si ricava dividendo. */
 function fattoreMagg(y,m){
   const S=state.settings, oreC=Number(S.oreContratto)||173;
   const F=fasceMese(y,m);
@@ -1358,8 +1289,6 @@ function fattoreMagg(y,m){
   return {K, ore:h(F.B.nott+F.B.fest+F.B.festNott), completo:F.compilati>=F.days,
           compilati:F.compilati, days:F.days};
 }
-/* Le maggiorazioni della busta di riferimento: calcolate dai turni se
-   quel mese è caricato, altrimenti prese dal campo compilato a mano. */
 function maggRiferimento(){
   const S=state.settings, C=Number(S.bpComp)||0;
   if(/^\d{4}-\d{2}$/.test(S.bpMese||'')&&C){
@@ -1369,7 +1298,7 @@ function maggRiferimento(){
       const lordo=C/(1+f.K);
       return {mag:C-lordo, lordo, auto:true, ...f};
     }
-    if(f) return {mag:0, lordo:C, auto:true, ...f};   /* mese senza maggiorazioni */
+    if(f) return {mag:0, lordo:C, auto:true, ...f};
   }
   return {mag:Number(S.bpMagg)||0, lordo:C-(Number(S.bpMagg)||0), auto:false};
 }
@@ -1378,18 +1307,14 @@ function profilo(){
   const N=Number(S.bpNetto)||0, C=Number(S.bpComp)||0, I=Number(S.bpImpIrpef)||0;
   if(!N||!C||!I||I>=C) return null;
   const R=maggRiferimento(), M=R.mag;
-  const c=(C-I)/C;                       /* contributi = competenze meno imponibile IRPEF */
+  const c=C > 0 ? (C - I) / C : 0;
   const annuo=I*12;
   const i=(Number(S.bpScaglione)||0)>0 ? Number(S.bpScaglione)/100
         : annuo>50000?0.43 : annuo>28000?0.35 : 0.23;
-  const k=(1-c)*(1-i);                   /* quanto resta di ogni euro lordo in più */
-  /* Il lordo fisso di quella busta si ricava: competenze meno maggiorazioni.
-     Serve per adattare la stima ai mesi con uno stipendio diverso. */
+  const k=(1-c)*(1-i);
   const lordoRif=R.lordo;
   return {N,C,I,M,c,i,k,annuo,lordoRif,magAuto:R.auto,magInfo:R,mese:S.bpMese||'',base:N-M*k};
 }
-/* Dice esattamente perché il profilo non si calcola, invece di lasciare
-   l'utente a controllare quattro campi a caso. */
 function profiloProblema(){
   const S=state.settings;
   const N=Number(S.bpNetto)||0, C=Number(S.bpComp)||0, I=Number(S.bpImpIrpef)||0, M=Number(S.bpMagg)||0;
@@ -1403,13 +1328,11 @@ function profiloProblema(){
   if(!/^\d{4}-\d{2}$/.test(S.bpMese||'')&&M>=C) return `Le maggiorazioni (${eur(M)}) non possono valere quanto tutte le competenze.`;
   return null;
 }
-/* Valori accettabili ma poco credibili: l'app calcola, però avvisa.
-   I contributi di un dipendente stanno in genere fra il 9% e il 13%. */
 function profiloDubbio(){
   const S=state.settings;
   const N=Number(S.bpNetto)||0, C=Number(S.bpComp)||0, I=Number(S.bpImpIrpef)||0;
   if(!N||!C||!I||I>=C) return null;
-  const c=(C-I)/C;
+  const c=C > 0 ? (C - I) / C : 0;
   if(c>0.20) return `I contributi risultano il ${(c*100).toFixed(1)}% delle competenze, ben oltre il normale (circa 10%). Controlla l'imponibile IRPEF: non è l'imponibile INPS né il netto.`;
   if(c<0.04) return `I contributi risultano solo il ${(c*100).toFixed(1)}% delle competenze, troppo poco. L'imponibile IRPEF va preso dalla voce F02000, non dall'imponibile INPS.`;
   const netMin=N/C;
@@ -1428,8 +1351,6 @@ function renderProfilo(){
   }
   const pc=x=>(x*100).toFixed(2).replace('.',',')+'%';
   const dubbio=profiloDubbio();
-  /* Lo scaglione dedotto da un mese solo è fragile vicino alle soglie:
-     un mese magro o ricco sposta l'aliquota di dieci punti. */
   let vicino='';
   if(!Number(S.bpScaglione)){
     const soglie=[[28000,23,35],[50000,35,43]];
@@ -1447,8 +1368,6 @@ function renderProfilo(){
           `${Number(S.bpScaglione)?'':` (imponibile annuo ${eur(P.annuo)})`}<br>`+
           `Di ogni euro lordo in più ti resta <b>${pc(P.k)}</b><br>`+
           `Netto base senza maggiorazioni <b>${eur(P.base)}</b>`;
-  /* Se so di che mese è la busta, confronto col lordo registrato per quel mese:
-     è il controllo che smaschera un lordo sbagliato o uno scatto con la data errata. */
   let rifY,rifM;
   if(/^\d{4}-\d{2}$/.test(P.mese)){const t=P.mese.split('-').map(Number);rifY=t[0];rifM=t[1]-1}
   else {const o=new Date();rifY=o.getFullYear();rifM=o.getMonth()}
@@ -1467,7 +1386,6 @@ function renderProfilo(){
   el.innerHTML=txt;
 }
 
-/* ---------- editor ---------- */
 function openEditor(key){
   editing=key;
   const s=state.shifts[key];
@@ -1538,7 +1456,6 @@ document.getElementById('save').onclick=()=>{
 };
 document.getElementById('del').onclick=()=>{delete state.shifts[editing];save();closeSheets();render();toast('Turno eliminato')};
 
-/* ---------- pannelli ---------- */
 function showSheet(id){document.getElementById(id).classList.add('on');document.getElementById('scrim').classList.add('on')}
 function closeSheets(){document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on'));document.getElementById('scrim').classList.remove('on')}
 document.getElementById('scrim').onclick=closeSheets;
@@ -1547,7 +1464,7 @@ document.getElementById('fab').onclick=()=>{
   const t=new Date(), k=(t.getMonth()===view.getMonth()&&t.getFullYear()===view.getFullYear())?ymd(t):ymd(new Date(view.getFullYear(),view.getMonth(),1));
   openEditor(k);
 };
-/* Anche da freccia o da selettore il cambio è animato, per coerenza. */
+
 function cambiaMese(passo,y,m){
   const sl=document.querySelector('.col-b');
   const applica=()=>{ if(passo) view.setMonth(view.getMonth()+passo); else view=new Date(y,m,1); render(); };
@@ -1564,10 +1481,7 @@ function cambiaMese(passo,y,m){
 document.getElementById('prev').onclick=()=>cambiaMese(-1);
 document.getElementById('next').onclick=()=>cambiaMese(1);
 
-/* ---------- impostazioni ---------- */
 const setMap={'s-day':['dayThreshold','num'],'s-n1':['night1','str'],'s-n2':['night2','str'],'s-break':['defaultBreak','num'],'s-wd':['workDays','num'],'s-rd':['restDays','num'],'s-lordo':['lordoFisso','num'],'s-orec':['oreContratto','num'],'s-pn':['pctNotturno','num'],'s-pf':['pctFestivo','num'],'s-pfn':['pctFestNott','num'],'s-ps':['pctStraord','num'],'s-sa':['straordAparte','num'],'s-pat':['patrono','str'],'s-bn':['bpNetto','num'],'s-bc':['bpComp','num'],'s-bi':['bpImpIrpef','num'],'s-bm':['bpMagg','num'],'s-bs':['bpScaglione','num'],'s-bmese':['bpMese','str'],'s-rit':['ritardo','num'],'s-gb':['giornoBusta','num'],'s-gt':['giornoTurni','num'],'s-pd':['periodoDa','num']};
-/* Apre le impostazioni posizionandosi sul gruppo che interessa,
-   invece di lasciare l'utente a cercarlo fra sei sezioni chiuse. */
 const GRUPPI={retribuzione:0,busta:1,turni:2,dati:3,contratto:4,orari:4,avanzate:4};
 function apriImpostazioni(quale){
   document.getElementById('settings').click();
@@ -1634,13 +1548,7 @@ Object.entries(setMap).forEach(([id,[key,kind]])=>{
     });
   });
 });
-/* Un gruppo alla volta: aprirne uno chiude gli altri, così il pannello
-   resta corto invece di diventare un muro di campi. */
-/* Nasconde le voci che non hanno effetto con la configurazione attuale. */
-/* Quando i turni del mese di riferimento sono caricati, le maggiorazioni le
-   calcolo io: il campo a mano sparisce e mostro anche il lordo che ne deriva. */
-/* La tendina propone i mesi per cui ho i turni: sono gli unici per cui
-   posso calcolare le maggiorazioni e verificare il lordo. */
+
 function riempiMesiBusta(){
   const sel=document.getElementById('s-bmese'); if(!sel) return;
   const scelto=state.settings.bpMese||'';
@@ -1670,25 +1578,14 @@ function aggiornaMaggRif(){
   riga.style.display='none'; box.style.display='';
   const [y,m]=S.bpMese.split('-').map(Number);
   const reg=lordoDi(y,m-1), scarto=reg?Math.abs(reg-R.lordo)/R.lordo:1;
+  
   box.innerHTML=
     `Dai tuoi turni di ${MESI[m-1].toLowerCase()}: <b>${R.ore.toFixed(0)}h</b> maggiorate `+
-    `= <b>${eur(R.mag)}</b><br>Il lordo fisso di quel mese risulta quindi <b>${eur(R.lordo)}</b>.`+
+    `= <b>${eur(R.mag)}</b><br>Il lordo calcolato per differenza risulta <b>${eur(R.lordo)}</b>.`+
     (R.completo?'':`<span class="issue">Di ${MESI[m-1].toLowerCase()} hai caricato solo ${R.compilati} giorni su ${R.days}: il calcolo è parziale.</span>`)+
     (reg&&scarto>0.02
       ? `<span class="issue">In Retribuzione hai registrato ${eur(reg)} per quel mese.</span>`
-      : '')+
-    `<button class="btn ghost" style="width:100%;margin-top:10px" id="bm-usa">Usa ${eur(R.lordo)} come lordo</button>`;
-  const b=document.getElementById('bm-usa');
-  if(b) b.onclick=()=>{
-    const dentroScatto=(state.settings.scatti||[]).some(x=>x.da<=S.bpMese);
-    if(dentroScatto){
-      state.settings.scatti=state.settings.scatti.map(x=>
-        x.da===scattoDi(y,m-1)?{...x,lordo:+R.lordo.toFixed(2)}:x);
-    } else state.settings.lordoFisso=+R.lordo.toFixed(2);
-    document.getElementById('s-lordo').value=(+R.lordo.toFixed(2)).toFixed(2).replace('.',',');
-    save(); renderProfilo(); aggiornaMaggRif(); statoImpostazioni(); render();
-    toast('Lordo aggiornato');
-  };
+      : '');
 }
 function aggiornaVociUtili(){
   const aParte=Number(state.settings.straordAparte)===1;
@@ -1722,7 +1619,6 @@ document.getElementById('copy').onclick=async()=>{
   try{await navigator.clipboard.writeText(txt);toast('Riepilogo copiato')}catch(e){toast('Copia non riuscita')}
 };
 
-/* ---------- importazione da Excel ---------- */
 const norm=s=>String(s??'').trim().toLowerCase()
   .replace(/[àáâ]/g,'a').replace(/[èé]/g,'e').replace(/[ìí]/g,'i').replace(/[òó]/g,'o').replace(/[ùú]/g,'u');
 const COLS={
@@ -1739,8 +1635,6 @@ function matchCol(h){
   for(const [k,names] of Object.entries(COLS)) if(names.some(x=>n===x||n.startsWith(x))) return k;
   return null;
 }
-/* Non uso instanceof: una data creata da un'altra libreria può non superarlo.
-   Guardo invece se l'oggetto si comporta da data. */
 function eData(v){
   return !!v && typeof v==='object' && typeof v.getFullYear==='function' && !isNaN(v.getTime());
 }
@@ -1780,8 +1674,6 @@ function toType(v){
   if(n.startsWith('not')||n==='n') return 'notte';
   return null;
 }
-/* Una cella del turnario può contenere anche gli orari ("M 08 - 20") o una
-   precisazione ("M (A)"). Tengo il tipo, gli orari se ci sono, e il testo originale. */
 function leggiCella(v){
   const orig=String(v??'').trim(); if(!orig) return null;
   let s=norm(orig), start=null, end=null;
@@ -1793,7 +1685,7 @@ function leggiCella(v){
   }
   s=s.replace(/[()\.]/g,' ').replace(/\s+/g,' ').trim();
   let t=toType(s);
-  if(!t&&s) t=toType(s.split(/[^a-z]+/)[0]);      /* "m a" → "m", "m/permesso" → "m" */
+  if(!t&&s) t=toType(s.split(/[^a-z]+/)[0]);
   if(!t) return null;
   const semplice=/^[a-z]+$/i.test(orig)&&!start;
   return {t,start,end,note:semplice?'':orig};
@@ -1813,6 +1705,7 @@ function rowToShift(cells,map){
   const brk=map.brk!=null?Math.max(0,Number(String(cells[map.brk]).replace(',','.'))||0):(typeOf(type).brk??state.settings.defaultBreak??0);
   return {key:ymd(d),shift:{type,start:st,end:en,break:brk,note:map.note!=null?String(cells[map.note]??'').trim():''}};
 }
+
 let pending=[];
 function openPreview(label,skipped){
   const dup=pending.filter(p=>state.shifts[p.key]).length;
@@ -1845,7 +1738,6 @@ document.getElementById('file').addEventListener('change',async e=>{
   if(typeof XLSX==='undefined'){toast('Libreria non caricata: riapri la pagina online');return}
   try{
     const wb=XLSX.read(new Uint8Array(await f.arrayBuffer()),{type:'array',cellDates:true});
-    /* un lettore solo: prova tutte le disposizioni su tutti i fogli */
     cartella=leggiCartella(wb);
     if(!cartella){toast('Non riconosco i turni in questo file — scarica il modello');return}
     const tot=cartella.persone.reduce((a,p)=>a+p.giorni,0);
@@ -1854,7 +1746,6 @@ document.getElementById('file').addEventListener('change',async e=>{
     document.getElementById('pers-info').innerHTML=
       `<b>${cartella.fogli}</b> fogli (${modi}) · <b>${cartella.persone.length}</b> persone · <b>${tot}</b> giorni`+
       (ign?`<span class="issue">${ign} celle non interpretate: ${Object.keys(cartella.ignorati).slice(0,4).join(', ')}</span>`:'');
-    /* una persona sola: niente da scegliere */
     if(cartella.persone.length===1){ closeSheets(); scegliPersona(0); return; }
     const auto=cartella.persone.findIndex(p=>p.nome===state.settings.nome);
     if(auto>=0){ closeSheets(); scegliPersona(auto); return; }
@@ -1892,20 +1783,11 @@ document.getElementById('tpl').onclick=()=>{
   XLSX.writeFile(wb,'modello-turni.xlsx');
 };
 
-/* Costruisce il turno a partire dal tipo, con gli orari predefiniti. */
-function turnoDa(t){
-  if(!typeOf(t).work) return {type:t,start:'',end:'',break:0,note:''};
-  const pr=presetOf(t);
-  return {type:t,start:pr[0],end:pr[1],break:typeOf(t).brk??state.settings.defaultBreak??0,note:''};
-}
-
-/* ---------- turnario collettivo (un foglio per mese, nomi in riga) ---------- */
 const GG_LET='DLMMGVS';
 const MESI_N={gennaio:0,febbraio:1,marzo:2,aprile:3,maggio:4,giugno:5,
               luglio:6,agosto:7,settembre:8,ottobre:9,novembre:10,dicembre:11};
 
 function leggiFoglio(rows,nomeFoglio,annoIpotesi){
-  /* 1. la riga dei giorni è quella con più interi fra 1 e 31 */
   let dr=-1,cols=null;
   for(let i=0;i<Math.min(rows.length,20);i++){
     const c=[];
@@ -1916,7 +1798,6 @@ function leggiFoglio(rows,nomeFoglio,annoIpotesi){
     if(c.length>=15&&(!cols||c.length>cols.length)){dr=i;cols=c}
   }
   if(dr<0) return null;
-  /* 2. punto di partenza: prima data vera sopra, altrimenti il nome del foglio */
   const nm=norm(nomeFoglio);
   const kNome=Object.keys(MESI_N).find(x=>nm.includes(x));
   const meseNome=kNome!==undefined?MESI_N[kNome]:null;
@@ -1930,19 +1811,18 @@ function leggiFoglio(rows,nomeFoglio,annoIpotesi){
     mo=meseNome; y=annoNome||annoIpotesi;
     if(cols[0].n>=20){mo--; if(mo<0){mo=11;y--}}
   }
-  /* 3. costruisco le date cambiando mese a ogni ritorno indietro dei giorni */
   const giorniMese=(Y,M)=>new Date(Y,M+1,0).getDate();
   const costruisci=(y0,m0)=>{
     const date={}; let Y=y0,M=m0,prev=null,errori=0;
     for(const {j,n} of cols){
       if(prev!==null&&n<prev){M++; if(M>11){M=0;Y++}}
       prev=n;
-      if(n>giorniMese(Y,M)){errori++;continue}     /* giorno inesistente nel file */
+      if(n>giorniMese(Y,M)){errori++;continue}
       date[j]=`${Y}-${pad(M+1)}-${pad(n)}`;
     }
     return {date,errori};
   };
-  const coerenza=date=>{                           /* controprova sui giorni della settimana */
+  const coerenza=date=>{
     const r=rows[dr+1]||[]; let ok=0,tot=0;
     for(const j in date){
       const t=String(r[j]??'').trim().toUpperCase();
@@ -1958,7 +1838,6 @@ function leggiFoglio(rows,nomeFoglio,annoIpotesi){
     for(const j in date){const k=date[j].slice(0,7); c[k]=(c[k]||0)+1}
     return Object.entries(c).sort((a,b)=>b[1]-a[1])[0][0];
   };
-  /* 4. provo i mesi vicini e tengo quello che regge nome e giorni della settimana */
   let scelta=null;
   for(const dy of [0,-1,1]) for(const dm of [0,-1,1]){
     const t=new Date(y+dy,mo+dm,1);
@@ -1970,7 +1849,6 @@ function leggiFoglio(rows,nomeFoglio,annoIpotesi){
     if(!scelta||punti>scelta.punti) scelta={date,punti,co};
   }
   if(!scelta) return null;
-  /* 5. le persone: un nome a sinistra e almeno tre codici leggibili */
   const primaCol=Math.min(...cols.map(c=>c.j));
   const persone=[];
   for(let i=dr+1;i<rows.length;i++){
@@ -1983,15 +1861,12 @@ function leggiFoglio(rows,nomeFoglio,annoIpotesi){
       if(t.length===1&&GG_LET.includes(t.toUpperCase())) lettere++;
       if(leggiCella(t)) validi++;
     }
-    if(validi<3||lettere>validi*0.8) continue;     /* scarta la riga dei giorni settimana */
+    if(validi<3||lettere>validi*0.8) continue;
     persone.push({nome,riga:i,validi});
   }
   return persone.length?{date:scelta.date,persone,rows,co:scelta.co}:null;
 }
 
-/* Unisce tutti i fogli: i più recenti sovrascrivono i giorni ripetuti. */
-/* Matrice con date complete nell'intestazione (26/07/2026) invece dei soli
-   numeri del giorno: qui non serve dedurre il mese, c'è già scritto. */
 function leggiMatriceDate(rows){
   let dr=-1,date=null;
   for(let i=0;i<Math.min(rows.length,25);i++){
@@ -2014,16 +1889,12 @@ function leggiMatriceDate(rows){
   return persone.length?{date,persone,rows}:null;
 }
 
-/* Gira la tabella di 90°: serve quando le date stanno in colonna
-   e le persone sono le intestazioni orizzontali. */
 function trasponi(rows){
   const w=Math.max(0,...rows.map(r=>r.length));
   const out=[];
   for(let j=0;j<w;j++) out.push(rows.map(r=>r[j]??''));
   return out;
 }
-/* Formato a elenco: una riga per turno, con colonne Data/Turno/Inizio/Fine.
-   Qui la persona è una sola: prendo il nome dalla colonna, se c'è. */
 function leggiElenco(rows,nomeFoglio){
   let map=null,head=-1;
   for(let i=0;i<Math.min(rows.length,15);i++){
@@ -2042,7 +1913,6 @@ function leggiElenco(rows,nomeFoglio){
   }
   return Object.keys(per).length?{perNome:per}:null;
 }
-/* Estrae i turni da una matrice già riconosciuta. */
 function daMatrice(F,ignorati){
   const per={};
   F.persone.forEach(p=>{
@@ -2060,11 +1930,9 @@ function daMatrice(F,ignorati){
   });
   return Object.keys(per).length?{perNome:per}:null;
 }
-/* Prova ogni disposizione e tiene quella che estrae più turni. */
 function leggiFoglioQualsiasi(rows,nome,ignorati){
   const anno=new Date().getFullYear();
   const giro=trasponi(rows);
-  /* quattro disposizioni possibili, provate tutte */
   const cand=[
     ['tabella',            leggiFoglio(rows,nome,anno)],
     ['tabella con date',   leggiMatriceDate(rows)],
@@ -2083,7 +1951,7 @@ function leggiFoglioQualsiasi(rows,nome,ignorati){
   const peso=t=>Object.values(t.perNome).reduce((a,m)=>a+Object.keys(m).length,0);
   tentativi.sort((a,b)=>peso(b)-peso(a));
   const scelto=tentativi[0];
-  if(scelto.F) daMatrice(scelto.F,ignorati);   /* riconto gli scarti sul solo formato scelto */
+  if(scelto.F) daMatrice(scelto.F,ignorati);
   return scelto;
 }
 
@@ -2119,7 +1987,6 @@ function apriPersone(){
 function scegliPersona(i){
   const p=cartella.persone[i];
   state.settings.nome=p.nome;
-  /* conservo il turnario di tutti: serve per la tabella di reparto */
   state.roster={};
   cartella.persone.forEach(q=>{
     const m={};
@@ -2131,13 +1998,18 @@ function scegliPersona(i){
   openPreview(p.nome,Object.values(cartella.ignorati).reduce((a,b)=>a+b,0));
 }
 
-/* ---------- inserimento da sequenza ---------- */
+function turnoDa(t){
+  if(!typeOf(t).work) return {type:t,start:'',end:'',break:0,note:''};
+  const pr=presetOf(t);
+  return {type:t,start:pr[0],end:pr[1],break:typeOf(t).brk??state.settings.defaultBreak??0,note:''};
+}
+
 function lastKey(){const k=Object.keys(state.shifts).sort();return k.length?k[k.length-1]:null}
 function parseSeq(startKey,text){
   const toks=String(text||'').trim().split(/[\s,;|\/]+/).filter(Boolean);
   const out=[],bad=[];
   toks.forEach((tk,i)=>{
-    const t=toType(tk), key=dayAdd(startKey,i);   /* ogni codice consuma un giorno, anche se non lo riconosco */
+    const t=toType(tk), key=dayAdd(startKey,i);
     if(!t){bad.push(tk);return}
     out.push({key,shift:turnoDa(t)});
   });
@@ -2170,7 +2042,6 @@ document.getElementById('q-go').onclick=()=>{
   openPreview('sequenza incollata',r.bad.length);
 };
 
-/* I turni escono entro il giorno impostato: da lì in poi il mese dopo è già noto. */
 function renderNudge(){
   const box=document.getElementById('nudge'); box.innerHTML='';
   const oggi=new Date(), g=Number(state.settings.giornoTurni)||15;
@@ -2186,9 +2057,6 @@ function renderNudge(){
   box.appendChild(b);
 }
 
-/* ---------- pronostico dopo l'importazione ---------- */
-/* Appena entrano turni nuovi, la domanda è una sola: quanto prendo.
-   Apro direttamente la scheda Paga con la prossima busta in evidenza. */
 let dopoImport=false;
 function prossimaBusta(){
   const oggi=new Date();
@@ -2197,7 +2065,7 @@ function prossimaBusta(){
     const P=paga(d.getFullYear(),d.getMonth());
     if(!P||!P.compilati) continue;
     const arr=new Date(d.getFullYear(),d.getMonth()+1,Number(state.settings.giornoBusta)||10);
-    if(arr<oggi) continue;                     /* già arrivata */
+    if(arr<oggi) continue;
     const mag=P.magNott+P.magFest+P.magFN+P.stra;
     const N=nettoDa(mag,d.getFullYear(),d.getMonth());
     return {d,P,mag,arr,netto:N,parziale:P.compilati<P.days};
@@ -2213,10 +2081,6 @@ function mostraPronostico(){
   toast(`Busta di ${MESI[B.d.getMonth()].toLowerCase()}: ${q}, entro il ${f(B.arr)}`);
 }
 
-/* ---------- backup ---------- */
-/* Un file di testo con tutto: turni, impostazioni, cedolini, turnario di
-   reparto. Serve sia per non perdere i dati, sia per spostarli fra PC e
-   telefono, che hanno archivi separati. */
 function backupOggetto(){
   return {formato:'turni-backup', versione:1, app:VERSIONE,
           data:new Date().toISOString(), dispositivo:nomeDispositivo(),
@@ -2238,7 +2102,6 @@ document.getElementById('bk-file').addEventListener('change',async e=>{
   e.target.value='';
   try{
     const b=JSON.parse(await f.text());
-    /* controlli: meglio rifiutare che sovrascrivere tutto con spazzatura */
     if(b.formato!=='turni-backup'||typeof b.shifts!=='object'||!b.shifts)
       {toast('Non è un file di backup di questa app');return}
     const n=Object.keys(b.shifts).length;
@@ -2268,8 +2131,6 @@ document.getElementById('bk-go').onclick=()=>{
   toast(`Ripristinati ${Object.keys(state.shifts).length} turni`);
 };
 
-/* Ogni intestazione mostra com'è messo quel gruppo: si capisce a colpo
-   d'occhio cosa è già a posto e cosa manca, senza aprire nulla. */
 function statoImpostazioni(){
   const S=state.settings, put=(id,txt,cls)=>{
     const e=document.getElementById(id); if(!e) return;
@@ -2289,7 +2150,7 @@ function statoImpostazioni(){
   const mRif=/^\d{4}-\d{2}$/.test(S.bpMese||'')
     ? MESI[+S.bpMese.slice(5)-1].slice(0,3).toLowerCase()+' '+S.bpMese.slice(2,4)+' · ' : '';
   put('st-busta', P?(dubbio?'valori da verificare':mRif+`contributi ${(P.c*100).toFixed(1)}% · resta ${(P.k*100).toFixed(0)}%`+
-                     (nCed?` · ${nCed} ${nCed===1?'cedolino':'cedolini'}`:''))
+                     (nCed?` ${nCed} ${nCed===1?'cedolino':'cedolini'}`:''))
                     :(vuota?'da compilare':'dati da correggere'),
       P?(dubbio?'warn-t':'ok-t'):'warn-t');
 
@@ -2299,7 +2160,6 @@ function statoImpostazioni(){
   put('st-dati',`versione ${VERSIONE.split(' ')[0]} · ${store.mode==='claude'?'archivio Claude':nomeDispositivo().replace('questo ','')}`);
 }
 
-/* ---------- navigazione fra i mesi ---------- */
 let annoPicker=null;
 function vaiAlMese(y,m){ cambiaMese(0,y,m); }
 function renderMesi(){
@@ -2307,7 +2167,6 @@ function renderMesi(){
   document.getElementById('anno-lb').textContent=annoPicker;
   const box=document.getElementById('mesi'); box.innerHTML='';
   const oggi=new Date();
-  /* segno i mesi che hanno turni: così si vede subito dove c'è qualcosa */
   const pieni=new Set(Object.keys(state.shifts).map(k=>k.slice(0,7)));
   MESI.forEach((nome,i)=>{
     const k=`${annoPicker}-${pad(i+1)}`;
@@ -2327,13 +2186,11 @@ document.getElementById('anno-next').onclick=()=>{annoPicker++;renderMesi()};
 document.getElementById('mese-close').onclick=closeSheets;
 document.getElementById('mese-oggi').onclick=()=>{const o=new Date();vaiAlMese(o.getFullYear(),o.getMonth());closeSheets()};
 
-/* Scorrimento fra i mesi che segue il dito: durante il trascinamento il
-   contenuto si sposta davvero, al rilascio prosegue o torna indietro. */
 (function(){
   const zona=document.getElementById('app');
   const slitta=document.querySelector('.col-b');
   if(!zona||!slitta) return;
-  let x0=0,y0=0,t0=0,stato=0,dx=0,largh=0;   /* stato: 0 fermo, 1 in valutazione, 2 sto trascinando */
+  let x0=0,y0=0,t0=0,stato=0,dx=0,largh=0;
 
   const posa=v=>{slitta.style.transform=v?`translateX(${v}px)`:'';};
   const conTransizione=(on)=>{
@@ -2357,7 +2214,6 @@ document.getElementById('mese-oggi').onclick=()=>{const o=new Date();vaiAlMese(o
     if(!stato) return;
     const t=e.touches[0], ax=t.clientX-x0, ay=t.clientY-y0;
     if(stato===1){
-      /* decido una volta sola se è un gesto orizzontale o una scrollata */
       if(Math.abs(ax)<8&&Math.abs(ay)<8) return;
       stato=Math.abs(ax)>Math.abs(ay)*1.3?2:0;
       if(!stato) return;
@@ -2381,7 +2237,7 @@ document.getElementById('mese-oggi').onclick=()=>{const o=new Date();vaiAlMese(o
       view.setMonth(view.getMonth()+verso);
       render();
       conTransizione(false);
-      posa(verso*largh*0.35);            /* entra dal lato opposto */
+      posa(verso*largh*0.35);
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
         conTransizione(true); posa(0); slitta.style.opacity='1';
       }));
@@ -2394,7 +2250,6 @@ document.getElementById('mese-oggi').onclick=()=>{const o=new Date();vaiAlMese(o
   },{passive:true});
 })();
 
-/* Da tastiera: frecce sinistra e destra */
 document.addEventListener('keydown',e=>{
   if(document.querySelector('.sheet.on')) return;
   if(/input|textarea|select/i.test((e.target.tagName||''))) return;
@@ -2402,18 +2257,14 @@ document.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight') cambiaMese(1);
 });
 
-/* ---------- schede ---------- */
 let scheda='cal';
 const ORDINE_SCHEDE=['cal','pag','bac'];
-/* Sposta la pastiglia di vetro sotto la scheda attiva. */
 function muoviThumb(){
   const th=document.getElementById('tab-thumb');
   const att=document.querySelector('.tab.on');
   if(!th||!att) return;
   const x=att.offsetLeft-4;
   th.style.width=att.offsetWidth+'px';
-  /* si allunga nella direzione del movimento e poi torna: dà l'impressione
-     di un materiale che cede, non di un rettangolo che trasla */
   th.style.transform=`translateX(${x}px)`;
 }
 function mostraScheda(k){
@@ -2427,8 +2278,6 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>mostraScheda(b.datase
 window.addEventListener('resize',muoviThumb);
 setTimeout(muoviThumb,60);
 
-/* Solo per dirlo con la parola giusta: i dati stanno nel browser di questo
-   dispositivo, che sia telefono, tablet o computer. */
 function nomeDispositivo(){
   const u=navigator.userAgent||'';
   if(/iPad/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1)) return 'questo iPad';
@@ -2440,12 +2289,6 @@ function nomeDispositivo(){
   return 'questo dispositivo';
 }
 
-/* ---------- aggiornamenti ---------- */
-/* Il browser può servire una copia vecchia dell'app. Qui rileggo il file
-   scavalcando la cache e confronto il numero di versione: se ne esiste una
-   più recente lo dico, invece di lasciare l'utente a indovinare. */
-/* Svuota tutto ciò che può servire una copia vecchia dell'app e ricarica
-   da un indirizzo mai visto. I turni non sono toccati: stanno altrove. */
 async function forzaAggiornamento(numero){
   try{
     if(navigator.serviceWorker){
@@ -2481,18 +2324,13 @@ async function controllaAggiornamenti(){
       forzaAggiornamento(online);
     };
     box.appendChild(b);
-  }catch(e){/* offline: pazienza */}
+  }catch(e){}
 }
 
-/* ---------- esportazione nel calendario ---------- */
-/* Genero un file .ics: i turni di lavoro come eventi a orario, le assenze
-   come eventi giornata intera. Gli orari sono locali (niente fuso), così
-   un turno 00:00-08:00 resta tale ovunque. */
 function icsData(){
   const oggi=ymd(new Date());
   const chiavi=Object.keys(state.shifts).filter(k=>k>=oggi).sort();
   if(!chiavi.length) return null;
-  /* nel formato ics vanno protetti backslash, punto e virgola e virgola */
   const esc=t=>String(t||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
   const stampo=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
   const dt=(key,ora)=>key.replace(/-/g,'')+'T'+ora.replace(':','')+'00';
@@ -2501,7 +2339,6 @@ function icsData(){
   let conOra=0, interi=0;
   chiavi.forEach(key=>{
     const s=state.shifts[key], t=typeOf(s.type);
-    /* un identificatore stabile: reimportando, iOS aggiorna invece di duplicare */
     const uid=`turno-${key}-${s.type}@turni.app`;
     righe.push('BEGIN:VEVENT',`UID:${uid}`,`DTSTAMP:${stampo}`,
                `SUMMARY:${esc(t.label)}${s.note?' · '+esc(s.note):''}`);
@@ -2537,8 +2374,6 @@ document.getElementById('ics').onclick=()=>{
   toast(`${I.n} turni dal ${f(I.da)} al ${f(I.a)}`);
 };
 
-/* Elenco dei turni di una persona: per me uso i dati completi (orari, pause,
-   note), per un collega solo il tipo dal turnario, con gli orari standard. */
 function tabellaPersona(y,m,chi){
   const mio=chi==='__io__';
   const fonte=mio?state.shifts:(state.roster||{})[chi];
@@ -2579,7 +2414,7 @@ function elencoPersone(){
   const add=(v,t)=>{const o=document.createElement('option');o.value=v;o.textContent=t;sel.appendChild(o)};
   if(Object.keys(state.shifts).length) add('__io__',(state.settings.nome||'I miei turni')+' (io)');
   Object.keys(state.roster||{}).sort().forEach(n=>{
-    if(n===state.settings.nome) return;      /* già presente come "io" */
+    if(n===state.settings.nome) return;
     add(n,n);
   });
   if(!sel.children.length) add('__io__','I miei turni');
@@ -2587,10 +2422,6 @@ function elencoPersone(){
   if(!sel.value) sel.selectedIndex=0;
 }
 
-/* ---------- turnario di reparto in PDF ---------- */
-/* Le tre colonne sono i turni che coprono le 24 ore, nell'ordine del vostro
-   modello: notte, mattina, pomeriggio. Chi è a riposo, in ferie o in DEAS
-   non compare, esattamente come nel foglio che stampate oggi. */
 const COLONNE=['notte','mattina','pomeriggio'];
 function tabellaMese(y,m){
   const nomi=Object.keys(state.roster||{});
@@ -2655,7 +2486,7 @@ document.getElementById('pdf-go').onclick=()=>{
   const y=view.getFullYear(), m=view.getMonth(), T=tabellaPdf(y,m);
   if(!T){toast('Niente da esportare');return}
   const lib=window.jspdf&&window.jspdf.jsPDF;
-  if(!lib){                                     /* senza rete resta la stampa come ripiego */
+  if(!lib){
     document.getElementById('stampa').innerHTML=T.html;
     const t=document.title; document.title=T.titolo;
     toast('Libreria PDF non caricata: apro la stampa');
@@ -2663,7 +2494,6 @@ document.getElementById('pdf-go').onclick=()=>{
     return;
   }
   const doc=new lib({unit:'mm',format:'a4'});
-  /* la libreria cambia interfaccia fra le versioni: le accetto entrambe */
   const auto=typeof doc.autoTable==='function' ? o=>doc.autoTable(o)
            : typeof window.autoTable==='function' ? o=>window.autoTable(doc,o)
            : (window.jspdf&&typeof window.jspdf.autoTable==='function') ? o=>window.jspdf.autoTable(doc,o)
@@ -2691,7 +2521,6 @@ document.getElementById('pdf-go').onclick=()=>{
   toast('PDF scaricato');
 };
 
-/* ---------- aumenti e scatti ---------- */
 function renderScatti(){
   const box=document.getElementById('sca-list'), info=document.getElementById('sca-info');
   if(!box) return;
@@ -2740,11 +2569,6 @@ document.getElementById('sca-add').onclick=()=>{
   toast('Aumento registrato');
 };
 
-/* ---------- il netto misurato sui cedolini ---------- */
-/* Con due o più cedolini non serve modellare la busta: il legame fra
-   maggiorazioni e netto si misura. Retta ai minimi quadrati:
-   netto = base + coefficiente × maggiorazioni.
-   Dentro "base" finiscono da sole detrazioni, addizionali e conguagli. */
 function magDelMese(mese){
   const [y,m]=mese.split('-').map(Number);
   const P=paga(y,m-1);
@@ -2752,15 +2576,9 @@ function magDelMese(mese){
   return {mag:P.magNott+P.magFest+P.magFN+P.stra, completo:P.compilati>=P.days,
           compilati:P.compilati, days:P.days};
 }
-/* Ancoraggio: faccio passare la retta esattamente per il cedolino più
-   recente, usando la pendenza teorica. Serve quando ho un solo cedolino,
-   o quando la retta su più punti non è credibile: in entrambi i casi un
-   dato vero vale più di una stima. */
 function ancoraSu(dati,esclusi,mese){
   const PR=profilo();
   if(!PR||!dati.length) return null;
-  /* Scelgo il cedolino più vicino nel tempo al mese richiesto: fra due mesi
-     lontani cambiano detrazioni e addizionali, quindi il vicino vale di più. */
   const dist=c=>{
     if(!mese) return 0;
     const a=c.mese.split('-').map(Number), b=mese.split('-').map(Number);
@@ -2773,8 +2591,6 @@ function ancoraSu(dati,esclusi,mese){
           punti:[{...scelto,stima:scelto.netto,scarto:0}],errMax:0,errMedio:0};
 }
 function fitNetto(periodoChiesto){
-  /* Dopo un aumento la parte fissa cambia: mescolare cedolini di periodi
-     diversi darebbe una retta senza senso. Tengo solo quelli attuali. */
   const oggi=new Date();
   const periodo=arguments.length?periodoChiesto:scattoDi(oggi.getFullYear(),oggi.getMonth());
   const tutti=(state.settings.cedolini||[]).map(c=>{
@@ -2785,27 +2601,21 @@ function fitNetto(periodoChiesto){
   }).filter(Boolean);
   const dati=tutti.filter(c=>c.periodo===periodo);
   const esclusi=tutti.length-dati.length;
-  /* Con un solo cedolino non posso ricavare la pendenza, ma posso ancorare
-     la parte fissa: uso la percentuale del profilo e faccio passare la retta
-     esattamente per quel mese. Meglio di una stima pura. */
   if(dati.length===1) return ancoraSu(dati,esclusi,periodo&&null)||{scarsi:true,esclusi,n:1};
   if(!dati.length) return esclusi?{scarsi:true,esclusi,n:0}:null;
   const n=dati.length;
   const sx=dati.reduce((a,p)=>a+p.mag,0), sy=dati.reduce((a,p)=>a+p.netto,0);
   const sxx=dati.reduce((a,p)=>a+p.mag*p.mag,0), sxy=dati.reduce((a,p)=>a+p.mag*p.netto,0);
   const den=n*sxx-sx*sx;
-  if(Math.abs(den)<1)  return {dati,piatto:true,esclusi};   /* maggiorazioni tutte uguali */
+  if(Math.abs(den)<1)  return {dati,piatto:true,esclusi};
   const b=(n*sxy-sx*sy)/den, a=(sy-b*sx)/n;
   const punti=dati.map(p=>({...p,stima:a+b*p.mag,scarto:p.netto-(a+b*p.mag)}));
   const err=punti.map(p=>Math.abs(p.scarto));
   return {a,b,punti,n,esclusi,errMax:Math.max(...err),errMedio:err.reduce((x,y)=>x+y,0)/n};
 }
-/* Con due soli cedolini la retta ci passa sempre esatta, anche su numeri sbagliati:
-   la misura va usata solo se supera dei controlli di plausibilità. */
 function fitProblema(F){
   if(!F) return 'servono almeno due cedolini';
   if(F.ancora){
-    /* la pendenza è quella teorica, controllo solo che la parte fissa abbia senso */
     if(F.a<=0) return 'il netto del cedolino non è coerente con le maggiorazioni di quel mese';
     return null;
   }
@@ -2819,30 +2629,21 @@ function fitProblema(F){
   if(PR&&Math.abs(PR.k-F.b)>0.15) return `lontano dal calcolo teorico (${(F.b*100).toFixed(0)}% contro ${(PR.k*100).toFixed(0)}%)`;
   return null;
 }
-/* Il netto di un mese: se la misura è affidabile la uso, altrimenti il profilo. */
-/* Il netto di un mese preciso. La parte fissa dipende dal lordo di quel mese:
-   applicare quella di un altro periodo darebbe un importo sbagliato. */
 function nettoDa(mag,y,m){
   const oggi=new Date();
   if(y===undefined){y=oggi.getFullYear();m=oggi.getMonth()}
-  /* Se per questo mese mi hai dato il netto vero, quello è la risposta:
-     nessuna stima può batterlo. */
   const mese=`${y}-${pad(m+1)}`;
   const suo=(state.settings.cedolini||[]).find(c=>c.mese===mese);
   if(suo&&Number(suo.netto)) return {v:Number(suo.netto), fonte:'reale'};
   const periodo=scattoDi(y,m);
   const F=fitNetto(periodo);
   if(F&&!fitProblema(F)) return {v:F.a+F.b*mag, fonte:'cedolini', F};
-  /* la retta non regge, ma se ho cedolini di questo periodo li uso lo stesso
-     come ancoraggio: meglio un dato vero che una stima teorica */
   if(F&&F.punti&&F.punti.length){
     const A=ancoraSu(F.punti,F.esclusi,mese);
     if(A) return {v:A.a+A.b*mag, fonte:'cedolini', F:A};
   }
   const PR=profilo();
   if(!PR) return null;
-  /* differenza di lordo fra questo mese e la busta di riferimento,
-     riportata al netto con la stessa proporzione */
   const delta=(lordoDi(y,m)-PR.lordoRif)*PR.k;
   return {v:PR.base+delta+mag*PR.k, fonte:'profilo', delta};
 }
@@ -2869,7 +2670,6 @@ function renderCedolini(){
     };
     box.appendChild(row);
   });
-  /* menu dei mesi che hanno turni e non sono già inseriti */
   const sel=document.getElementById('ced-mese'); sel.innerHTML='';
   const visti=new Set(Object.keys(state.shifts).map(k=>k.slice(0,7)));
   const dentro=new Set(lista.map(c=>c.mese));
@@ -2935,21 +2735,17 @@ document.getElementById('ced-add').onclick=()=>{
   toast('Cedolino aggiunto');
 };
 
-/* ---------- previsione delle buste ---------- */
-/* La busta di un mese paga le maggiorazioni maturate <ritardo> mesi prima. */
 function renderBuste(){
   const box=document.getElementById('buste-list'); box.innerHTML='';
   const lag=Number(state.settings.ritardo)||0;
   const oggi=new Date(), gt=Number(state.settings.giornoTurni)||15;
   const PR=nettoDa(0);
-  /* primo passaggio: raccolgo i mesi e ne classifico l'attendibilità */
   const righe=[];
   for(let i=0;i<6;i++){
     const d=new Date(oggi.getFullYear(),oggi.getMonth()+i,1);
     const src=new Date(d.getFullYear(),d.getMonth()-lag,1);
     const P=paga(src.getFullYear(),src.getMonth());
     if(!P) return;
-    /* i turni di un mese sono pubblicati dal giorno gt del mese precedente */
     const uscita=new Date(src.getFullYear(),src.getMonth()-1,gt);
     righe.push({d,src,P,
       mag:P.magNott+P.magFest+P.magFN+P.stra,
