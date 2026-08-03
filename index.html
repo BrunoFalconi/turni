@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Turni">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACOUlEQVR42u3dsU3EQBCGUd+KmIgQJCpAohsiJEoguxLIKAGJiG6QaAEKISAl8vy27PH7CtjA+zS2daf16fLqdpL+a7gEgkNwCA7BITgEh+AQHIJDcEhwCA7BITgEh+AQHIJDXbtILfTzduNqbqfrp+/6Iqf6H4yx6EpkkNG44u4MMvjI4yCjvQ9vK0rjMDaOMDxMDsEhOASH4BAcgkNwCA7BITgkOASH4BAcgkNwCA7BITgEhwSH4BAcgkNwaNc4ImeDaLXm7ZfJoQVwGB69x0Z1cvDRWEbgtsJHVxlT5MC4v5zY0YlFGIc8kAoOCQ7BITgEh+AQHIJDcAgOHaDYZ7zu319cze30+XiuLxL44Q2LrkQGGY0r7s4gg488DjLa+/C2ojQOY+MIw8PkEByCQ3AIDsEhOASH4BAcgkOCQ3AIDsEhOASH4BAcgkNwSHAIDsEhOASHdo0jcjaIVmvefpkcWgCH4dF7bFQnBx+NZQRuK3x0lTEFv9TkxI5OLMI45IFUcEhwCA7BITgEh+AQHIJDcOgAxT7j9fzw5Wpup9ePu/oigR/esOhKZJDRuOLuDDL4yOMgo70PbytK4zA2jjA8TA7BITgEh+AQHIJDcAgOwSE4JDgEh+AQHIJDcAgOwSE4BIcEh+AQHIJDcGjXOCJng2i15u2XyaEFcBgevcdGdXLw0VhG4LbCR1cZU/BLTU7s6MQijEMeSAWHBIfgEByCQ3AIDsEhOASH4BAcEhyCQ3AIDsGhrfULL31m+dq5K6UAAAAASUVORK5CYII=">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACOUlEQVR42u3dsU3EQBCGUd+KmIgQJCpAohsiJEoguxLIKAGJiG6QaAEKISAl8vy27PH7CtjA+zS2daf16fLqdpL+a7gEgkNwCA7BITgEh+AQHIJDcEhwCA7BITgEh+AQHIJDXbtILfTzduNqbqfrp+/6Iqf6H4yx6EpkkNG44u4MMvjI4yCjvQ9vK0rjMDaOMDxMDsEhOASH4BAcgkNwCA7BITgkOASH4BAcgkNwCA7BITgEhwSH4BAcgkNwaNc4ImeDaLXm7ZfJoQVwGB69x0Z1cvDRWEbgtsJHVxlT5MC4v5zY0YlFGIc8kAoOCQ7BITgEh+AQHIJDcAgOHaDYZ7zu319cze30+XiuLxL44Q2LrkQGGY0r7s4gg488DjLa+/C2ojQOY+MIw8PkEByCQ3AIDsEhOASH4BAcgkOCQ3AIDsEhOASH4BAcgkNwSHAIDsEhOASHdo0jcjaIVmvefpkcWgCH4dF7bFQnBx+NZQRuK3x0lTEFv9TkxI5OLMI45IFUcEhwCA7BITgEh+AQHIJDcAgOwSE4JDgEh+AQHIJDcAgOwSE4BIcEh+AQHIJDcGjXOCJng2i15u2XyaEFcBgevcdGdXLw0VhG4LbCR1cZU/BLTU7s6MQijEMeSAWHBIfgEByCQ3AIDsEhOASH4BAcEhyCQ3AIDsGhrfULL31m+dq5K6UAAAAASUVORK5CYII=">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
 
@@ -504,7 +504,7 @@ input[type=time]{font-family:var(--mono)}
       <button class="btn ghost" style="flex:1" id="imp">Importa da Excel</button>
       <button class="btn ghost" style="flex:1" id="tpl">Scarica modello</button>
     </div>
-    <button class="btn ghost" style="width:100%;margin-bottom:8px" id="ics">Invia al calendario iPhone</button>
+    <button class="btn ghost" style="width:100%;margin-bottom:8px" id="ics">Esporta nel Calendario (Google/Apple)</button>
     <button class="btn ghost" style="width:100%;margin-bottom:8px" id="pdf">Turnario del mese in PDF</button>
     <button class="btn ghost" style="width:100%" id="copy">Copia riepilogo del mese</button>
   </details>
@@ -843,7 +843,7 @@ function weekStats(start){
     filled++;
     if(isWork(s)){work++;mins+=worked(s)}
     else if(isRiposo(s)) rest++;
-    else ass++;                       /* ferie, permesso, malattia */
+    else ass++;                        /* ferie, permesso, malattia */
   }
   return {days,work,rest,ass,mins,complete:filled===7};
 }
@@ -1942,7 +1942,7 @@ function leggiFoglio(rows,nomeFoglio,annoIpotesi){
     }
     return {date,errori};
   };
-  const coerenza=date=>{                            /* controprova sui giorni della settimana */
+  const coerenza=date=>{                           /* controprova sui giorni della settimana */
     const r=rows[dr+1]||[]; let ok=0,tot=0;
     for(const j in date){
       const t=String(r[j]??'').trim().toUpperCase();
@@ -2290,7 +2290,7 @@ function statoImpostazioni(){
     ? MESI[+S.bpMese.slice(5)-1].slice(0,3).toLowerCase()+' '+S.bpMese.slice(2,4)+' · ' : '';
   put('st-busta', P?(dubbio?'valori da verificare':mRif+`contributi ${(P.c*100).toFixed(1)}% · resta ${(P.k*100).toFixed(0)}%`+
                      (nCed?` · ${nCed} ${nCed===1?'cedolino':'cedolini'}`:''))
-                   :(vuota?'da compilare':'dati da correggere'),
+                    :(vuota?'da compilare':'dati da correggere'),
       P?(dubbio?'warn-t':'ok-t'):'warn-t');
 
   const nT=Object.keys(state.shifts).length, nR=Object.keys(state.roster||{}).length;
@@ -2655,7 +2655,7 @@ document.getElementById('pdf-go').onclick=()=>{
   const y=view.getFullYear(), m=view.getMonth(), T=tabellaPdf(y,m);
   if(!T){toast('Niente da esportare');return}
   const lib=window.jspdf&&window.jspdf.jsPDF;
-  if(!lib){                                   /* senza rete resta la stampa come ripiego */
+  if(!lib){                                     /* senza rete resta la stampa come ripiego */
     document.getElementById('stampa').innerHTML=T.html;
     const t=document.title; document.title=T.titolo;
     toast('Libreria PDF non caricata: apro la stampa');
