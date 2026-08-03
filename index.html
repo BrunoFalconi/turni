@@ -324,10 +324,6 @@ input[type=time]{font-family:var(--mono)}
 <div id="app">
   <div class="sync-toast" id="sync-toast">Sincronizzazione in corso...</div>
 
-  <div id="boot" style="background:#FF7A6B1a;border:1px solid #FF7A6B4d;border-radius:12px;padding:13px 15px;margin-bottom:16px;font-size:13px;line-height:1.5;color:#E9EDF6;font-family:system-ui,-apple-system,sans-serif">
-    <b style="color:#FF7A6B">L'app non è partita.</b><br>
-    Questa finestra non esegue il codice: succede aprendo il file dall'app File. Aprilo in Safari, oppure dall'app Claude.
-  </div>
   <div class="wrap">
   <div class="col-a">
   <div class="month-bar">
@@ -422,7 +418,6 @@ input[type=time]{font-family:var(--mono)}
 
 <div class="scrim" id="scrim"></div>
 
-<!-- NUOVO EDITOR IN SOLA LETTURA -->
 <div class="sheet" id="sheet-detail">
   <h2 id="sheet-title"></h2>
   <div class="calc" id="calc" style="margin-top:10px;"></div>
@@ -822,7 +817,6 @@ async function load(){
     }
   }catch(e){}
   render();
-  const b=document.getElementById('boot'); if(b) b.remove();
   syncFromCloud();
 }
 
@@ -1349,10 +1343,9 @@ function renderProfilo(){
   el.innerHTML=txt;
 }
 
-/* -- L'editor è stato rimosso, mostriamo solo il dettaglio -- */
 function openEditor(key){
   const s = state.shifts[key];
-  if(!s) return; // Non ci sono dati, non faccio nulla.
+  if(!s) return;
   
   const dt = new Date(key+'T00:00:00');
   document.getElementById('sheet-title').innerHTML = `${GIORNI[dt.getDay()]} ${dt.getDate()} <span>${MESI[dt.getMonth()].toLowerCase()}</span>`;
@@ -2013,7 +2006,6 @@ function icsData(){
   let conOra=0, interi=0;
   chiavi.forEach(key=>{
     const s=state.shifts[key], t=typeOf(s.type);
-    // Usando SOLO la data come UID, il calendario aggiornerà l'evento in base al giorno!
     const uid=`turno-${key}@turni.app`;
     righe.push('BEGIN:VEVENT',`UID:${uid}`,`DTSTAMP:${stampo}`,
                `SUMMARY:${esc(t.label)}${s.note?' · '+esc(s.note):''}`);
@@ -2302,7 +2294,7 @@ function fitProblema(F){
   if(F.b<=0.2||F.b>=0.9) return `coefficiente implausibile (${(F.b*100).toFixed(0)}%)`;
   if(F.n>2&&F.errMedio>40) return `i netti non stanno su una retta (scarto medio ${eur(F.errMedio)})`;
   const PR=profilo();
-  if(PR&&Math.abs(PR.k-F.b)>0.15) return `lontano dal calcolo teorico (${(PR.k*100).toFixed(0)}% contro ${(PR.k*100).toFixed(0)}%)`;
+  if(PR&&Math.abs(PR.k-F.b)>0.15) return `lontano dal calcolo teorico (${(F.b*100).toFixed(0)}% contro ${(PR.k*100).toFixed(0)}%)`;
   return null;
 }
 function nettoDa(mag,y,m){
@@ -2463,7 +2455,7 @@ function renderBuste(){
     (PR?(PR.fonte==='cedolini'?`Importi al netto, misurati sui tuoi ${PR.F.n} cedolini. `:'Importi al netto, stimati sul tuo profilo. ')
        :'Importi al lordo: compila i dati della busta paga o inserisci due cedolini per vedere il netto. ')+
     `${certi.length} mesi su 6 hanno i turni completi`+
-    (mediaMag!==null?`; per gli altri uso la media di ${eur(mediaMag)} di maggiorazioni.`:'.')+
+    (mediaMag!==null?`; per altre uso la media di ${eur(mediaMag)} di maggiorazioni.`:'.')+
     ` Gli importi in trasparenza sono stime, non previsioni.`;
 }
 document.getElementById('buste').onclick=()=>{renderBuste();showSheet('sheet-buste')};
