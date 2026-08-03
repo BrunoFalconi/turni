@@ -192,6 +192,11 @@ input[type=time]{font-family:var(--mono)}
 .pay-rows div{display:flex;justify-content:space-between;gap:12px}
 .pay-rows i{font-style:normal;color:var(--text);white-space:nowrap}
 .dett{margin-top:10px}
+.elenco{margin-top:26px;border-top:1px solid var(--line);padding-top:6px}
+.elenco>summary{display:flex;width:100%;font-family:var(--body);font-size:13px;padding:11px 2px;gap:0}
+.elenco>summary::after{margin-left:auto}
+.elenco>summary b{color:var(--text);font-weight:500}
+.elenco #list{margin-top:2px}
 .dett>summary{list-style:none;cursor:pointer;font-size:12px;color:var(--muted);
   padding:6px 0;display:inline-flex;align-items:center;gap:6px;font-family:var(--mono)}
 .dett>summary::-webkit-details-marker{display:none}
@@ -382,7 +387,6 @@ input[type=time]{font-family:var(--mono)}
   <div class="tabs" role="tablist">
     <span class="tab-thumb" id="tab-thumb"></span>
     <button class="tab on" data-tab="cal" role="tab">Calendario</button>
-    <button class="tab" data-tab="tur" role="tab">Turni</button>
     <button class="tab" data-tab="pag" role="tab">Paga</button>
     <button class="tab" data-tab="bac" role="tab">Bacheca</button>
   </div>
@@ -390,17 +394,13 @@ input[type=time]{font-family:var(--mono)}
   </div>
   <div class="col-b">
   <section class="pane on" data-pane="cal">
+  <div id="alerts"></div>
   <div class="week-head"><div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div></div>
   <div class="grid" id="grid"></div>
   <div class="weeks" id="weeks"></div>
-
-  </section>
-
-  <section class="pane" data-pane="tur">
-  <div id="alerts" style="margin-top:4px"></div>
-
-  <div class="list-title">Turni del mese</div>
-  <div id="list"></div>
+  <details class="dett elenco"><summary id="list-sum">Elenco dei turni</summary>
+    <div id="list"></div>
+  </details>
   </section>
 
   <section class="pane" data-pane="pag">
@@ -679,7 +679,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='57 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='58 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -967,9 +967,7 @@ function render(){
   document.getElementById('bar-left').textContent=
     `${worked_days} lavorati · ${rest_days} riposi`+(abs_days?` · ${abs_days} assenze`:'');
   renderPay(y,m); renderWeeks(y,m); renderNudge(); renderBacheca();
-  const nAvvisi=renderAlerts(y,m)||0;
-  const tabTur=document.querySelector('.tab[data-tab="tur"]');
-  if(tabTur) tabTur.innerHTML='Turni'+(nAvvisi?'<span class="bad" title="'+nAvvisi+(nAvvisi===1?' avviso':' avvisi')+'"></span>':'');
+  renderAlerts(y,m);
   const haPaga=document.getElementById('pay').style.display!=='none';
   const vuoto=document.getElementById('pay-empty');
   if(vuoto){
@@ -983,6 +981,9 @@ function render(){
     }
   }
 
+  const sum=document.getElementById('list-sum');
+  if(sum) sum.innerHTML=`<b>Elenco dei turni</b><span style="color:var(--muted);margin-left:12px">${
+    rows.length?`${worked_days} lavorati · ${fmtPlain(tot)}`:'nessuno'}</span>`;
   const list=document.getElementById('list'); list.innerHTML='';
   if(!rows.length){
     list.innerHTML=`<div class="empty-state">Nessun turno registrato in ${MESI[m].toLowerCase()}.<br>Tocca un giorno del calendario per iniziare.</div>`;
@@ -1185,6 +1186,7 @@ function renderWeeks(y,m){
 }
 function renderAlerts(y,m){
   const box=document.getElementById('alerts'); box.innerHTML='';
+  box.style.marginBottom='0';
   let quanti=0;
   const items=[], days=new Date(y,m+1,0).getDate();
   for(let d=1;d<=days;d++){
@@ -1205,9 +1207,7 @@ function renderAlerts(y,m){
   });
   quanti=items.length;
   if(!items.length) return 0;
-  const h=document.createElement('div'); h.className='list-title';
-  h.style.marginTop='0'; h.textContent=items.length===1?'1 avviso':`${items.length} avvisi`;
-  box.appendChild(h);
+  box.style.marginBottom='16px';
   items.forEach(it=>{
     const b=document.createElement('button'); b.className='alert';
     b.innerHTML=`<b>${it.label}</b>${it.text}`;
@@ -2379,7 +2379,7 @@ document.addEventListener('keydown',e=>{
 
 /* ---------- schede ---------- */
 let scheda='cal';
-const ORDINE_SCHEDE=['cal','tur','pag','bac'];
+const ORDINE_SCHEDE=['cal','pag','bac'];
 /* Sposta la pastiglia di vetro sotto la scheda attiva. */
 function muoviThumb(){
   const th=document.getElementById('tab-thumb');
