@@ -91,8 +91,20 @@ input[type=time]{font-family:var(--mono)}
 .mesi button.on i{background:var(--bg)}
 .mesi button.vuoto{opacity:.4}
 
+/* ---- oggi e domani ---- */
+.oggi{display:flex;flex-direction:column;gap:1px;margin-bottom:24px}
+.og{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid var(--line)}
+.og:last-child{border-bottom:none}
+.og .q{width:9px;height:9px;border-radius:3px;flex:none}
+.og .lb{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);width:64px;flex:none}
+.og .tp{flex:1;font-size:16px;font-weight:600;letter-spacing:-.01em}
+.og .tp em{font-style:normal;font-weight:400;font-size:12px;color:var(--muted);margin-left:8px;font-family:var(--mono)}
+.og .hh{font-family:var(--mono);font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.og.libero .tp{color:var(--muted);font-weight:500}
+.oggi .vuoto{padding:16px 0;font-size:13.5px;color:var(--muted);line-height:1.5}
+
 /* ---- riepilogo ---- */
-.summary{padding:2px 2px 4px;margin-bottom:22px}
+.summary{padding:0 0 4px;margin-bottom:20px}
 .totals{display:flex;gap:22px;align-items:flex-end}
 .tot-main{flex:1}
 .tot-label{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
@@ -360,26 +372,7 @@ input[type=time]{font-family:var(--mono)}
     </div>
   </div>
 
-  <div class="summary">
-    <div class="totals">
-      <div class="tot-main">
-        <div class="tot-label">Ore lavorate</div>
-        <div class="tot-value" id="tot-h">0<small>h</small></div>
-      </div>
-      <div class="tot-side tot-extra" id="box-x">
-        <div class="tot-label">Straord.</div>
-        <div class="tot-value" id="tot-x">0<small>h</small></div>
-      </div>
-      <div class="tot-side" id="box-n">
-        <div class="tot-label">Notturne</div>
-        <div class="tot-value" id="tot-n">0<small>h</small></div>
-      </div>
-    </div>
-    <div class="bar"><i id="bar-1"></i><i class="over" id="bar-2"></i></div>
-    <div class="bar-note"><span id="bar-left">—</span></div>
-
-    </div>
-  </div>
+  <div class="oggi" id="oggi"></div>
 
   <div id="upd"></div>
   <div id="nudge"></div>
@@ -404,6 +397,25 @@ input[type=time]{font-family:var(--mono)}
   </section>
 
   <section class="pane" data-pane="pag">
+  <div class="summary">
+    <div class="totals">
+      <div class="tot-main">
+        <div class="tot-label">Ore lavorate</div>
+        <div class="tot-value" id="tot-h">0<small>h</small></div>
+      </div>
+      <div class="tot-side tot-extra" id="box-x">
+        <div class="tot-label">Straord.</div>
+        <div class="tot-value" id="tot-x">0<small>h</small></div>
+      </div>
+      <div class="tot-side" id="box-n">
+        <div class="tot-label">Notturne</div>
+        <div class="tot-value" id="tot-n">0<small>h</small></div>
+      </div>
+    </div>
+    <div class="bar"><i id="bar-1"></i><i class="over" id="bar-2"></i></div>
+    <div class="bar-note"><span id="bar-left">—</span></div>
+  </div>
+
   <div class="pay" id="pay" style="display:none">
       <div class="pay-top"><span>Lordo stimato</span><b id="pay-tot">—</b></div>
       <div class="pay-rows" id="pay-rows"></div>
@@ -411,6 +423,7 @@ input[type=time]{font-family:var(--mono)}
       <div class="pay-net" id="pay-net" style="display:none"><span>Netto stimato</span><b id="pay-net-v">—</b></div>
       <div class="pay-note" id="pay-note"></div>
       <button class="pay-btn" id="buste">Prossime buste paga</button>
+  </div>
   <div class="empty-state" id="pay-empty">Per vedere il compenso, apri le impostazioni e inserisci il lordo fisso mensile.</div>
   </section>
 
@@ -679,7 +692,7 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='58 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
+const VERSIONE='59 · 2 agosto 2026';   /* si vede in impostazioni: dice subito se l'aggiornamento è arrivato */
 
 /* Bonifica: un service worker rimasto registrato da una versione precedente
    continuerebbe a servire i vecchi file anche dopo un aggiornamento.
@@ -966,7 +979,7 @@ function render(){
   document.getElementById('bar-2').style.width=(target?Math.min(over/target*100,100-base/target*100):0)+'%';
   document.getElementById('bar-left').textContent=
     `${worked_days} lavorati · ${rest_days} riposi`+(abs_days?` · ${abs_days} assenze`:'');
-  renderPay(y,m); renderWeeks(y,m); renderNudge(); renderBacheca();
+  renderOggi(); renderPay(y,m); renderWeeks(y,m); renderNudge(); renderBacheca();
   renderAlerts(y,m);
   const haPaga=document.getElementById('pay').style.display!=='none';
   const vuoto=document.getElementById('pay-empty');
@@ -1080,6 +1093,27 @@ function renderDettaglio(y,m){
       `<td>${h(T.n).toFixed(0)}</td><td>${h(T.f).toFixed(0)}</td><td>${h(T.fn).toFixed(0)}</td><td>${eur(T.e)}</td></tr></tfoot></table>`+
       `<div class="pay-note">● giorno festivo o domenica. Le ore sono al netto della pausa non pagata.</div>`
     : '<div class="pay-note">Nessuna maggiorazione in questo mese.</div>';
+}
+/* Oggi e domani: è la domanda che ci si fa aprendo l'app. Non dipende dal
+   mese che stai guardando, resta fisso mentre sfogli. */
+function renderOggi(){
+  const box=document.getElementById('oggi'); if(!box) return;
+  const oggi=new Date();
+  const righe=[[0,'Oggi'],[1,'Domani']].map(([n,et])=>{
+    const d=new Date(oggi.getFullYear(),oggi.getMonth(),oggi.getDate()+n);
+    const key=ymd(d), sh=state.shifts[key];
+    if(!sh) return `<div class="og libero"><span class="q" style="background:#ffffff1a"></span>
+      <span class="lb">${et}</span><span class="tp">—</span>
+      <span class="hh">${GIORNI[d.getDay()].toLowerCase()} ${d.getDate()}</span></div>`;
+    const t=typeOf(sh.type), lav=isWork(sh);
+    return `<div class="og${lav?'':' libero'}"><span class="q" style="background:${lav?t.color:'#ffffff22'}"></span>
+      <span class="lb">${et}</span>
+      <span class="tp">${t.label}${lav?`<em>${sh.start}–${sh.end==='00:00'?'24:00':sh.end}</em>`:''}</span>
+      <span class="hh">${lav?fmtPlain(worked(sh)):GIORNI[d.getDay()].toLowerCase()+' '+d.getDate()}</span></div>`;
+  }).join('');
+  const vuoto=!state.shifts[ymd(oggi)]&&!state.shifts[ymd(new Date(oggi.getFullYear(),oggi.getMonth(),oggi.getDate()+1))];
+  box.innerHTML=righe+(vuoto&&!Object.keys(state.shifts).length
+    ? '<div class="vuoto">Nessun turno caricato. Apri le impostazioni per importare il turnario.</div>' : '');
 }
 function renderPay(y,m){
   const box=document.getElementById('pay'), P=paga(y,m);
