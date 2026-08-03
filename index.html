@@ -62,7 +62,6 @@ input[type=number]{-moz-appearance:textfield}
 textarea{font-family:var(--mono);line-height:1.7;resize:vertical;letter-spacing:.05em;text-transform:uppercase}
 input[type=time]{font-family:var(--mono)}
 
-/* ---- intestazione mese ---- */
 .month-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
 .month-name{font-family:var(--display);font-size:27px;font-weight:700;letter-spacing:-.02em;line-height:1}
 .month-name span{color:var(--muted);font-weight:500}
@@ -91,7 +90,6 @@ input[type=time]{font-family:var(--mono)}
 .mesi button.on i{background:var(--bg)}
 .mesi button.vuoto{opacity:.4}
 
-/* ---- oggi e domani ---- */
 .oggi{display:flex;flex-direction:column;gap:1px;margin-bottom:24px}
 .og{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid var(--line)}
 .og:last-child{border-bottom:none}
@@ -103,7 +101,6 @@ input[type=time]{font-family:var(--mono)}
 .og.libero .tp{color:var(--muted);font-weight:500}
 .oggi .vuoto{padding:16px 0;font-size:13.5px;color:var(--muted);line-height:1.5}
 
-/* ---- riepilogo ---- */
 .summary{padding:0 0 4px;margin-bottom:20px}
 .totals{display:flex;gap:22px;align-items:flex-end}
 .tot-main{flex:1}
@@ -116,10 +113,7 @@ input[type=time]{font-family:var(--mono)}
 .bar i{display:block;height:100%;background:var(--text);transition:width .35s ease}
 .bar i.over{background:var(--extra)}
 .bar-note{font-size:11.5px;color:var(--muted);margin-top:9px}
-.chips-legend{display:flex;gap:14px;margin-top:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
-.chips-legend b{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:1px}
 
-/* ---- calendario ---- */
 .week-head{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:9px}
 .week-head div{text-align:center;font-size:10px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
@@ -139,7 +133,6 @@ input[type=time]{font-family:var(--mono)}
 .tag{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--muted);margin-top:auto;padding-bottom:2px}
 .hrs{font-family:var(--mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 
-/* ---- elenco turni ---- */
 .list-title{font-family:var(--display);font-size:15px;font-weight:600;margin:4px 0 6px;color:var(--muted);letter-spacing:.02em}
 .row{display:flex;align-items:center;gap:13px;padding:13px 2px;background:transparent;border-bottom:1px solid var(--line);border-radius:0;margin-bottom:0;width:100%;text-align:left}
 .row .dot{width:10px;height:10px;border-radius:3px;flex:none}
@@ -149,16 +142,12 @@ input[type=time]{font-family:var(--mono)}
 .row .h{font-family:var(--mono);font-size:14px;font-variant-numeric:tabular-nums}
 .empty-state{background:transparent;border:1px dashed var(--line);border-radius:14px;padding:26px 20px;text-align:center;color:var(--muted);font-size:14px;line-height:1.5}
 
-/* ---- pannello ---- */
 .scrim{position:fixed;inset:0;background:rgba(6,10,18,.55);-webkit-backdrop-filter:blur(14px) saturate(120%);backdrop-filter:blur(14px) saturate(120%);opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
 .scrim.on{opacity:1;pointer-events:auto}
 .sheet{pointer-events:none;visibility:hidden;position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:rgba(24,31,45,.82);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);border-top:1px solid rgba(255,255,255,.09);border-radius:22px 22px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(102%);transition:transform .26s cubic-bezier(.32,.72,0,1);z-index:21;max-height:92vh;overflow-y:auto}
 .sheet.on{pointer-events:auto;visibility:visible;transform:translateY(0)}
 .sheet h2{font-family:var(--display);font-size:19px;font-weight:600;margin:0 0 14px;letter-spacing:-.01em}
 .sheet h2 span{color:var(--muted);font-weight:500}
-.types{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px}
-.type{padding:10px 4px;border-radius:11px;background:var(--surface-2);font-size:13px;text-align:center;border:1px solid transparent;transition:.15s}
-.type.on{border-color:currentColor;background:color-mix(in srgb,currentColor 14%,var(--surface-2))}
 .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .field label{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .field.wide{grid-column:1/-1}
@@ -172,8 +161,15 @@ input[type=time]{font-family:var(--mono)}
   border:1px solid rgba(255,255,255,.09);flex:0 0 auto;padding:13px 18px;font-weight:500}
 .btn.danger{background:var(--surface-2);color:var(--extra);-webkit-text-fill-color:var(--extra);
   border:1px solid #FF7A6B44}
-.fab{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);font-weight:600;font-size:14px;padding:13px 22px;border-radius:24px;box-shadow:0 6px 24px rgba(0,0,0,.5);z-index:10;transition:transform .2s cubic-bezier(.32,.72,0,1)}
-.fab:active{transform:translateX(-50%) scale(.94)}
+
+.sync-toast{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-20px);background:var(--pomeriggio);color:#0D121C;font-weight:600;padding:8px 16px;border-radius:20px;font-size:13px;opacity:0;pointer-events:none;transition:.3s;z-index:40}
+.sync-toast.on{opacity:1;transform:translate(-50%,0)}
+
+.cal-prompt{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:18px;right:18px;background:rgba(30,38,54,.95);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:1px solid var(--pomeriggio);border-radius:20px;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.5);opacity:0;pointer-events:none;transform:translateY(20px);transition:.3s cubic-bezier(.32,.72,0,1);z-index:50}
+.cal-prompt.on{opacity:1;transform:translateY(0);pointer-events:auto}
+.cal-prompt-title{font-weight:600;font-size:15px;margin-bottom:6px;color:var(--text);text-align:center}
+.cal-prompt-desc{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.4;text-align:center}
+
 .toast{position:fixed;bottom:96px;left:50%;transform:translate(-50%,14px);background:rgba(30,38,54,.85);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid rgba(255,255,255,.10);color:var(--text);font-size:13px;padding:10px 16px;border-radius:20px;opacity:0;pointer-events:none;transition:.2s;z-index:30}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .set-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid #ffffff0d}
@@ -222,11 +218,6 @@ input[type=time]{font-family:var(--mono)}
 .pay-net{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
 .pay-net span{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
 .pay-net b{font-family:var(--mono);font-size:21px;font-weight:600;color:var(--pomeriggio)}
-.upd{display:block;width:100%;text-align:left;background:#7F6CF21f;border:1px solid #7F6CF255;
-  border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13px;line-height:1.5;color:var(--text)}
-.upd b{color:#A99CF7;font-weight:600;display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;margin-bottom:3px}
-.nudge{display:block;width:100%;text-align:left;background:#3FB6A814;border:1px solid #3FB6A83d;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:13px;line-height:1.5;color:var(--text)}
-.nudge b{color:var(--pomeriggio);font-weight:600;display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;margin-bottom:3px}
 .busta{display:block;width:100%;text-align:left;background:var(--surface-2);border-radius:12px;padding:13px 15px;margin-bottom:7px}
 .busta .t{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .busta .m{font-family:var(--display);font-size:15px;font-weight:600}
@@ -320,7 +311,6 @@ input[type=time]{font-family:var(--mono)}
     opacity:0;transition:opacity .18s ease,transform .18s ease;
     box-shadow:0 24px 70px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.10)}
   .sheet.on{pointer-events:auto;visibility:visible;transform:translate(-50%,-50%) scale(1);opacity:1}
-  .fab{left:auto;right:28px;transform:none;bottom:28px}
   .pane[data-pane="pag"] .pay{background:var(--surface);border-radius:18px;padding:20px;border-top:none;margin-top:0}
   #stampa{display:none}
 }
@@ -332,6 +322,8 @@ input[type=time]{font-family:var(--mono)}
 </style>
 
 <div id="app">
+  <div class="sync-toast" id="sync-toast">Sincronizzazione in corso...</div>
+
   <div id="boot" style="background:#FF7A6B1a;border:1px solid #FF7A6B4d;border-radius:12px;padding:13px 15px;margin-bottom:16px;font-size:13px;line-height:1.5;color:#E9EDF6;font-family:system-ui,-apple-system,sans-serif">
     <b style="color:#FF7A6B">L'app non è partita.</b><br>
     Questa finestra non esegue il codice: succede aprendo il file dall'app File. Aprilo in Safari, oppure dall'app Claude.
@@ -353,9 +345,7 @@ input[type=time]{font-family:var(--mono)}
   </div>
 
   <div class="oggi" id="oggi"></div>
-
   <div id="upd"></div>
-  <div id="nudge"></div>
 
   <div class="tabs" role="tablist">
     <span class="tab-thumb" id="tab-thumb"></span>
@@ -415,40 +405,29 @@ input[type=time]{font-family:var(--mono)}
 
   </div>
   </div>
-  <button class="fab" id="fab">Aggiungi turno</button>
   <div class="toast" id="toast"></div>
+
+  <div class="cal-prompt" id="cal-prompt">
+    <div class="cal-prompt-title">Sono state rilevate modifiche ai tuoi turni</div>
+    <div class="cal-prompt-desc">Vuoi aggiornare il calendario personale sul dispositivo?</div>
+    <div class="cal-prompt-actions">
+      <button class="btn" id="cal-prompt-yes">Aggiorna</button>
+      <button class="btn ghost" id="cal-prompt-no">Ignora</button>
+    </div>
+  </div>
+
 </div>
 
 <div id="stampa"></div>
 
 <div class="scrim" id="scrim"></div>
 
-<div class="sheet" id="sheet">
+<!-- NUOVO EDITOR IN SOLA LETTURA -->
+<div class="sheet" id="sheet-detail">
   <h2 id="sheet-title"></h2>
-  <div class="types" id="types"></div>
-  <div id="work-fields">
-    <div class="fields">
-      <div class="field"><label for="f-start">Inizio</label><input type="time" id="f-start"></div>
-      <div class="field"><label for="f-end">Fine</label><input type="time" id="f-end"></div>
-      <div class="field"><label for="f-break">Pausa (min)</label><input type="number" id="f-break" min="0" step="5" inputmode="numeric"></div>
-      <div class="field"><label for="f-repeat">Ripeti per</label>
-        <select id="f-repeat">
-          <option value="1">Solo questo giorno</option>
-          <option value="2">2 giorni</option>
-          <option value="3">3 giorni</option>
-          <option value="4">4 giorni</option>
-          <option value="5">5 giorni</option>
-          <option value="6">6 giorni</option>
-          <option value="7">7 giorni</option>
-        </select>
-      </div>
-      <div class="field wide"><label for="f-note">Nota</label><input type="text" id="f-note" placeholder="Reparto, sede, collega…"></div>
-    </div>
-    <div class="calc" id="calc"></div>
-  </div>
-  <div class="actions">
-    <button class="btn" id="save">Salva</button>
-    <button class="btn ghost danger" id="del">Elimina</button>
+  <div class="calc" id="calc" style="margin-top:10px;"></div>
+  <div class="actions" style="margin-top:20px;">
+    <button class="btn ghost" id="detail-close" style="width:100%">Chiudi</button>
   </div>
 </div>
 
@@ -483,25 +462,10 @@ input[type=time]{font-family:var(--mono)}
 
   <details class="grp">
     <summary><b>Turni</b><i id="st-turni"></i></summary>
-    <button class="btn" style="width:100%;margin-bottom:8px" id="seq">Incolla sequenza turni</button>
-    <div class="actions" style="margin-bottom:8px">
-      <button class="btn ghost" style="flex:1" id="imp">Importa da Excel</button>
-      <button class="btn ghost" style="flex:1" id="tpl">Scarica modello</button>
-    </div>
+    <button class="btn ghost" style="width:100%;margin-bottom:8px" id="cambia-chi">Cambia la persona selezionata</button>
     <button class="btn ghost" style="width:100%;margin-bottom:8px" id="ics">Esporta nel Calendario (Google/Apple)</button>
     <button class="btn ghost" style="width:100%;margin-bottom:8px" id="pdf">Turnario del mese in PDF</button>
     <button class="btn ghost" style="width:100%" id="copy">Copia riepilogo del mese</button>
-  </details>
-
-  <details class="grp">
-    <summary><b>Backup e dati</b><i id="st-dati"></i></summary>
-    <div class="actions" style="margin-bottom:8px">
-      <button class="btn ghost" style="flex:1" id="bk-save">Salva backup</button>
-      <button class="btn ghost" style="flex:1" id="bk-load">Ripristina</button>
-    </div>
-    <div class="calc" id="store-info" style="margin:10px 0"></div>
-    <button class="btn ghost" style="width:100%;margin-bottom:8px" id="ricarica">Forza aggiornamento</button>
-    <button class="btn danger" style="width:100%" id="wipe">Cancella tutti i dati</button>
   </details>
 
   <details class="grp">
@@ -533,8 +497,6 @@ input[type=time]{font-family:var(--mono)}
   <div class="actions" style="margin-top:16px">
     <button class="btn" id="set-close">Fatto</button>
   </div>
-  <input type="file" id="bk-file" accept=".json,application/json" style="display:none">
-  <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
 </div>
 
 <div class="sheet" id="sheet-mese">
@@ -548,19 +510,6 @@ input[type=time]{font-family:var(--mono)}
   <div class="actions" style="margin-top:16px">
     <button class="btn" id="mese-oggi">Vai a oggi</button>
     <button class="btn ghost" id="mese-close">Chiudi</button>
-  </div>
-</div>
-
-<div class="sheet" id="sheet-bk">
-  <h2>Ripristina backup</h2>
-  <div class="calc" id="bk-info" style="margin-bottom:14px"></div>
-  <div class="set-row" style="border:none;padding-top:0">
-    <span>Unisci ai dati attuali invece di sostituirli</span>
-    <input type="checkbox" id="bk-merge" style="width:22px;height:22px;flex:none;accent-color:var(--mattina)">
-  </div>
-  <div class="actions">
-    <button class="btn" id="bk-go">Ripristina</button>
-    <button class="btn ghost" id="bk-cancel">Annulla</button>
   </div>
 </div>
 
@@ -611,10 +560,10 @@ input[type=time]{font-family:var(--mono)}
 
 <div class="sheet" id="sheet-pers">
   <h2>Chi sei?</h2>
-  <div class="calc" id="pers-info" style="margin-bottom:12px"></div>
+  <div class="calc" id="pers-info" style="margin-bottom:12px">Seleziona il tuo nome per vedere i tuoi turni.</div>
   <div class="field" style="margin-bottom:10px"><input type="text" id="pf" placeholder="Filtra per nome o cognome"></div>
   <div id="pers-list" style="max-height:44vh;overflow-y:auto;margin-bottom:14px"></div>
-  <div class="actions"><button class="btn ghost" style="flex:1" id="pers-cancel">Annulla</button></div>
+  <div class="actions"><button class="btn ghost" style="flex:1" id="pers-cancel">Ignora</button></div>
 </div>
 
 <div class="sheet" id="sheet-buste">
@@ -624,49 +573,17 @@ input[type=time]{font-family:var(--mono)}
   <div class="actions" style="margin-top:16px"><button class="btn" id="buste-close">Chiudi</button></div>
 </div>
 
-<div class="sheet" id="sheet-seq">
-  <h2>Incolla la sequenza</h2>
-  <div class="field" style="margin-bottom:12px">
-    <label for="q-date">Il primo turno della stringa è del</label>
-    <input type="date" id="q-date">
-  </div>
-  <div class="field" style="margin-bottom:12px">
-    <label for="q-text">Sequenza</label>
-    <textarea id="q-text" rows="4" placeholder="R N M M P P R R N R M P R DEAS..."></textarea>
-  </div>
-  <div class="calc" id="q-info">Codici: M mattina · P pomeriggio · N notte · DEAS · R riposo · F ferie · MAL malattia</div>
-  <div class="actions">
-    <button class="btn" id="q-go">Vedi anteprima</button>
-    <button class="btn ghost" id="q-cancel">Annulla</button>
-  </div>
-</div>
-
-<div class="sheet" id="sheet-imp">
-  <h2>Anteprima importazione</h2>
-  <div class="calc" id="imp-sum"></div>
-  <div id="imp-list" style="max-height:32vh;overflow-y:auto;margin-bottom:14px"></div>
-  <div class="set-row" style="border:none;padding-top:0">
-    <span>Sostituisci i turni già presenti</span>
-    <input type="checkbox" id="imp-over" checked style="width:22px;height:22px;flex:none;accent-color:var(--mattina)">
-  </div>
-  <div class="actions">
-    <button class="btn" id="imp-go">Importa</button>
-    <button class="btn ghost" id="imp-cancel">Annulla</button>
-  </div>
-</div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='68 · 3 agosto 2026';
+const VERSIONE='69 · 3 agosto 2026';
+const CLOUD_URL = 'https://docs.google.com/spreadsheets/d/1Wc1ZkXNm-3rcxF5gsGvkpTosJcEQUDzbEafD4ewSfF8/export?format=xlsx';
 
 if(typeof navigator!=='undefined'&&navigator.serviceWorker){
-  navigator.serviceWorker.getRegistrations()
-    .then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
-  if(typeof caches!=='undefined')
-    caches.keys().then(ks=>ks.forEach(k=>caches.delete(k))).catch(()=>{});
+  navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
+  if(typeof caches!=='undefined') caches.keys().then(ks=>ks.forEach(k=>caches.delete(k))).catch(()=>{});
 }
 
 const mem={};
@@ -677,23 +594,13 @@ const store={
   })(),
   async get(k){
     if(this.mode==='claude') return await window.storage.get(k);
-    if(this.mode==='browser'){
-      try{const v=localStorage.getItem(k);return v?{key:k,value:v}:null}catch(e){return null}
-    }
+    if(this.mode==='browser'){try{const v=localStorage.getItem(k);return v?{key:k,value:v}:null}catch(e){return null}}
     return mem[k]?{key:k,value:mem[k]}:null;
   },
   async set(k,v){
     if(this.mode==='claude') return await window.storage.set(k,v);
-    if(this.mode==='browser'){
-      try{localStorage.setItem(k,v)}catch(e){}
-    } else {mem[k]=v;}
+    if(this.mode==='browser'){try{localStorage.setItem(k,v)}catch(e){}} else {mem[k]=v;}
     return {key:k,value:v};
-  },
-  async del(k){
-    if(this.mode==='claude') return await window.storage.delete(k);
-    if(this.mode==='browser'){
-      try{localStorage.removeItem(k)}catch(e){}
-    } else {delete mem[k];}
   }
 };
 const TYPES=[
@@ -721,8 +628,6 @@ const DEFAULTS={
 
 let state={shifts:{},roster:{},settings:{...DEFAULTS}};
 let view=new Date(); view.setDate(1);
-let editing=null;
-let draft=null;
 
 const pad=n=>String(n).padStart(2,'0');
 const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -735,10 +640,7 @@ function span(s){
   if(b<=a) b+=1440;
   return {a,b,gross:b-a};
 }
-function worked(s){
-  if(!isWork(s)) return 0;
-  return Math.max(0, span(s).gross - (Number(s.break)||0));
-}
+function worked(s){if(!isWork(s)) return 0; return Math.max(0, span(s).gross - (Number(s.break)||0));}
 function isWork(s){const t=TYPES.find(t=>t.id===s.type);return t&&t.work}
 function isRiposo(s){return s.type==='riposo'}
 function isAssenza(s){return !isWork(s)&&!isRiposo(s)}
@@ -753,15 +655,11 @@ function nightMin(s){
   }
   return Math.min(tot, b-a);
 }
-function overtime(s){
-  const w=worked(s);
-  return Math.max(0, w - state.settings.dayThreshold*60);
-}
+function overtime(s){const w=worked(s); return Math.max(0, w - state.settings.dayThreshold*60);}
 function typeOf(id){return TYPES.find(t=>t.id===id)||TYPES[0]}
 function lordoDi(y,m){
   const mese=`${y}-${pad(m+1)}`;
-  const tutti=(state.settings.scatti||[]).filter(x=>x&&x.da&&Number(x.lordo))
-    .sort((a,b)=>a.da<b.da?-1:1);
+  const tutti=(state.settings.scatti||[]).filter(x=>x&&x.da&&Number(x.lordo)).sort((a,b)=>a.da<b.da?-1:1);
   const validi=tutti.filter(x=>x.da<=mese);
   if(validi.length) return Number(validi[validi.length-1].lordo);
   const base=Number(state.settings.lordoFisso)||0;
@@ -791,12 +689,11 @@ function issuesFor(key,override){
   if(s.type==='notte'){
     const p=state.shifts[dayAdd(key,-1)];
     if(p&&isWork(p)&&!BEFORE_NIGHT.includes(p.type))
-      out.push({kind:'prev',text:`Il giorno prima c'è ${typeOf(p.type).label.toLowerCase()}: prima di una notte serve un riposo, un'altra notte o un DEAS.`});
+      out.push({kind:'prev',text:`Prima di una notte serve riposo o DEAS.`});
   }
   if(isWork(s)&&!BEFORE_NIGHT.includes(s.type)){
     const n=state.shifts[dayAdd(key,1)];
-    if(n&&n.type==='notte')
-      out.push({kind:'next',text:`Il giorno dopo c'è una notte: prima serve un riposo, un'altra notte o un DEAS.`});
+    if(n&&n.type==='notte') out.push({kind:'next',text:`Il giorno dopo c'è una notte: serve riposo.`});
   }
   return out;
 }
@@ -816,6 +713,103 @@ function weekStats(start){
   return {days,work,rest,ass,mins,complete:filled===7};
 }
 
+let saveTimer;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{
+    try{ await store.set(KEY, JSON.stringify(state)); }catch(e){}
+  },250);
+}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2500)}
+
+/* ---- SINCRONIZZAZIONE ---- */
+let cartellaCache = null;
+
+async function syncFromCloud() {
+  const tst = document.getElementById('sync-toast');
+  if(tst) tst.classList.add('on');
+  try {
+    const res = await fetch(CLOUD_URL, {cache: 'no-store'});
+    if(!res.ok) throw new Error('Network response was not ok');
+    const ab = await res.arrayBuffer();
+    
+    if(typeof XLSX === 'undefined') return;
+    const wb = XLSX.read(new Uint8Array(ab), {type: 'array', cellDates: true});
+    const cartella = leggiCartella(wb);
+    
+    if(tst) tst.classList.remove('on');
+    if(!cartella) return;
+    
+    cartellaCache = cartella;
+    
+    const newRoster = {};
+    cartella.persone.forEach(q => {
+      const m = {};
+      for (const k in q.turni) m[k] = q.turni[k].type;
+      newRoster[q.nome] = m;
+    });
+
+    const mioNome = state.settings.nome;
+    if (!mioNome) {
+      state.roster = newRoster;
+      save(); render();
+      apriPersone(); 
+      showSheet('sheet-pers');
+      return;
+    }
+
+    let myNewShifts = {};
+    const p = cartella.persone.find(x => x.nome === mioNome);
+    if(p) myNewShifts = p.turni;
+
+    let changed = false;
+    const oldKeys = Object.keys(state.shifts);
+    const newKeys = Object.keys(myNewShifts);
+    
+    if (oldKeys.length !== newKeys.length) {
+      changed = true;
+    } else {
+      for (const k of newKeys) {
+        const o = state.shifts[k], n = myNewShifts[k];
+        if (!o || o.type !== n.type || o.start !== n.start || o.end !== n.end) {
+          changed = true; break;
+        }
+      }
+    }
+
+    state.roster = newRoster;
+    state.shifts = myNewShifts;
+    save();
+    render();
+
+    if (changed && oldKeys.length > 0) {
+      document.getElementById('cal-prompt').classList.add('on');
+    }
+
+  } catch(e) {
+    if(tst) tst.classList.remove('on');
+    console.error("Sync error:", e);
+  }
+}
+
+document.getElementById('cal-prompt-no').onclick = () => {
+  document.getElementById('cal-prompt').classList.remove('on');
+};
+
+document.getElementById('cal-prompt-yes').onclick = () => {
+  document.getElementById('cal-prompt').classList.remove('on');
+  const I = icsData();
+  if(!I) { toast('Nessun turno da sincronizzare.'); return; }
+  
+  const blob = new Blob([I.testo],{type:'text/calendar;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `turni-${I.da}.ics`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  toast('Scarica il file e cliccaci per aggiornare i calendari!');
+};
+
 async function load(){
   try{
     const r=await store.get(KEY);
@@ -825,40 +819,12 @@ async function load(){
       state.shifts=d.shifts||{};
       state.roster=d.roster||{};
       state.settings={...DEFAULTS,...saved};
-      let changed=false;
-      if((saved.payV||0)<DEFAULTS.payV){
-        state.settings.ritardo=DEFAULTS.ritardo;
-        state.settings.payV=DEFAULTS.payV;
-        changed=true;
-      }
-      if((saved.presetsV||0)<DEFAULTS.presetsV){
-        state.settings.presets={...DEFAULTS.presets};
-        state.settings.presetsV=DEFAULTS.presetsV;
-        changed=true;
-      }
-      for(const k in DEFAULTS.presets){
-        const p=state.settings.presets[k];
-        if(!Array.isArray(p)||p.length<2||!p[0]||!p[1]){
-          state.settings.presets[k]=[...DEFAULTS.presets[k]];
-          changed=true;
-        }
-      }
-      if(changed) save();
     }
   }catch(e){}
   render();
   const b=document.getElementById('boot'); if(b) b.remove();
-  controllaAggiornamenti();
+  syncFromCloud();
 }
-let saveTimer;
-function save(){
-  clearTimeout(saveTimer);
-  saveTimer=setTimeout(async()=>{
-    try{ await store.set(KEY, JSON.stringify(state)); }
-    catch(e){ toast('Salvataggio non riuscito, riprova'); }
-  },250);
-}
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1900)}
 
 function render(){
   const y=view.getFullYear(), m=view.getMonth();
@@ -928,18 +894,15 @@ function render(){
   document.getElementById('bar-2').style.width=(target?Math.min(over/target*100,100-base/target*100):0)+'%';
   document.getElementById('bar-left').textContent=
     `${worked_days} lavorati · ${rest_days} riposi`+(abs_days?` · ${abs_days} assenze`:'');
-  renderOggi(); renderPay(y,m); renderWeeks(y,m); renderNudge(); renderBacheca();
+  renderOggi(); renderPay(y,m); renderWeeks(y,m); renderBacheca();
   renderAlerts(y,m);
+  
   const haPaga=document.getElementById('pay').style.display!=='none';
   const vuoto=document.getElementById('pay-empty');
   if(vuoto){
     vuoto.style.display=haPaga?'none':'';
     if(!haPaga){
-      const haScatti=(state.settings.scatti||[]).length>0;
-      vuoto.innerHTML=haScatti
-        ? `Per ${MESI[m].toLowerCase()} ${y} non conosco il lordo.<br>Serve il <b>lordo fisso mensile</b>: vale per i mesi precedenti ai tuoi aumenti.`
-        : `Per vedere il compenso serve il <b>lordo fisso mensile</b>.`;
-      vuoto.innerHTML+=`<br><br><button class="btn ghost" style="width:100%" onclick="apriImpostazioni('retribuzione')">Apri le impostazioni</button>`;
+      vuoto.innerHTML= `Per vedere il compenso serve il <b>lordo fisso mensile</b>.<br><br><button class="btn ghost" style="width:100%" onclick="apriImpostazioni('retribuzione')">Apri le impostazioni</button>`;
     }
   }
 
@@ -948,7 +911,7 @@ function render(){
     rows.length?`${worked_days} lavorati · ${fmtPlain(tot)}`:'nessuno'}</span>`;
   const list=document.getElementById('list'); list.innerHTML='';
   if(!rows.length){
-    list.innerHTML=`<div class="empty-state">Nessun turno registrato in ${MESI[m].toLowerCase()}.<br>Tocca un giorno del calendario per iniziare.</div>`;
+    list.innerHTML=`<div class="empty-state">Nessun turno assegnato a te in ${MESI[m].toLowerCase()}.</div>`;
   }else{
     rows.forEach(([key,s])=>{
       const dt=new Date(key+'T00:00:00');
@@ -974,7 +937,7 @@ function renderBacheca(){
   const nomi=Object.keys(state.roster||{});
 
   if(!nomi.length){
-    box.innerHTML='<div class="empty-state">Nessun turnario di reparto disponibile.<br>Importa il file Excel collettivo per vedere i turni dei colleghi.</div>';
+    box.innerHTML='<div class="empty-state">Nessun turnario di reparto disponibile.</div>';
     if(note) note.textContent='';
     return;
   }
@@ -1010,7 +973,7 @@ function renderBacheca(){
   }
 
   box.innerHTML=hasShifts ? html : `<div class="empty-state">Nessun collega assegnato in ${MESI[m].toLowerCase()}.</div>`;
-  if(note) note.textContent=`${nomi.length} colleghi nel reparto. Riposi, assenze e ferie sono nascosti.`;
+  if(note) note.textContent=`${nomi.length} colleghi nel reparto.`;
 }
 
 function renderDettaglio(y,m){
@@ -1058,7 +1021,7 @@ function renderOggi(){
   }).join('');
   const vuoto=!state.shifts[ymd(oggi)]&&!state.shifts[ymd(new Date(oggi.getFullYear(),oggi.getMonth(),oggi.getDate()+1))];
   box.innerHTML=righe+(vuoto&&!Object.keys(state.shifts).length
-    ? '<div class="vuoto">Nessun turno caricato. Apri le impostazioni per importare il turnario.</div>' : '');
+    ? '<div class="vuoto">Nessun turno assegnato nei prossimi giorni.</div>' : '');
 }
 
 function renderPay(y,m){
@@ -1386,84 +1349,44 @@ function renderProfilo(){
   el.innerHTML=txt;
 }
 
+/* -- L'editor è stato rimosso, mostriamo solo il dettaglio -- */
 function openEditor(key){
-  editing=key;
-  const s=state.shifts[key];
-  draft=s?{...s}:{type:'mattina',start:presetOf('mattina')[0],end:presetOf('mattina')[1],break:state.settings.defaultBreak??0,note:''};
-  const dt=new Date(key+'T00:00:00');
-  document.getElementById('sheet-title').innerHTML=`${GIORNI[dt.getDay()]} ${dt.getDate()} <span>${MESI[dt.getMonth()].toLowerCase()}</span>`;
-  document.getElementById('del').style.display=s?'':'none';
-  document.getElementById('f-repeat').value='1';
-  paintTypes(); syncFields(); showSheet('sheet');
-}
-function paintTypes(){
-  const c=document.getElementById('types'); c.innerHTML='';
-  TYPES.forEach(t=>{
-    const b=document.createElement('button');
-    b.className='type'+(draft.type===t.id?' on':'');
-    b.style.color=t.color;
-    b.textContent=t.label;
-    b.onclick=()=>{
-      draft.type=t.id;
-      if(DEFAULTS.presets[t.id]){const pr=presetOf(t.id);draft.start=pr[0];draft.end=pr[1]}
-      draft.break=t.brk??(state.settings.defaultBreak||0);
-      paintTypes(); syncFields();
-    };
-    c.appendChild(b);
-  });
-}
-function syncFields(){
-  const work=isWork(draft);
-  document.getElementById('work-fields').style.display=work?'':'none';
-  if(!work) return;
-  document.getElementById('f-start').value=draft.start;
-  document.getElementById('f-end').value=draft.end;
-  document.getElementById('f-break').value=draft.break??0;
-  document.getElementById('f-note').value=draft.note||'';
-  const w=worked(draft), x=overtime(draft), n=nightMin(draft);
-  const iss=issuesFor(editing,draft);
-  const S=state.settings;
-  const dEd=new Date(editing+'T00:00:00');
-  const lf=lordoDi(dEd.getFullYear(),dEd.getMonth());
-  let mag='';
+  const s = state.shifts[key];
+  if(!s) return; // Non ci sono dati, non faccio nulla.
+  
+  const dt = new Date(key+'T00:00:00');
+  document.getElementById('sheet-title').innerHTML = `${GIORNI[dt.getDay()]} ${dt.getDate()} <span>${MESI[dt.getMonth()].toLowerCase()}</span>`;
+  
+  const t = typeOf(s.type);
+  const w = worked(s), x = overtime(s), n = nightMin(s);
+  const S = state.settings;
+  const lf = lordoDi(dt.getFullYear(), dt.getMonth());
+  let mag = '';
   if(lf){
-    const ph=lf/(Number(S.oreContratto)||173), z=fasce(editing,draft);
-    const v=z.nott/60*ph*(S.pctNotturno||0)/100+z.fest/60*ph*(S.pctFestivo||0)/100+z.festNott/60*ph*(S.pctFestNott||0)/100;
-    if(v>0.005) mag=`<br>Maggiorazione di questo turno <b>${eur(v)}</b>`;
+    const ph = lf/(Number(S.oreContratto)||173), z = fasce(key, s);
+    const v = z.nott/60*ph*(S.pctNotturno||0)/100 + z.fest/60*ph*(S.pctFestivo||0)/100 + z.festNott/60*ph*(S.pctFestNott||0)/100;
+    if(v > 0.005) mag = `<br>Maggiorazione del turno <b>${eur(v)}</b>`;
   }
-  document.getElementById('calc').innerHTML=
-    `Ore conteggiate <b>${fmtPlain(w)}</b><br>`+
-    `Di cui straordinario <b class="${x?'x':''}">${fmtPlain(x)}</b> · notturne <b>${fmtPlain(n)}</b>`+mag+
-    iss.map(i=>`<span class="issue">${i.text}</span>`).join('');
+  
+  document.getElementById('calc').innerHTML =
+    `<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <span class="dot" style="background:${t.color}"></span>
+      <b style="font-size:15px; color:${t.color}">${t.label.toUpperCase()}</b>
+      ${isWork(s) ? `<span style="color:var(--muted); font-family:var(--mono)">${s.start} - ${s.end}</span>` : ''}
+    </div>` +
+    (isWork(s) ? `Ore conteggiate <b>${fmtPlain(w)}</b><br>` +
+    `Di cui straordinario <b class="${x?'x':''}">${fmtPlain(x)}</b> · notturne <b>${fmtPlain(n)}</b>` + mag : '') +
+    (s.note ? `<div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,.05); color:var(--muted)">Nota: ${s.note}</div>` : '');
+    
+  showSheet('sheet-detail');
 }
-['f-start','f-end','f-break','f-note'].forEach(id=>{
-  document.getElementById(id).addEventListener('input',e=>{
-    const k={'f-start':'start','f-end':'end','f-break':'break','f-note':'note'}[id];
-    draft[k]=k==='break'?Math.max(0,Number(e.target.value)||0):e.target.value;
-    if(k!=='note') syncFields();
-  });
-});
-document.getElementById('save').onclick=()=>{
-  if(isWork(draft)&&(!draft.start||!draft.end)){toast('Inserisci orario di inizio e fine');return}
-  const n=Number(document.getElementById('f-repeat').value)||1;
-  const base=new Date(editing+'T00:00:00');
-  for(let i=0;i<(isWork(draft)?n:1);i++){
-    const d=new Date(base); d.setDate(base.getDate()+i);
-    state.shifts[ymd(d)]={...draft};
-  }
-  save(); closeSheets(); render();
-  toast(n>1?`${n} turni salvati`:'Turno salvato');
-};
-document.getElementById('del').onclick=()=>{delete state.shifts[editing];save();closeSheets();render();toast('Turno eliminato')};
+
+document.getElementById('detail-close').onclick = closeSheets;
 
 function showSheet(id){document.getElementById(id).classList.add('on');document.getElementById('scrim').classList.add('on')}
 function closeSheets(){document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on'));document.getElementById('scrim').classList.remove('on')}
 document.getElementById('scrim').onclick=closeSheets;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheets()});
-document.getElementById('fab').onclick=()=>{
-  const t=new Date(), k=(t.getMonth()===view.getMonth()&&t.getFullYear()===view.getFullYear())?ymd(t):ymd(new Date(view.getFullYear(),view.getMonth(),1));
-  openEditor(k);
-};
 
 function cambiaMese(passo,y,m){
   const sl=document.querySelector('.col-b');
@@ -1525,11 +1448,6 @@ document.getElementById('settings').onclick=()=>{
     document.getElementById('p-'+k+'1').value=pr[0];
     document.getElementById('p-'+k+'2').value=pr[1];
   });
-  document.getElementById('store-info').innerHTML=`<b>Versione ${VERSIONE}</b><br>`+{
-    claude:'Archivio: <b>Claude</b><br>I turni ti seguono su tutti i dispositivi.',
-    browser:`Archivio: <b>${nomeDispositivo()}</b><br>I turni restano su questo dispositivo, non si sincronizzano con gli altri.`,
-    memoria:'Archivio: <b class="x">nessuno</b><span class="issue">I turni spariranno alla chiusura. Apri l\'app da un indirizzo web o dall\'app Claude.</span>'
-  }[store.mode];
   showSheet('sheet-set');
 };
 Object.entries(setMap).forEach(([id,[key,kind]])=>{
@@ -1600,12 +1518,6 @@ document.querySelectorAll('#sheet-set .grp').forEach(g=>{
   });
 });
 document.getElementById('set-close').onclick=closeSheets;
-document.getElementById('wipe').onclick=async()=>{
-  if(!confirm('Cancellare tutti i turni salvati? L\u2019operazione non si può annullare.'))return;
-  state={shifts:{},settings:{...DEFAULTS}};
-  try{await store.del(KEY)}catch(e){}
-  closeSheets(); render(); toast('Dati cancellati');
-};
 document.getElementById('copy').onclick=async()=>{
   const y=view.getFullYear(), m=view.getMonth(), days=new Date(y,m+1,0).getDate();
   let tot=0,ex=0,nt=0,lines=[];
@@ -1705,83 +1617,6 @@ function rowToShift(cells,map){
   const brk=map.brk!=null?Math.max(0,Number(String(cells[map.brk]).replace(',','.'))||0):(typeOf(type).brk??state.settings.defaultBreak??0);
   return {key:ymd(d),shift:{type,start:st,end:en,break:brk,note:map.note!=null?String(cells[map.note]??'').trim():''}};
 }
-
-let pending=[];
-function openPreview(label,skipped){
-  const dup=pending.filter(p=>state.shifts[p.key]).length;
-  document.getElementById('imp-sum').innerHTML=
-    `<b>${pending.length}</b> turni letti da <b>${label}</b><br>`+
-    `Non riconosciuti <b>${skipped}</b> · già presenti in agenda <b>${dup}</b>`;
-  const box=document.getElementById('imp-list'); box.innerHTML='';
-  const mostra=pending.length>60?pending.slice(-60):pending;
-  if(pending.length>60){
-    const d=document.createElement('div'); d.className='pay-note';
-    d.style.marginBottom='8px';
-    d.textContent=`Mostro gli ultimi 60 di ${pending.length} turni.`;
-    box.appendChild(d);
-  }
-  mostra.forEach(p=>{
-    const dt=new Date(p.key+'T00:00:00'), t=typeOf(p.shift.type);
-    const row=document.createElement('div'); row.className='row';
-    row.innerHTML=`<span class="dot" style="background:${t.color}"></span>
-      <span class="d">${GIORNI[dt.getDay()]} ${dt.getDate()}/${dt.getMonth()+1}</span>
-      <span class="t">${t.label}${isWork(p.shift)?`<em>${p.shift.start}–${p.shift.end}</em>`:''}</span>
-      <span class="h">${isWork(p.shift)?fmtPlain(worked(p.shift)):'—'}</span>`;
-    box.appendChild(row);
-  });
-  closeSheets(); showSheet('sheet-imp');
-}
-document.getElementById('imp').onclick=()=>document.getElementById('file').click();
-document.getElementById('file').addEventListener('change',async e=>{
-  const f=e.target.files[0]; if(!f) return;
-  e.target.value='';
-  if(typeof XLSX==='undefined'){toast('Libreria non caricata: riapri la pagina online');return}
-  try{
-    const wb=XLSX.read(new Uint8Array(await f.arrayBuffer()),{type:'array',cellDates:true});
-    cartella=leggiCartella(wb);
-    if(!cartella){toast('Non riconosco i turni in questo file — scarica il modello');return}
-    const tot=cartella.persone.reduce((a,p)=>a+p.giorni,0);
-    const ign=Object.values(cartella.ignorati).reduce((a,b)=>a+b,0);
-    const modi=Object.entries(cartella.modi).map(([k,v])=>`${v} come ${k}`).join(', ');
-    document.getElementById('pers-info').innerHTML=
-      `<b>${cartella.fogli}</b> fogli (${modi}) · <b>${cartella.persone.length}</b> persone · <b>${tot}</b> giorni`+
-      (ign?`<span class="issue">${ign} celle non interpretate: ${Object.keys(cartella.ignorati).slice(0,4).join(', ')}</span>`:'');
-    if(cartella.persone.length===1){ closeSheets(); scegliPersona(0); return; }
-    const auto=cartella.persone.findIndex(p=>p.nome===state.settings.nome);
-    if(auto>=0){ closeSheets(); scegliPersona(auto); return; }
-    document.getElementById('pf').value='';
-    closeSheets(); apriPersone(); showSheet('sheet-pers');
-  }catch(err){ toast('File non leggibile'); }
-});
-document.getElementById('imp-cancel').onclick=()=>{pending=[];closeSheets()};
-document.getElementById('pers-cancel').onclick=()=>{cartella=null;closeSheets()};
-document.getElementById('pf').addEventListener('input',apriPersone);
-document.getElementById('imp-go').onclick=()=>{
-  const over=document.getElementById('imp-over').checked;
-  let n=0;
-  pending.forEach(p=>{ if(state.shifts[p.key]&&!over) return; state.shifts[p.key]={...p.shift}; n++; });
-  const chiavi=pending.map(p=>p.key).sort();
-  const oggiK=ymd(new Date());
-  const scelta=chiavi.find(k=>k.slice(0,7)===oggiK.slice(0,7))||chiavi[chiavi.length-1];
-  if(scelta){const d=new Date(scelta+'T00:00:00'); view=new Date(d.getFullYear(),d.getMonth(),1);}
-  dopoImport=true;
-  pending=[]; save(); closeSheets(); render();
-  toast(n?`${n} turni importati`:'Nessun turno aggiunto');
-  if(n) setTimeout(mostraPronostico,350);
-};
-document.getElementById('tpl').onclick=()=>{
-  if(typeof XLSX==='undefined'){toast('Libreria non caricata: riapri la pagina online');return}
-  const p={mattina:presetOf('mattina'),pomeriggio:presetOf('pomeriggio'),notte:presetOf('notte'),deas:presetOf('deas')};
-  const aoa=[['Data','Turno','Inizio','Fine','Pausa','Note'],
-    ['01/09/2026','Mattina',p.mattina[0],p.mattina[1],0,''],
-    ['02/09/2026','Pomeriggio',p.pomeriggio[0],p.pomeriggio[1],0,''],
-    ['03/09/2026','Notte',p.notte[0],p.notte[1],0,''],
-    ['04/09/2026','DEAS',p.deas[0],p.deas[1],60,'Smart working'],
-    ['05/09/2026','Riposo','','','','']];
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa),'Turni');
-  XLSX.writeFile(wb,'modello-turni.xlsx');
-};
 
 const GG_LET='DLMMGVS';
 const MESI_N={gennaio:0,febbraio:1,marzo:2,aprile:3,maggio:4,giugno:5,
@@ -1971,165 +1806,44 @@ function leggiCartella(wb){
   return persone.length?{persone,fogli,ignorati,modi}:null;
 }
 
-let cartella=null;
 function apriPersone(){
   const box=document.getElementById('pers-list'), f=norm(document.getElementById('pf').value);
   box.innerHTML='';
-  cartella.persone.forEach((p,i)=>{
+  if(!cartellaCache) return;
+  cartellaCache.persone.forEach((p)=>{
     if(f&&!norm(p.nome).includes(f)) return;
     const b=document.createElement('button'); b.className='row';
-    b.innerHTML=`<span class="t">${p.nome}<em>${p.giorni} giorni · dal ${p.da.slice(8)}/${p.da.slice(5,7)}/${p.da.slice(2,4)} al ${p.a.slice(8)}/${p.a.slice(5,7)}/${p.a.slice(2,4)}</em></span>`;
-    b.onclick=()=>scegliPersona(i);
+    b.innerHTML=`<span class="t">${p.nome}<em>${p.giorni} giorni caricati</em></span>`;
+    b.onclick=()=>scegliPersona(p.nome);
     box.appendChild(b);
   });
-  if(!box.children.length) box.innerHTML='<div class="empty-state">Nessun nome corrisponde.</div>';
 }
-function scegliPersona(i){
-  const p=cartella.persone[i];
-  state.settings.nome=p.nome;
-  state.roster={};
-  cartella.persone.forEach(q=>{
-    const m={};
-    for(const k in q.turni) m[k]=q.turni[k].type;
-    state.roster[q.nome]=m;
-  });
+function scegliPersona(nomeScelto){
+  state.settings.nome = nomeScelto;
+  
+  if(cartellaCache){
+    const p = cartellaCache.persone.find(x => x.nome === nomeScelto);
+    if(p) state.shifts = p.turni;
+  }
+  
   save();
-  pending=Object.keys(p.turni).sort().map(k=>({key:k,shift:p.turni[k]}));
-  openPreview(p.nome,Object.values(cartella.ignorati).reduce((a,b)=>a+b,0));
+  closeSheets();
+  render();
+  toast('Sincronizzato sui tuoi turni');
 }
+document.getElementById('cambia-chi').onclick = () => {
+    if(!cartellaCache) { toast('Dati cloud non ancora scaricati. Riprova tra un attimo.'); return; }
+    apriPersone();
+    showSheet('sheet-pers');
+}
+document.getElementById('pf').addEventListener('input',apriPersone);
+document.getElementById('pers-cancel').onclick = closeSheets;
 
 function turnoDa(t){
   if(!typeOf(t).work) return {type:t,start:'',end:'',break:0,note:''};
   const pr=presetOf(t);
   return {type:t,start:pr[0],end:pr[1],break:typeOf(t).brk??state.settings.defaultBreak??0,note:''};
 }
-
-function lastKey(){const k=Object.keys(state.shifts).sort();return k.length?k[k.length-1]:null}
-function parseSeq(startKey,text){
-  const toks=String(text||'').trim().split(/[\s,;|\/]+/).filter(Boolean);
-  const out=[],bad=[];
-  toks.forEach((tk,i)=>{
-    const t=toType(tk), key=dayAdd(startKey,i);
-    if(!t){bad.push(tk);return}
-    out.push({key,shift:turnoDa(t)});
-  });
-  return {out,bad,n:toks.length};
-}
-const SEQ_HELP='Codici: M mattina · P pomeriggio · N notte · DEAS · R riposo · F ferie · MAL malattia';
-function seqInfo(){
-  const d=document.getElementById('q-date').value, txt=document.getElementById('q-text').value;
-  const el=document.getElementById('q-info');
-  if(!d||!txt.trim()){el.textContent=SEQ_HELP;return null}
-  const r=parseSeq(d,txt);
-  const lab=k=>{const x=new Date(k+'T00:00:00');return `${GIORNI[x.getDay()].toLowerCase()} ${x.getDate()}/${x.getMonth()+1}`};
-  el.innerHTML=`<b>${r.n}</b> codici · da <b>${lab(d)}</b> a <b>${lab(dayAdd(d,r.n-1))}</b>`+
-    (r.bad.length?`<span class="issue">Non riconosciuti: ${[...new Set(r.bad)].join(', ')} — quei giorni restano vuoti.</span>`:'');
-  return r;
-}
-function apriSequenza(data){
-  const l=lastKey();
-  document.getElementById('q-date').value=data||(l?dayAdd(l,1):ymd(new Date()));
-  document.getElementById('q-text').value='';
-  seqInfo(); closeSheets(); showSheet('sheet-seq');
-}
-document.getElementById('seq').onclick=()=>apriSequenza();
-['q-date','q-text'].forEach(id=>document.getElementById(id).addEventListener('input',seqInfo));
-document.getElementById('q-cancel').onclick=()=>{pending=[];closeSheets()};
-document.getElementById('q-go').onclick=()=>{
-  const r=seqInfo();
-  if(!r||!r.out.length){toast('Servono la data di partenza e la sequenza');return}
-  pending=r.out;
-  openPreview('sequenza incollata',r.bad.length);
-};
-
-function renderNudge(){
-  const box=document.getElementById('nudge'); box.innerHTML='';
-  const oggi=new Date(), g=Number(state.settings.giornoTurni)||15;
-  if(oggi.getDate()<g) return;
-  const n=new Date(oggi.getFullYear(),oggi.getMonth()+1,1);
-  const {compilati,days}=fasceMese(n.getFullYear(),n.getMonth());
-  if(compilati>=days) return;
-  const b=document.createElement('button'); b.className='nudge';
-  b.innerHTML=`<b>TURNI GIÀ PUBBLICATI</b>`+
-    (compilati?`Di ${MESI[n.getMonth()].toLowerCase()} hai caricato ${compilati} giorni su ${days}.`
-              :`I turni di ${MESI[n.getMonth()].toLowerCase()} sono usciti entro il ${g}. Tocca per incollarli.`);
-  b.onclick=()=>apriSequenza(ymd(new Date(n.getFullYear(),n.getMonth(),compilati+1)));
-  box.appendChild(b);
-}
-
-let dopoImport=false;
-function prossimaBusta(){
-  const oggi=new Date();
-  for(let i=0;i<4;i++){
-    const d=new Date(oggi.getFullYear(),oggi.getMonth()+i,1);
-    const P=paga(d.getFullYear(),d.getMonth());
-    if(!P||!P.compilati) continue;
-    const arr=new Date(d.getFullYear(),d.getMonth()+1,Number(state.settings.giornoBusta)||10);
-    if(arr<oggi) continue;
-    const mag=P.magNott+P.magFest+P.magFN+P.stra;
-    const N=nettoDa(mag,d.getFullYear(),d.getMonth());
-    return {d,P,mag,arr,netto:N,parziale:P.compilati<P.days};
-  }
-  return null;
-}
-function mostraPronostico(){
-  mostraScheda('pag');
-  const B=prossimaBusta();
-  if(!B){toast('Imposta il lordo fisso per vedere il compenso');return}
-  const f=x=>`${x.getDate()} ${MESI[x.getMonth()].toLowerCase()}`;
-  const q=B.netto?`${eur(B.netto.v)} netti`:`${eur(B.P.lordo+B.mag)} lordi`;
-  toast(`Busta di ${MESI[B.d.getMonth()].toLowerCase()}: ${q}, entro il ${f(B.arr)}`);
-}
-
-function backupOggetto(){
-  return {formato:'turni-backup', versione:1, app:VERSIONE,
-          data:new Date().toISOString(), dispositivo:nomeDispositivo(),
-          shifts:state.shifts, roster:state.roster||{}, settings:state.settings};
-}
-document.getElementById('bk-save').onclick=()=>{
-  const b=backupOggetto();
-  const blob=new Blob([JSON.stringify(b,null,1)],{type:'application/json'});
-  const url=URL.createObjectURL(blob), a=document.createElement('a');
-  a.href=url; a.download=`turni-backup-${ymd(new Date())}.json`;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),4000);
-  toast(`Backup di ${Object.keys(b.shifts).length} turni salvato`);
-};
-let daRipristinare=null;
-document.getElementById('bk-load').onclick=()=>document.getElementById('bk-file').click();
-document.getElementById('bk-file').addEventListener('change',async e=>{
-  const f=e.target.files[0]; if(!f) return;
-  e.target.value='';
-  try{
-    const b=JSON.parse(await f.text());
-    if(b.formato!=='turni-backup'||typeof b.shifts!=='object'||!b.shifts)
-      {toast('Non è un file di backup di questa app');return}
-    const n=Object.keys(b.shifts).length;
-    if(!n){toast('Il backup non contiene turni');return}
-    daRipristinare=b;
-    const k=Object.keys(b.shifts).sort();
-    const gg=x=>`${x.slice(8)}/${x.slice(5,7)}/${x.slice(2,4)}`;
-    const attuali=Object.keys(state.shifts).length;
-    document.getElementById('bk-info').innerHTML=
-      `<b>${n}</b> turni, dal <b>${gg(k[0])}</b> al <b>${gg(k[k.length-1])}</b><br>`+
-      `Salvato il ${new Date(b.data).toLocaleDateString('it-IT')} da ${b.dispositivo||'—'} · app ${b.app||'?'}<br>`+
-      `Reparto: ${Object.keys(b.roster||{}).length} persone · cedolini: ${(b.settings&&b.settings.cedolini||[]).length}`+
-      (attuali?`<span class="issue">Ora hai ${attuali} turni: senza l'opzione qui sotto verranno sostituiti.</span>`:'');
-    document.getElementById('bk-merge').checked=attuali>0;
-    closeSheets(); showSheet('sheet-bk');
-  }catch(err){ toast('File non leggibile'); }
-});
-document.getElementById('bk-cancel').onclick=()=>{daRipristinare=null;closeSheets()};
-document.getElementById('bk-go').onclick=()=>{
-  const b=daRipristinare; if(!b) return;
-  const unisci=document.getElementById('bk-merge').checked;
-  state.shifts=unisci?{...state.shifts,...b.shifts}:{...b.shifts};
-  state.roster=unisci?{...(state.roster||{}),...(b.roster||{})}:{...(b.roster||{})};
-  if(b.settings) state.settings={...DEFAULTS,...state.settings,...b.settings};
-  for(const y in festCache) delete festCache[y];
-  daRipristinare=null; save(); closeSheets(); render();
-  toast(`Ripristinati ${Object.keys(state.shifts).length} turni`);
-};
 
 function statoImpostazioni(){
   const S=state.settings, put=(id,txt,cls)=>{
@@ -2154,10 +1868,8 @@ function statoImpostazioni(){
                     :(vuota?'da compilare':'dati da correggere'),
       P?(dubbio?'warn-t':'ok-t'):'warn-t');
 
-  const nT=Object.keys(state.shifts).length, nR=Object.keys(state.roster||{}).length;
-  put('st-turni', nT?`${nT} giorni${nR?` · ${nR} colleghi`:''}`:'nessun turno caricato', nT?'':'warn-t');
-
-  put('st-dati',`versione ${VERSIONE.split(' ')[0]} · ${store.mode==='claude'?'archivio Claude':nomeDispositivo().replace('questo ','')}`);
+  const nT=Object.keys(state.shifts).length;
+  put('st-turni', state.settings.nome ? `In lettura per: ${state.settings.nome}` : 'Scegli la tua persona', state.settings.nome?'':'warn-t');
 }
 
 let annoPicker=null;
@@ -2289,44 +2001,6 @@ function nomeDispositivo(){
   return 'questo dispositivo';
 }
 
-async function forzaAggiornamento(numero){
-  try{
-    if(navigator.serviceWorker){
-      const rs=await navigator.serviceWorker.getRegistrations();
-      await Promise.all(rs.map(x=>x.unregister()));
-    }
-  }catch(e){}
-  try{
-    if(typeof caches!=='undefined'){
-      const ks=await caches.keys();
-      await Promise.all(ks.map(k=>caches.delete(k)));
-    }
-  }catch(e){}
-  const v=numero||Date.now().toString(36);
-  location.replace(location.pathname+'?v='+v);
-}
-
-async function controllaAggiornamenti(){
-  const box=document.getElementById('upd');
-  if(!box||location.protocol==='file:') return;
-  try{
-    const r=await fetch(location.pathname+'?_ck='+Date.now(),{cache:'no-store'});
-    if(!r.ok) return;
-    const t=await r.text();
-    const m=t.match(/const VERSIONE='(\d+)/);
-    if(!m) return;
-    const online=+m[1], mia=+VERSIONE.match(/^\d+/)[0];
-    if(online<=mia) return;
-    const b=document.createElement('button'); b.className='upd';
-    b.innerHTML=`<b>AGGIORNAMENTO DISPONIBILE</b>Hai la versione ${mia}, online c'è la ${online}. Tocca per caricarla.`;
-    b.onclick=()=>{
-      b.innerHTML='<b>AGGIORNAMENTO</b>Sto ricaricando…';
-      forzaAggiornamento(online);
-    };
-    box.appendChild(b);
-  }catch(e){}
-}
-
 function icsData(){
   const oggi=ymd(new Date());
   const chiavi=Object.keys(state.shifts).filter(k=>k>=oggi).sort();
@@ -2339,7 +2013,8 @@ function icsData(){
   let conOra=0, interi=0;
   chiavi.forEach(key=>{
     const s=state.shifts[key], t=typeOf(s.type);
-    const uid=`turno-${key}-${s.type}@turni.app`;
+    // Usando SOLO la data come UID, il calendario aggiornerà l'evento in base al giorno!
+    const uid=`turno-${key}@turni.app`;
     righe.push('BEGIN:VEVENT',`UID:${uid}`,`DTSTAMP:${stampo}`,
                `SUMMARY:${esc(t.label)}${s.note?' · '+esc(s.note):''}`);
     if(isWork(s)&&s.start&&s.end){
@@ -2361,6 +2036,7 @@ function icsData(){
   return {testo:righe.join('\r\n')+'\r\n', n:chiavi.length, conOra, interi,
           da:chiavi[0], a:chiavi[chiavi.length-1]};
 }
+
 document.getElementById('ics').onclick=()=>{
   const I=icsData();
   if(!I){toast('Nessun turno da oggi in avanti');return}
@@ -2626,7 +2302,7 @@ function fitProblema(F){
   if(F.b<=0.2||F.b>=0.9) return `coefficiente implausibile (${(F.b*100).toFixed(0)}%)`;
   if(F.n>2&&F.errMedio>40) return `i netti non stanno su una retta (scarto medio ${eur(F.errMedio)})`;
   const PR=profilo();
-  if(PR&&Math.abs(PR.k-F.b)>0.15) return `lontano dal calcolo teorico (${(F.b*100).toFixed(0)}% contro ${(PR.k*100).toFixed(0)}%)`;
+  if(PR&&Math.abs(PR.k-F.b)>0.15) return `lontano dal calcolo teorico (${(PR.k*100).toFixed(0)}% contro ${(PR.k*100).toFixed(0)}%)`;
   return null;
 }
 function nettoDa(mag,y,m){
