@@ -246,6 +246,19 @@ input[type=time]{font-family:var(--mono)}
 .pay-note .issue{background:#FF7A6B14;border:1px solid #FF7A6B3d;border-radius:10px;
   padding:10px 12px;font-size:12.5px;margin-top:10px}
 .pay-empty-btn{margin-top:12px}
+/* Chi è in turno oggi, in cima: è la domanda che ci si fa aprendo la bacheca */
+.oggi-box{margin-bottom:24px}
+.oggi-tit{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.oggi-tit b{font-family:var(--display);font-size:17px;font-weight:600}
+.oggi-tit span{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.fascia{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
+.fascia:last-child{border-bottom:none}
+.fascia .q{width:3px;align-self:stretch;border-radius:2px;flex:none;min-height:34px}
+.fascia .ore{font-family:var(--mono);font-size:11px;color:var(--muted);width:52px;flex:none;padding-top:2px;letter-spacing:-.02em}
+.fascia .chi{flex:1;font-size:14.5px;line-height:1.45}
+.fascia .chi em{font-style:normal;color:var(--muted)}
+.fascia .chi b{font-weight:600}
+.fascia.vuota .chi{color:var(--muted);font-size:13.5px}
 .bac-day{background:var(--surface);border-radius:12px;padding:14px;margin-bottom:8px}
 .bac-day-title{font-family:var(--display);font-size:15px;font-weight:600;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--surface-2)}
 .bac-shift{display:flex;align-items:center;gap:10px;padding:4px 0}
@@ -358,6 +371,7 @@ input[type=time]{font-family:var(--mono)}
   </div>
   <div class="col-b">
   <section class="pane on" data-pane="cal">
+  <div id="sync-stato" style="display:none"></div>
   <div id="alerts"></div>
   <div class="week-head"><div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div></div>
   <div class="grid" id="grid"></div>
@@ -399,6 +413,7 @@ input[type=time]{font-family:var(--mono)}
   </section>
 
   <section class="pane" data-pane="bac">
+    <div id="bac-oggi"></div>
     <div class="list-title">Bacheca Reparto</div>
     <div class="pay-note" id="bac-note" style="margin-bottom:14px"></div>
     <div id="bac-list"></div>
@@ -450,7 +465,7 @@ input[type=time]{font-family:var(--mono)}
   <details class="grp" open>
     <summary><b>Retribuzione</b><i id="st-retrib"></i></summary>
     <p class="grp-intro">Il lordo è il <b>TOTALE</b> degli elementi della retribuzione, in alto sulla busta: non il minimo.</p>
-    <div class="set-row"><span>Lordo fisso mensile (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-lordo" placeholder="2538,46"></div></div>
+    <div class="set-row"><span>Lordo fisso mensile (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-lordo" placeholder="1700,00"></div></div>
     <div class="set-row"><span>Maggiorazione notturna %</span><div class="in"><input type="number" id="s-pn" min="0" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>Maggiorazione festiva %</span><div class="in"><input type="number" id="s-pf" min="0" step="1" inputmode="numeric"></div></div>
     <div class="set-row"><span>Festiva notturna %</span><div class="in"><input type="number" id="s-pfn" min="0" step="1" inputmode="numeric"></div></div>
@@ -464,10 +479,10 @@ input[type=time]{font-family:var(--mono)}
     <summary><b>La tua busta paga</b><i id="st-busta"></i></summary>
     <p class="grp-intro">Copia i dati di <b>una</b> busta paga: da lì ricavo contributi e IRPEF, e li applico a tutti i mesi.</p>
     <div class="set-row"><span>Di che mese è questa busta</span><div class="in" style="width:160px"><select id="s-bmese"></select></div></div>
-    <div class="set-row"><span>Netto del mese (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bn" placeholder="2174,00"></div></div>
-    <div class="set-row"><span>Totale competenze (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bc" placeholder="3057,89"></div></div>
-    <div class="set-row"><span>Imponibile IRPEF (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bi" placeholder="2736,85"></div></div>
-    <div class="set-row" id="row-bm"><span>Maggiorazioni in questa busta (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bm" placeholder="519,43"></div></div>
+    <div class="set-row"><span>Netto del mese (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bn" placeholder="1500,00"></div></div>
+    <div class="set-row"><span>Totale competenze (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bc" placeholder="2000,00"></div></div>
+    <div class="set-row"><span>Imponibile IRPEF (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bi" placeholder="1800,00"></div></div>
+    <div class="set-row" id="row-bm"><span>Maggiorazioni in questa busta (€)</span><div class="in"><input type="text" inputmode="decimal" id="s-bm" placeholder="300,00"></div></div>
     <div class="calc" id="bm-auto" style="display:none;margin:10px 0 0"></div>
     <div class="calc" id="prof-info" style="margin:12px 0 0"></div>
     <button class="btn ghost" style="width:100%;margin-top:10px" id="ced">Cedolini dei mesi scorsi</button>
@@ -552,7 +567,7 @@ input[type=time]{font-family:var(--mono)}
   <div id="sca-list" style="max-height:34vh;overflow-y:auto;margin-bottom:12px"></div>
   <div class="fields">
     <div class="field"><label for="sca-da">In vigore da</label><input type="month" id="sca-da"></div>
-    <div class="field"><label for="sca-lordo">Nuovo lordo (€)</label><input type="text" inputmode="decimal" id="sca-lordo" placeholder="2600,00"></div>
+    <div class="field"><label for="sca-lordo">Nuovo lordo (€)</label><input type="text" inputmode="decimal" id="sca-lordo" placeholder="1800,00"></div>
   </div>
   <div class="actions">
     <button class="btn" id="sca-add">Aggiungi</button>
@@ -566,7 +581,7 @@ input[type=time]{font-family:var(--mono)}
   <div id="ced-list" style="max-height:34vh;overflow-y:auto;margin-bottom:12px"></div>
   <div class="fields">
     <div class="field"><label for="ced-mese">Mese</label><select id="ced-mese"></select></div>
-    <div class="field"><label for="ced-netto">Netto incassato (€)</label><input type="text" inputmode="decimal" id="ced-netto" placeholder="2174,00"></div>
+    <div class="field"><label for="ced-netto">Netto incassato (€)</label><input type="text" inputmode="decimal" id="ced-netto" placeholder="1500,00"></div>
   </div>
   <div class="actions">
     <button class="btn" id="ced-add">Aggiungi</button>
@@ -596,9 +611,9 @@ input[type=time]{font-family:var(--mono)}
 const KEY='turni:v1';
 const VERSIONE='69 · 3 agosto 2026';
 /* Indirizzo dell'intermediario, non del foglio: da solo non apre niente,
-   serve anche la chiave che ogni collega inserisce sul proprio telefono.
-   Sostituisci con l'indirizzo /exec che ti dà Google Apps Script. */
-const SYNC_URL = 'https://script.google.com/macros/s/AKfycbyz_-c9BaMQ5pX9o6ubLf_3eiukzZ5ykODghbq0mdE8hXFTwibfPK62wpSmPQH22FLT/exec';
+    serve anche la chiave che ogni collega inserisce sul proprio telefono.
+    Sostituisci con l'indirizzo /exec che ti dà Google Apps Script. */
+const SYNC_URL = 'INCOLLA_QUI_INDIRIZZO_APPS_SCRIPT';
 
 if(typeof navigator!=='undefined'&&navigator.serviceWorker){
   navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
@@ -637,7 +652,7 @@ const MESI=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Ag
 const GIORNI=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
 
 const DEFAULTS={
-  chiaveSync:'',
+  chiaveSync:'', ultimaSync:'',
   weekHours:40, dayThreshold:8, night1:'22:00', night2:'06:00', defaultBreak:0, presetsV:3,
   workDays:5, restDays:2,
   lordoFisso:0, oreContratto:173, pctNotturno:50, pctFestivo:50, pctFestNott:55, pctStraord:0, straordAparte:0,
@@ -772,25 +787,40 @@ function leggiDaFogli(fogli){
 
 let cartellaCache = null;
 
+/* Esito dell'ultima sincronizzazione: serve a dirlo a schermo invece di
+   restare in silenzio mostrando dati vecchi. */
+let esitoSync={stato:'mai',quando:null,dettaglio:''};
+function segnaSync(stato,dettaglio){
+  esitoSync={stato,quando:new Date(),dettaglio:dettaglio||''};
+  try{ mostraStatoSync() }catch(e){}
+}
 async function syncFromCloud() {
   const tst = document.getElementById('sync-toast');
   if(tst) tst.classList.add('on');
   try {
-    const chiave = state.settings.chiaveSync || '';
-    if(!chiave){                       /* primo avvio: la chiave non c'è ancora */
+    if(!SYNC_URL || SYNC_URL.indexOf('script.google.com') < 0){
       if(tst) tst.classList.remove('on');
+      segnaSync('nonconfigurato','In index.html manca l\'indirizzo dello script (SYNC_URL).');
+      return;
+    }
+    const chiave = state.settings.chiaveSync || '';
+    if(!chiave){                         /* primeiro avvio: la chiave non c'è ancora */
+      if(tst) tst.classList.remove('on');
+      segnaSync('nochiave');
       chiediChiave();
       return;
     }
     const res = await fetch(SYNC_URL + '?k=' + encodeURIComponent(chiave) + '&t=' + Date.now(),
-                            {cache:'no-store'});
+                        {cache:'no-store'});
     if(!res.ok) throw new Error('rete');
     const dati = await res.json();
 
     if(!dati.ok){
       if(tst) tst.classList.remove('on');
-      if(dati.err === 'auth'){ chiediChiave('La chiave non è corretta.'); return; }
-      toast(dati.err === 'config' ? 'Intermediario non configurato' : 'Foglio non leggibile');
+      if(dati.err === 'auth'){ segnaSync('chiave'); chiediChiave('La chiave non è corretta.'); return; }
+      segnaSync('errore', dati.err==='config'
+        ? 'Lo script non ha FOGLIO o CHIAVE fra le proprietà.'
+        : 'Lo script non riesce ad aprire il foglio: controlla di avervi accesso.');
       return;
     }
     const cartella = leggiDaFogli(dati.fogli);
@@ -809,9 +839,12 @@ async function syncFromCloud() {
 
     const mioNome = state.settings.nome;
     if (!mioNome) {
+      /* prima sincronizzazione: i dati sono arrivati, manca solo scegliere
+         chi sei. Va registrata come riuscita, altrimenti l'avviso resta. */
       state.roster = newRoster;
-      save(); render();
-      apriPersone(); 
+      state.settings.ultimaSync=new Date().toISOString();
+      save(); segnaSync('ok'); render();
+      apriPersone();
       showSheet('sheet-pers');
       return;
     }
@@ -824,34 +857,7 @@ async function syncFromCloud() {
     const oldKeys = Object.keys(state.shifts);
     const newKeys = Object.keys(myNewShifts);
     
-    let turniModificati = [];
-    if (oldKeys.length > 0) {
-      for (const k of newKeys) {
-        const o = state.shifts[k], n = myNewShifts[k];
-        if (o && (o.type !== n.type || o.start !== n.start || o.end !== n.end)) {
-          turniModificati.push({
-            data: k,
-            vecchio: typeOf(o.type).label.toUpperCase() + (o.start ? ` (${o.start}-${o.end})` : ''),
-            nuovo: typeOf(n.type).label.toUpperCase() + (n.start ? ` (${n.start}-${n.end})` : '')
-          });
-        }
-      }
-      
-      if (turniModificati.length > 0) {
-        let msg = "Attenzione, sono state rilevate delle modifiche ai tuoi turni:\n\n";
-        turniModificati.forEach(m => {
-          const d = new Date(m.data + 'T00:00:00');
-          const dataIta = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
-          msg += `- ${dataIta}: avevi [${m.vecchio}], ora avrai [${m.nuovo}]\n`;
-        });
-        msg += "\nVuoi scaricare e aggiornare il nuovo calendario in app?";
-        if (!confirm(msg)) {
-           return;
-        }
-      }
-    }
-
-    if (oldKeys.length !== newKeys.length || turniModificati.length > 0) {
+    if (oldKeys.length !== newKeys.length) {
       changed = true;
     } else {
       for (const k of newKeys) {
@@ -864,7 +870,9 @@ async function syncFromCloud() {
 
     state.roster = newRoster;
     state.shifts = myNewShifts;
+    state.settings.ultimaSync=new Date().toISOString();
     save();
+    segnaSync('ok');
     render();
 
     if (changed && oldKeys.length > 0) {
@@ -873,8 +881,38 @@ async function syncFromCloud() {
 
   } catch(e) {
     if(tst) tst.classList.remove('on');
+    segnaSync('rete','Nessuna risposta dallo script: rete assente, oppure la distribuzione non è attiva.');
     console.error("Sync error:", e);
   }
+}
+
+/* Riquadro in cima al calendario quando la sincronizzazione non riesce.
+   Mostrare turni vecchi senza dirlo è peggio che non mostrarli. */
+function mostraStatoSync(){
+  const box=document.getElementById('sync-stato'); if(!box) return;
+  const E=esitoSync;
+  if(E.stato==='ok'||E.stato==='mai'){ box.innerHTML=''; box.style.display='none'; return; }
+  const ultima=state.settings.ultimaSync;
+  const quando=ultima
+    ? (()=>{const g=Math.round((Date.now()-new Date(ultima).getTime())/86400000);
+            return g<1?'oggi':(g===1?'ieri':`${g} days ago`)})()
+    : null;
+  const testi={
+    nonconfigurato:['SINCRONIZZAZIONE NON CONFIGURATA', E.dettaglio],
+    nochiave:['SERVE LA CHIAVE','Tocca per inserire la chiave del reparto.'],
+    chiave:['CHIAVE NON VALIDA','Tocca per reinserirla.'],
+    errore:['SINCRONIZZAZIONE FALLITA', E.dettaglio],
+    rete:['TURNI NON AGGIORNATI', E.dettaglio]
+  };
+  const [tit,msg]=testi[E.stato]||['SINCRONIZZAZIONE FALLITA',''];
+  box.style.display='';
+  box.innerHTML=`<button class="alert" style="width:100%"><b>${tit}</b>${msg}`+
+    (quando?`<br>Stai vedendo i turni scaricati ${quando}.`:'<br>Nessun turno ancora scaricato.')+
+    `</button>`;
+  box.querySelector('button').onclick=()=>{
+    if(E.stato==='nochiave'||E.stato==='chiave') chiediChiave(E.stato==='chiave'?'La chiave non è corretta.':'');
+    else syncFromCloud();
+  };
 }
 
 /* La chiave resta su questo telefono e viene mandata a ogni sincronizzazione.
@@ -1021,7 +1059,7 @@ function render(){
   document.getElementById('bar-2').style.width=(target?Math.min(over/target*100,100-base/target*100):0)+'%';
   document.getElementById('bar-left').textContent=
     `${worked_days} lavorati · ${rest_days} riposi`+(abs_days?` · ${abs_days} assenze`:'');
-  renderOggi(); renderPay(y,m); renderWeeks(y,m); renderBacheca();
+  renderOggi(); renderPay(y,m); renderWeeks(y,m); renderBacheca(); renderBachecaOggi();
   renderAlerts(y,m);
   
   const haPaga=document.getElementById('pay').style.display!=='none';
@@ -1052,6 +1090,45 @@ function render(){
       list.appendChild(b);
     });
   }
+}
+
+/* Chi copre le fasce oggi. Non dipende dal mese che stai guardando: resta
+   fermo su oggi mentre sfogli, perché è l'informazione operativa. */
+function renderBachecaOggi(){
+  const box=document.getElementById('bac-oggi'); if(!box) return;
+  const nomi=Object.keys(state.roster||{});
+  if(!nomi.length){ box.innerHTML=''; return; }
+
+  const oggi=new Date(), key=ymd(oggi);
+  const io=state.settings.nome||'';
+  const fasce=['notte','mattina','pomeriggio','deas'];
+  const orario=t=>{const p=presetOf(t);return p[0].slice(0,5)+'–'+(p[1]==='00:00'?'24:00':p[1].slice(0,5))};
+
+  let righe='', qualcuno=false;
+  fasce.forEach(t=>{
+    const chi=nomi.filter(n=>state.roster[n][key]===t).sort();
+    if(t==='deas'&&!chi.length) return;          /* il DEAS non c'è tutti i giorni */
+    if(chi.length) qualcuno=true;
+    const col=typeOf(t).color;
+    const elenco=chi.length
+      ? chi.map(n=>n===io?`<b>${n}</b>`:n).join(', ')
+      : '<em>nessuno</em>';
+    righe+=`<div class="fascia${chi.length?'':' vuota'}">
+      <span class="q" style="background:${chi.length?col:'#ffffff14'}"></span>
+      <span class="ore">${orario(t)}</span>
+      <span class="chi">${elenco}</span></div>`;
+  });
+
+  const assenti=nomi.filter(n=>{
+    const v=state.roster[n][key];
+    return v&&v!=='riposo'&&!fasce.includes(v);
+  }).sort();
+
+  box.className='oggi-box';
+  box.innerHTML=`<div class="oggi-tit"><b>Oggi in turno</b>`+
+    `<span>${GIORNI[oggi.getDay()]} ${oggi.getDate()} ${MESI[oggi.getMonth()].toLowerCase()}</span></div>`+
+    (qualcuno?righe:'<div class="empty-state">Nessun turno assegnato per oggi.</div>')+
+    (assenti.length?`<div class="pay-note" style="margin-top:10px">Assenti: ${assenti.map(n=>n+' ('+typeOf(state.roster[n][key]).label.toLowerCase()+')').join(', ')}</div>`:'');
 }
 
 function renderBacheca(){
@@ -1374,10 +1451,10 @@ function fattoreMagg(y,m){
   if(!F.compilati) return null;
   const h=x=>x/60;
   const K=(h(F.B.nott)*(Number(S.pctNotturno)||0)
-         +h(F.B.fest)*(Number(S.pctFestivo)||0)
-         +h(F.B.festNott)*(Number(S.pctFestNott)||0))/100/oreC;
+          +h(F.B.fest)*(Number(S.pctFestivo)||0)
+          +h(F.B.festNott)*(Number(S.pctFestNott)||0))/100/oreC;
   return {K, ore:h(F.B.nott+F.B.fest+F.B.festNott), completo:F.compilati>=F.days,
-          compilati:F.compilati, days:F.days};
+         compilati:F.compilati, days:F.days};
 }
 function maggRiferimento(){
   const S=state.settings, C=Number(S.bpComp)||0;
@@ -1675,7 +1752,7 @@ const COLS={
   brk:['pausa','break'],
   note:['note','nota','commento','reparto','sede'],
   nome:['nome','cognome','dipendente','operatore','persona','risorsa']
-}
+};
 function matchCol(h){
   const n=norm(h); if(!n) return null;
   for(const [k,names] of Object.entries(COLS)) if(names.some(x=>n===x||n.startsWith(x))) return k;
@@ -1746,7 +1823,7 @@ function rowToShift(cells,map){
   if(!st&&type&&DEFAULTS.presets[type]) [st,en]=presetOf(type);
   if(!st||!en) return null;
   if(!type){
-    type=Object.keys(DEFAULTS.presets).find(k=>presetOf(k)[0]===st)||(toMin(st)<12?'mattina':toMin(st)<20?'pomeriggio':'notte');
+    type=Object.keys(DEFAULTS.presets).find(k=>presetOf(k)[0]===st)|;(toMin(st)<12?'mattina':toMin(st)<20?'pomeriggio':'notte');
   }
   const brk=map.brk!=null?Math.max(0,Number(String(cells[map.brk]).replace(',','.'))||0):(typeOf(type).brk??state.settings.defaultBreak??0);
   return {key:ymd(d),shift:{type,start:st,end:en,break:brk,note:map.note!=null?String(cells[map.note]??'').trim():''}};
@@ -1903,7 +1980,7 @@ function leggiFoglioQualsiasi(rows,nome,ignorati){
   const anno=new Date().getFullYear();
   const giro=trasponi(rows);
   const cand=[
-    ['tabella',           leggiFoglio(rows,nome,anno)],
+    ['tabella',            leggiFoglio(rows,nome,anno)],
     ['tabella con date',    leggiMatriceDate(rows)],
     ['tabella ruotata',    leggiFoglio(giro,nome,anno)],
     ['ruotata con date',    leggiMatriceDate(giro)],
@@ -2004,7 +2081,7 @@ function statoImpostazioni(){
   const oggi=new Date(), lordo=lordoDi(oggi.getFullYear(),oggi.getMonth());
   const nSc=(S.scatti||[]).length;
   put('st-retrib', lordo?`${eur(lordo)} · +${S.pctNotturno}/${S.pctFestivo}/${S.pctFestNott}%`+(nSc?` · ${nSc} ${nSc===1?'scatto':'scatti'}`:'')
-                        :'lordo da inserire', lordo?'':'warn-t');
+                      :'lordo da inserire', lordo?'':'warn-t');
 
   const P=profilo(), dubbio=P?profiloDubbio():null;
   const nCed=(S.cedolini||[]).length;
@@ -2278,10 +2355,10 @@ function apriPdf(){
     document.getElementById('pdf-prev').innerHTML=
       `<div style="background:#fff;color:#111;padding:12px;border-radius:8px;overflow:auto;font-family:Helvetica,Arial,sans-serif">
          <style>#pdf-prev table{width:100%;border-collapse:collapse;font-size:11px;background:#fff}
-                 #pdf-prev th{background:#111;color:#fff!important;-webkit-text-fill-color:#fff;font-weight:700;text-align:center;padding:6px 4px;border:1px solid #111;white-space:nowrap}
-                 #pdf-prev td{background:#fff;color:#111!important;-webkit-text-fill-color:#111;text-align:center;padding:5px 4px;border:1px solid #d2d2d2;white-space:nowrap}
-                 #pdf-prev tbody tr:nth-child(even) td{background:#f2f2f2}
-                 #pdf-prev h1{font-size:15px;margin:0 0 10px;text-align:center;font-weight:700;color:#111!important;-webkit-text-fill-color:#111}</style>${T.html}</div>`;
+               #pdf-prev th{background:#111;color:#fff!important;-webkit-text-fill-color:#fff;font-weight:700;text-align:center;padding:6px 4px;border:1px solid #111;white-space:nowrap}
+               #pdf-prev td{background:#fff;color:#111!important;-webkit-text-fill-color:#111;text-align:center;padding:5px 4px;border:1px solid #d2d2d2;white-space:nowrap}
+               #pdf-prev tbody tr:nth-child(even) td{background:#f2f2f2}
+               #pdf-prev h1{font-size:15px;margin:0 0 10px;text-align:center;font-weight:700;color:#111!important;-webkit-text-fill-color:#111}</style>${T.html}</div>`;
     info.innerHTML=T.riepilogo
       ? T.riepilogo+(T.vuoti?`<span class="issue">${T.vuoti} giorni del mese non hanno un turno assegnato.</span>`:'')
       : `<b>${T.nomi}</b> persone · <b>${T.days-T.vuoti}</b> giorni coperti su ${T.days}`+
@@ -2385,7 +2462,7 @@ function magDelMese(mese){
   const P=paga(y,m-1);
   if(!P) return null;
   return {mag:P.magNott+P.magFest+P.magFN+P.stra, completo:P.compilati>=P.days,
-          compilati:P.compilati, days:P.days};
+         compilati:P.compilati, days:P.days};
 }
 function ancoraSu(dati,esclusi,mese){
   const PR=profilo();
@@ -2395,11 +2472,11 @@ function ancoraSu(dati,esclusi,mese){
     const a=c.mese.split('-').map(Number), b=mese.split('-').map(Number);
     return Math.abs((a[0]*12+a[1])-(b[0]*12+b[1]));
   };
-  const scelto=dati.slice().sort((x,y)=>dist(x)-dist(y)||(x.mese<y.mese?1:-1))[0];
+  const scelto=dati.slice().sort((x,y)=>dist(x)-dist(y)|-(x.mese<y.mese?1:-1))[0];
   const b=PR.k, a=scelto.netto-scelto.mag*b;
   if(a<=0) return null;
   return {a,b,n:1,esclusi,ancora:true,scartati:dati.length-1,lontano:dist(scelto),
-          punti:[{...scelto,stima:scelto.netto,scarto:0}],errMax:0,errMedio:0};
+         punti:[{...scelto,stima:scelto.netto,scarto:0}],errMax:0,errMedio:0};
 }
 function fitNetto(periodoChiesto){
   const oggi=new Date();
@@ -2509,7 +2586,7 @@ function renderCedolini(){
       `più <b>${(F.b*100).toFixed(1)}%</b> di ogni euro di maggiorazione.<br>`+
       (F.n>2?`Scarto medio <b>${eur(F.errMedio)}</b>, massimo ${eur(F.errMax)}.`
             :`Con due cedolini la retta passa esatta per entrambi: aggiungine un terzo per avere una verifica.`)+
-      (PR?`<br>Il calcolo teorico dava ${(PR.k*100).toFixed(1)}%.`:'')+
+      (PR?`<br>El calculo teórico daba ${(PR.k*100).toFixed(1)}%.`:'')+
       (guaio?`<span class="issue">Misura non usata: ${guaio}.${
         F.n>2&&peggio?` Il più fuori riga è ${MESI[+peggio.mese.slice(5)-1].toLowerCase()} (${(peggio.scarto>=0?'+':'')+peggio.scarto.toFixed(0)} €).`:''
         } Per ora uso la stima teorica.</span>`
