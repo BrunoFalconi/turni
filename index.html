@@ -5,6 +5,7 @@
 <title>Turni</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0E1420">
+<meta name="robots" content="noindex, nofollow, noarchive">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -422,6 +423,19 @@ input[type=time]{font-family:var(--mono)}
 
 <div class="scrim" id="scrim"></div>
 
+<div class="sheet" id="sheet-chiave" style="z-index:23">
+  <h2>Chiave di accesso</h2>
+  <div class="calc" id="chiave-msg" style="margin-bottom:12px"></div>
+  <div class="field" style="margin-bottom:12px">
+    <label for="chiave-in">Chiave</label>
+    <input type="password" id="chiave-in" autocomplete="off" placeholder="quella che ti ha dato il reparto">
+  </div>
+  <div class="actions">
+    <button class="btn" id="chiave-ok">Collega</button>
+    <button class="btn ghost" id="chiave-no">Più tardi</button>
+  </div>
+</div>
+
 <div class="sheet" id="sheet-detail">
   <h2 id="sheet-title"></h2>
   <div class="calc" id="calc" style="margin-top:10px;"></div>
@@ -461,6 +475,9 @@ input[type=time]{font-family:var(--mono)}
 
   <details class="grp">
     <summary><b>Turni</b><i id="st-turni"></i></summary>
+    <div class="set-row"><span>Chiave di sincronizzazione</span>
+      <div class="in" style="width:150px"><button class="btn ghost" style="width:100%;padding:9px 10px;font-size:13px" id="cambia-chiave">Cambia</button></div></div>
+    <p class="grp-intro" id="chiave-stato"></p>
     <button class="btn ghost" style="width:100%;margin-bottom:8px" id="cambia-chi">Cambia la persona selezionata</button>
     <button class="btn ghost" style="width:100%;margin-bottom:8px" id="ics">Esporta nel Calendario (Google/Apple)</button>
     <button class="btn ghost" style="width:100%;margin-bottom:8px" id="pdf">Turnario del mese in PDF</button>
@@ -578,7 +595,10 @@ input[type=time]{font-family:var(--mono)}
 <script>
 const KEY='turni:v1';
 const VERSIONE='69 · 3 agosto 2026';
-const CLOUD_URL = 'https://docs.google.com/spreadsheets/d/1Wc1ZkXNm-3rcxF5gsGvkpTosJcEQUDzbEafD4ewSfF8/export?format=xlsx';
+/* Indirizzo dell'intermediario, non del foglio: da solo non apre niente,
+   serve anche la chiave che ogni collega inserisce sul proprio telefono.
+   Sostituisci con l'indirizzo /exec che ti dà Google Apps Script. */
+const SYNC_URL = 'https://script.google.com/macros/s/AKfycbyz_-c9BaMQ5pX9o6ubLf_3eiukzZ5ykODghbq0mdE8hXFTwibfPK62wpSmPQH22FLT/exec';
 
 if(typeof navigator!=='undefined'&&navigator.serviceWorker){
   navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
@@ -617,6 +637,7 @@ const MESI=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Ag
 const GIORNI=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
 
 const DEFAULTS={
+  chiaveSync:'',
   weekHours:40, dayThreshold:8, night1:'22:00', night2:'06:00', defaultBreak:0, presetsV:3,
   workDays:5, restDays:2,
   lordoFisso:0, oreContratto:173, pctNotturno:50, pctFestivo:50, pctFestNott:55, pctStraord:0, straordAparte:0,
@@ -631,11 +652,14 @@ let view=new Date(); view.setDate(1);
 const pad=n=>String(n).padStart(2,'0');
 const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const toMin=t=>{const[h,m]=t.split(':').map(Number);return h*60+m};
-const fmt=m=>{if(!m)return'0<small>h</small>';const h=Math.floor(m/60),r=m%60;return r?`${h}<small>h</small>${pad(r)}`:`${h}<small>h</small>`};
-const fmtPlain=m=>{const h=Math.floor(m/60),r=m%60;return r?`${h}h ${pad(r)}`:`${h}h`};
+const fmt=m=>{if(!m||!isFinite(m))return'0<small>h</small>';const h=Math.floor(m/60),r=m%60;return r?`${h}<small>h</small>${pad(r)}`:`${h}<small>h</small>`};
+const fmtPlain=m=>{if(!isFinite(m))return'—';const h=Math.floor(m/60),r=m%60;return r?`${h}h ${pad(r)}`:`${h}h`};
 
 function span(s){
+  /* un turno di lavoro senza orario è un dato incompleto: meglio zero ore
+     che NaN, che si propaga silenziosamente in tutti i totali */
   let a=toMin(s.start), b=toMin(s.end);
+  if(!isFinite(a)||!isFinite(b)) return {a:0,b:0,gross:0};
   if(b<=a) b+=1440;
   return {a,b,gross:b-a};
 }
@@ -722,20 +746,55 @@ function save(){
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2500)}
 
 /* ---- SINCRONIZZAZIONE ---- */
+/* I fogli arrivano come righe già pronte, non come file Excel: le date sono
+   stringhe 'aaaa-mm-gg' e vanno rimesse in forma di data, perché il lettore
+   dei turni le usa per capire di che mese è ogni foglio. */
+function righeDaJson(righe){
+  return (righe||[]).map(r=>(r||[]).map(c=>
+    (typeof c==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(c))
+      ? new Date(+c.slice(0,4), +c.slice(5,7)-1, +c.slice(8,10))
+      : c));
+}
+function leggiDaFogli(fogli){
+  const per={}; let letti=0, ignorati={}, modi={};
+  (fogli||[]).forEach(f=>{
+    const R=leggiFoglioQualsiasi(righeDaJson(f.righe), f.nome, ignorati);
+    if(!R) return;
+    letti++; modi[R.modo]=(modi[R.modo]||0)+1;
+    for(const n in R.perNome) per[n]=Object.assign(per[n]||{},R.perNome[n]);
+  });
+  const persone=Object.entries(per).map(([nome,turni])=>{
+    const k=Object.keys(turni).sort();
+    return {nome,turni,giorni:k.length,da:k[0],a:k[k.length-1]};
+  }).sort((a,b)=>b.giorni-a.giorni);
+  return persone.length?{persone,fogli:letti,ignorati,modi}:null;
+}
+
 let cartellaCache = null;
 
 async function syncFromCloud() {
   const tst = document.getElementById('sync-toast');
   if(tst) tst.classList.add('on');
   try {
-    const res = await fetch(CLOUD_URL, {cache: 'no-store'});
-    if(!res.ok) throw new Error('Network response was not ok');
-    const ab = await res.arrayBuffer();
-    
-    if(typeof XLSX === 'undefined') return;
-    const wb = XLSX.read(new Uint8Array(ab), {type: 'array', cellDates: true});
-    const cartella = leggiCartella(wb);
-    
+    const chiave = state.settings.chiaveSync || '';
+    if(!chiave){                       /* primo avvio: la chiave non c'è ancora */
+      if(tst) tst.classList.remove('on');
+      chiediChiave();
+      return;
+    }
+    const res = await fetch(SYNC_URL + '?k=' + encodeURIComponent(chiave) + '&t=' + Date.now(),
+                            {cache:'no-store'});
+    if(!res.ok) throw new Error('rete');
+    const dati = await res.json();
+
+    if(!dati.ok){
+      if(tst) tst.classList.remove('on');
+      if(dati.err === 'auth'){ chiediChiave('La chiave non è corretta.'); return; }
+      toast(dati.err === 'config' ? 'Intermediario non configurato' : 'Foglio non leggibile');
+      return;
+    }
+    const cartella = leggiDaFogli(dati.fogli);
+
     if(tst) tst.classList.remove('on');
     if(!cartella) return;
     
@@ -765,7 +824,34 @@ async function syncFromCloud() {
     const oldKeys = Object.keys(state.shifts);
     const newKeys = Object.keys(myNewShifts);
     
-    if (oldKeys.length !== newKeys.length) {
+    let turniModificati = [];
+    if (oldKeys.length > 0) {
+      for (const k of newKeys) {
+        const o = state.shifts[k], n = myNewShifts[k];
+        if (o && (o.type !== n.type || o.start !== n.start || o.end !== n.end)) {
+          turniModificati.push({
+            data: k,
+            vecchio: typeOf(o.type).label.toUpperCase() + (o.start ? ` (${o.start}-${o.end})` : ''),
+            nuovo: typeOf(n.type).label.toUpperCase() + (n.start ? ` (${n.start}-${n.end})` : '')
+          });
+        }
+      }
+      
+      if (turniModificati.length > 0) {
+        let msg = "Attenzione, sono state rilevate delle modifiche ai tuoi turni:\n\n";
+        turniModificati.forEach(m => {
+          const d = new Date(m.data + 'T00:00:00');
+          const dataIta = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+          msg += `- ${dataIta}: avevi [${m.vecchio}], ora avrai [${m.nuovo}]\n`;
+        });
+        msg += "\nVuoi scaricare e aggiornare il nuovo calendario in app?";
+        if (!confirm(msg)) {
+           return;
+        }
+      }
+    }
+
+    if (oldKeys.length !== newKeys.length || turniModificati.length > 0) {
       changed = true;
     } else {
       for (const k of newKeys) {
@@ -790,6 +876,30 @@ async function syncFromCloud() {
     console.error("Sync error:", e);
   }
 }
+
+/* La chiave resta su questo telefono e viene mandata a ogni sincronizzazione.
+   Non è nel codice dell'app: chi apre il sito senza averla non ottiene turni. */
+function chiediChiave(messaggio){
+  const m=document.getElementById('chiave-msg');
+  m.innerHTML = messaggio
+    ? `<span class="issue">${messaggio}</span>Chiedila a chi gestisce il turnario.`
+    : 'Per scaricare i turni serve la chiave del reparto. La inserisci una volta sola.';
+  document.getElementById('chiave-in').value='';
+  /* chiudo prima gli altri pannelli: aperti insieme, quello delle
+     impostazioni copre questo perché viene dopo nel documento */
+  closeSheets();
+  showSheet('sheet-chiave');
+  setTimeout(()=>{const i=document.getElementById('chiave-in'); if(i&&i.focus) i.focus()},260);
+}
+document.getElementById('cambia-chiave').onclick=()=>chiediChiave();
+document.getElementById('chiave-no').onclick=closeSheets;
+document.getElementById('chiave-ok').onclick=()=>{
+  const v=document.getElementById('chiave-in').value.trim();
+  if(!v){toast('Inserisci la chiave');return}
+  state.settings.chiaveSync=v; save(); closeSheets();
+  toast('Collegamento in corso…');
+  syncFromCloud();
+};
 
 document.getElementById('cal-prompt-no').onclick = () => {
   document.getElementById('cal-prompt').classList.remove('on');
@@ -1264,8 +1374,8 @@ function fattoreMagg(y,m){
   if(!F.compilati) return null;
   const h=x=>x/60;
   const K=(h(F.B.nott)*(Number(S.pctNotturno)||0)
-          +h(F.B.fest)*(Number(S.pctFestivo)||0)
-          +h(F.B.festNott)*(Number(S.pctFestNott)||0))/100/oreC;
+         +h(F.B.fest)*(Number(S.pctFestivo)||0)
+         +h(F.B.festNott)*(Number(S.pctFestNott)||0))/100/oreC;
   return {K, ore:h(F.B.nott+F.B.fest+F.B.festNott), completo:F.compilati>=F.days,
           compilati:F.compilati, days:F.days};
 }
@@ -1430,6 +1540,13 @@ function apriImpostazioni(quale){
   g.forEach((x,j)=>x.open=(j===i));
   setTimeout(()=>{try{g[i].scrollIntoView({block:'start',behavior:'smooth'})}catch(e){}},120);
 }
+function statoChiave(){
+  const e=document.getElementById('chiave-stato'); if(!e) return;
+  const c=state.settings.chiaveSync||'';
+  e.innerHTML=c
+    ? `Collegato al turnario del reparto. La chiave resta su questo dispositivo.`
+    : `<span class="issue">Nessuna chiave: i turni non si scaricano.</span>`;
+}
 document.getElementById('settings').onclick=()=>{
   const s=state.settings;
   document.getElementById('s-wd').value=s.workDays;
@@ -1464,6 +1581,7 @@ document.getElementById('settings').onclick=()=>{
     document.getElementById('p-'+k+'1').value=pr[0];
     document.getElementById('p-'+k+'2').value=pr[1];
   });
+  statoChiave();
   showSheet('sheet-set');
 };
 Object.entries(setMap).forEach(([id,[key,kind]])=>{
@@ -1557,7 +1675,7 @@ const COLS={
   brk:['pausa','break'],
   note:['note','nota','commento','reparto','sede'],
   nome:['nome','cognome','dipendente','operatore','persona','risorsa']
-};
+}
 function matchCol(h){
   const n=norm(h); if(!n) return null;
   for(const [k,names] of Object.entries(COLS)) if(names.some(x=>n===x||n.startsWith(x))) return k;
@@ -1825,33 +1943,47 @@ function leggiCartella(wb){
 function apriPersone(){
   const box=document.getElementById('pers-list'), f=norm(document.getElementById('pf').value);
   box.innerHTML='';
-  if(!cartellaCache) return;
-  cartellaCache.persone.forEach((p)=>{
-    if(f&&!norm(p.nome).includes(f)) return;
+  /* ora i dati sono in state.roster, non in cartellaCache */
+  const nomi=Object.keys(state.roster||{}).sort();
+  if(!nomi.length){
+    box.innerHTML='<div class="empty-state">Turni non ancora scaricati.<br>Assicurati di avere la chiave corretta.</div>';
+    return;
+  }
+  nomi.forEach(nome=>{
+    if(f&&!norm(nome).includes(f)) return;
+    const giorni=Object.keys(state.roster[nome]).length;
     const b=document.createElement('button'); b.className='row';
-    b.innerHTML=`<span class="t">${p.nome}<em>${p.giorni} giorni caricati</em></span>`;
-    b.onclick=()=>scegliPersona(p.nome);
+    b.innerHTML=`<span class="t">${nome}<em>${giorni} giorni caricati</em></span>`;
+    b.onclick=()=>scegliPersona(nome);
     box.appendChild(b);
   });
 }
 function scegliPersona(nomeScelto){
-  state.settings.nome = nomeScelto;
-  
+  state.settings.nome=nomeScelto;
+  /* ricostruisce i turni dal roster: stesso formato di prima */
+  const m=state.roster[nomeScelto]||{};
+  const turni={};
+  /* turnoDa applica gli orari standard del tipo: senza, start ed end restano
+     vuoti e ogni calcolo di ore finisce in NaN */
+  for(const k in m) turni[k]=turnoDa(m[k]);
+  /* se la sincronizzazione è appena avvenuta e ha dati completi, usa quelli */
   if(cartellaCache){
-    const p = cartellaCache.persone.find(x => x.nome === nomeScelto);
-    if(p) state.shifts = p.turni;
+    const pc=cartellaCache.persone.find(x=>x.nome===nomeScelto);
+    if(pc) Object.assign(turni,pc.turni);
   }
-  
-  save();
-  closeSheets();
-  render();
-  toast('Sincronizzato sui tuoi turni');
+  state.shifts=turni;
+  save(); closeSheets(); render();
+  toast('Turni di '+nomeScelto+' caricati');
 }
-document.getElementById('cambia-chi').onclick = () => {
-    if(!cartellaCache) { toast('Dati cloud non ancora scaricati. Riprova tra un attimo.'); return; }
-    apriPersone();
-    showSheet('sheet-pers');
-}
+document.getElementById('cambia-chi').onclick=()=>{
+  if(!Object.keys(state.roster||{}).length){
+    toast('Turni non ancora scaricati. Riprova tra un attimo.');
+    return;
+  }
+  document.getElementById('pf').value='';
+  apriPersone();
+  showSheet('sheet-pers');
+};
 document.getElementById('pf').addEventListener('input',apriPersone);
 document.getElementById('pers-cancel').onclick = closeSheets;
 
@@ -2146,10 +2278,10 @@ function apriPdf(){
     document.getElementById('pdf-prev').innerHTML=
       `<div style="background:#fff;color:#111;padding:12px;border-radius:8px;overflow:auto;font-family:Helvetica,Arial,sans-serif">
          <style>#pdf-prev table{width:100%;border-collapse:collapse;font-size:11px;background:#fff}
-                #pdf-prev th{background:#111;color:#fff!important;-webkit-text-fill-color:#fff;font-weight:700;text-align:center;padding:6px 4px;border:1px solid #111;white-space:nowrap}
-                #pdf-prev td{background:#fff;color:#111!important;-webkit-text-fill-color:#111;text-align:center;padding:5px 4px;border:1px solid #d2d2d2;white-space:nowrap}
-                #pdf-prev tbody tr:nth-child(even) td{background:#f2f2f2}
-                #pdf-prev h1{font-size:15px;margin:0 0 10px;text-align:center;font-weight:700;color:#111!important;-webkit-text-fill-color:#111}</style>${T.html}</div>`;
+                 #pdf-prev th{background:#111;color:#fff!important;-webkit-text-fill-color:#fff;font-weight:700;text-align:center;padding:6px 4px;border:1px solid #111;white-space:nowrap}
+                 #pdf-prev td{background:#fff;color:#111!important;-webkit-text-fill-color:#111;text-align:center;padding:5px 4px;border:1px solid #d2d2d2;white-space:nowrap}
+                 #pdf-prev tbody tr:nth-child(even) td{background:#f2f2f2}
+                 #pdf-prev h1{font-size:15px;margin:0 0 10px;text-align:center;font-weight:700;color:#111!important;-webkit-text-fill-color:#111}</style>${T.html}</div>`;
     info.innerHTML=T.riepilogo
       ? T.riepilogo+(T.vuoti?`<span class="issue">${T.vuoti} giorni del mese non hanno un turno assegnato.</span>`:'')
       : `<b>${T.nomi}</b> persone · <b>${T.days-T.vuoti}</b> giorni coperti su ${T.days}`+
@@ -2253,7 +2385,7 @@ function magDelMese(mese){
   const P=paga(y,m-1);
   if(!P) return null;
   return {mag:P.magNott+P.magFest+P.magFN+P.stra, completo:P.compilati>=P.days,
-         compilati:P.compilati, days:P.days};
+          compilati:P.compilati, days:P.days};
 }
 function ancoraSu(dati,esclusi,mese){
   const PR=profilo();
@@ -2267,7 +2399,7 @@ function ancoraSu(dati,esclusi,mese){
   const b=PR.k, a=scelto.netto-scelto.mag*b;
   if(a<=0) return null;
   return {a,b,n:1,esclusi,ancora:true,scartati:dati.length-1,lontano:dist(scelto),
-         punti:[{...scelto,stima:scelto.netto,scarto:0}],errMax:0,errMedio:0};
+          punti:[{...scelto,stima:scelto.netto,scarto:0}],errMax:0,errMedio:0};
 }
 function fitNetto(periodoChiesto){
   const oggi=new Date();
