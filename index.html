@@ -169,10 +169,6 @@ input[type=time]{font-family:var(--mono)}
 .sync-toast{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-20px);background:var(--pomeriggio);color:#0D121C;font-weight:600;padding:8px 16px;border-radius:20px;font-size:13px;opacity:0;pointer-events:none;transition:.3s;z-index:40}
 .sync-toast.on{opacity:1;transform:translate(-50%,0)}
 
-.cal-prompt{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:18px;right:18px;background:rgba(30,38,54,.95);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:1px solid var(--pomeriggio);border-radius:20px;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.5);opacity:0;pointer-events:none;transform:translateY(20px);transition:.3s cubic-bezier(.32,.72,0,1);z-index:50}
-.cal-prompt.on{opacity:1;transform:translateY(0);pointer-events:auto}
-.cal-prompt-title{font-weight:600;font-size:15px;margin-bottom:6px;color:var(--text);text-align:center}
-.cal-prompt-desc{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.4;text-align:center}
 
 .toast{position:fixed;bottom:96px;left:50%;transform:translate(-50%,14px);background:rgba(30,38,54,.85);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid rgba(255,255,255,.10);color:var(--text);font-size:13px;padding:10px 16px;border-radius:20px;opacity:0;pointer-events:none;transition:.2s;z-index:30}
 .toast.on{opacity:1;transform:translate(-50%,0)}
@@ -259,7 +255,22 @@ input[type=time]{font-family:var(--mono)}
 .fascia .chi em{font-style:normal;color:var(--muted)}
 .fascia .chi b{font-weight:600}
 .fascia.vuota .chi{color:var(--muted);font-size:13.5px}
+.cambio{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
+.cambio:last-child{border-bottom:none}
+.cambio .g{font-family:var(--mono);font-size:12px;color:var(--muted);width:62px;flex:none}
+.cambio .v{flex:1;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cambio .chi{font-size:12px;color:var(--muted);display:block;width:100%}
+.cambio .da{color:var(--muted);text-decoration:line-through;text-decoration-thickness:1px}
+.cambio .fr{color:var(--muted);font-size:12px}
+.cambio .a{font-weight:600}
+.cambio-tit{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);
+  margin:18px 0 2px}
+.cambio-tit:first-child{margin-top:0}
+.cambio.mio{background:#F2B33D0f;margin:0 -10px;padding-left:10px;padding-right:10px;border-radius:8px}
 .bac-day{background:var(--surface);border-radius:12px;padding:14px;margin-bottom:8px}
+.bac-day.oggi{box-shadow:inset 0 0 0 1px var(--line)}
+.bac-day-title span{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:400;margin-left:8px}
 .bac-day-title{font-family:var(--display);font-size:15px;font-weight:600;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--surface-2)}
 .bac-shift{display:flex;align-items:center;gap:10px;padding:4px 0}
 .bac-shift .dot{width:10px;height:10px;border-radius:3px;flex:none}
@@ -286,6 +297,12 @@ input[type=time]{font-family:var(--mono)}
 .grp>*:last-child{margin-bottom:18px}
 .grp .set-row:last-of-type{border-bottom:none}
 .grp .set-row{padding:11px 0;border-bottom:1px solid #ffffff0a}
+.ver-riga{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-top:18px;padding-top:14px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.ver-riga button{font-family:var(--mono);font-size:11.5px;color:var(--pomeriggio);
+  padding:4px 0;text-decoration:underline;text-underline-offset:3px}
+.ver-riga button:active{opacity:.5}
 .grp-intro{font-size:12.5px;color:var(--muted);line-height:1.5;margin:0 0 6px}
 .grp-intro b{color:var(--text);font-weight:600}
 .tabs{display:flex;gap:0;position:relative;border-radius:14px;padding:4px;margin:0 0 18px;
@@ -423,15 +440,6 @@ input[type=time]{font-family:var(--mono)}
   </div>
   <div class="toast" id="toast"></div>
 
-  <div class="cal-prompt" id="cal-prompt">
-    <div class="cal-prompt-title">Sono state rilevate modifiche ai tuoi turni</div>
-    <div class="cal-prompt-desc">Vuoi aggiornare il calendario personale sul dispositivo?</div>
-    <div class="cal-prompt-actions">
-      <button class="btn" id="cal-prompt-yes">Aggiorna</button>
-      <button class="btn ghost" id="cal-prompt-no">Ignora</button>
-    </div>
-  </div>
-
 </div>
 
 <div id="stampa"></div>
@@ -448,6 +456,16 @@ input[type=time]{font-family:var(--mono)}
   <div class="actions">
     <button class="btn" id="chiave-ok">Collega</button>
     <button class="btn ghost" id="chiave-no">Più tardi</button>
+  </div>
+</div>
+
+<div class="sheet" id="sheet-cambi">
+  <h2>Turni cambiati</h2>
+  <div class="calc" id="cambi-info" style="margin-bottom:14px"></div>
+  <div id="cambi-list" style="max-height:52vh;overflow-y:auto"></div>
+  <div class="actions" style="margin-top:16px">
+    <button class="btn" id="cambi-ics">Aggiorna il calendario</button>
+    <button class="btn ghost" id="cambi-close">Chiudi</button>
   </div>
 </div>
 
@@ -525,7 +543,12 @@ input[type=time]{font-family:var(--mono)}
     </select></div></div>
   </details>
 
-  <div class="actions" style="margin-top:16px">
+  <div class="ver-riga">
+    <span id="ver-txt"></span>
+    <button id="ricarica">Cerca aggiornamenti</button>
+  </div>
+
+  <div class="actions" style="margin-top:14px">
     <button class="btn" id="set-close">Fatto</button>
   </div>
 </div>
@@ -609,11 +632,11 @@ input[type=time]{font-family:var(--mono)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const KEY='turni:v1';
-const VERSIONE='69 · 3 agosto 2026';
+const VERSIONE='72 · 6 agosto 2026';
 /* Indirizzo dell'intermediario, non del foglio: da solo non apre niente,
-    serve anche la chiave che ogni collega inserisce sul proprio telefono.
-    Sostituisci con l'indirizzo /exec che ti dà Google Apps Script. */
-const SYNC_URL = 'INCOLLA_QUI_INDIRIZZO_APPS_SCRIPT';
+   serve anche la chiave che ogni collega inserisce sul proprio telefono.
+   Sostituisci con l'indirizzo /exec che ti dà Google Apps Script. */
+const SYNC_URL = 'https://script.google.com/macros/s/AKfycbyz_-c9BaMQ5pX9o6ubLf_3eiukzZ5ykODghbq0mdE8hXFTwibfPK62wpSmPQH22FLT/exec';
 
 if(typeof navigator!=='undefined'&&navigator.serviceWorker){
   navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
@@ -804,14 +827,14 @@ async function syncFromCloud() {
       return;
     }
     const chiave = state.settings.chiaveSync || '';
-    if(!chiave){                         /* primeiro avvio: la chiave non c'è ancora */
+    if(!chiave){                       /* primo avvio: la chiave non c'è ancora */
       if(tst) tst.classList.remove('on');
       segnaSync('nochiave');
       chiediChiave();
       return;
     }
     const res = await fetch(SYNC_URL + '?k=' + encodeURIComponent(chiave) + '&t=' + Date.now(),
-                        {cache:'no-store'});
+                            {cache:'no-store'});
     if(!res.ok) throw new Error('rete');
     const dati = await res.json();
 
@@ -853,20 +876,9 @@ async function syncFromCloud() {
     const p = cartella.persone.find(x => x.nome === mioNome);
     if(p) myNewShifts = p.turni;
 
-    let changed = false;
-    const oldKeys = Object.keys(state.shifts);
-    const newKeys = Object.keys(myNewShifts);
-    
-    if (oldKeys.length !== newKeys.length) {
-      changed = true;
-    } else {
-      for (const k of newKeys) {
-        const o = state.shifts[k], n = myNewShifts[k];
-        if (!o || o.type !== n.type || o.start !== n.start || o.end !== n.end) {
-          changed = true; break;
-        }
-      }
-    }
+    /* Confronto prima di sovrascrivere: i cambi vanno mostrati, non subiti.
+       Guardo sia i miei turni sia quelli dei colleghi. */
+    const cambi = trovaCambi(state.shifts, myNewShifts, state.roster, newRoster, mioNome);
 
     state.roster = newRoster;
     state.shifts = myNewShifts;
@@ -875,9 +887,7 @@ async function syncFromCloud() {
     segnaSync('ok');
     render();
 
-    if (changed && oldKeys.length > 0) {
-      document.getElementById('cal-prompt').classList.add('on');
-    }
+    if(cambi.totale) mostraCambi(cambi);
 
   } catch(e) {
     if(tst) tst.classList.remove('on');
@@ -885,6 +895,92 @@ async function syncFromCloud() {
     console.error("Sync error:", e);
   }
 }
+
+/* Confronta i turni di prima con quelli appena scaricati. Guarda solo da oggi
+   in avanti: un turno passato che cambia sul foglio è una correzione contabile,
+   non una cosa su cui riorganizzarsi. */
+function trovaCambi(vecchiMiei, nuoviMiei, vecchioRoster, nuovoRoster, io){
+  const oggi=ymd(new Date());
+  const miei=[], altrui=[];
+  let passati=0;
+
+  const etichetta=t=>t?typeOf(t).label:'—';
+  const primoAvvio=!Object.keys(vecchiMiei||{}).length;
+
+  if(!primoAvvio){
+    const tutte=new Set([...Object.keys(vecchiMiei||{}),...Object.keys(nuoviMiei||{})]);
+    tutte.forEach(k=>{
+      const a=(vecchiMiei[k]||{}).type, b=(nuoviMiei[k]||{}).type;
+      if(a===b) return;
+      if(k<oggi){passati++;return}
+      miei.push({key:k,da:etichetta(a),a:etichetta(b)});
+    });
+  }
+
+  const vecchio=vecchioRoster||{};
+  if(Object.keys(vecchio).length){
+    const nomi=new Set([...Object.keys(vecchio),...Object.keys(nuovoRoster||{})]);
+    nomi.forEach(n=>{
+      if(n===io) return;                       /* i miei li ho già contati */
+      const A=vecchio[n]||{}, B=(nuovoRoster||{})[n]||{};
+      const gg=new Set([...Object.keys(A),...Object.keys(B)]);
+      gg.forEach(k=>{
+        if(A[k]===B[k]) return;
+        if(k<oggi){passati++;return}
+        altrui.push({key:k,chi:n,da:etichetta(A[k]),a:etichetta(B[k])});
+      });
+    });
+  }
+
+  const perData=(x,y)=>x.key<y.key?-1:x.key>y.key?1:0;
+  miei.sort(perData); altrui.sort(perData);
+  return {miei,altrui,passati,totale:miei.length+altrui.length};
+}
+
+function mostraCambi(C){
+  const box=document.getElementById('cambi-list'), info=document.getElementById('cambi-info');
+  if(!box) return;
+  const gg=k=>{const d=new Date(k+'T00:00:00');
+    return `${GIORNI[d.getDay()].toLowerCase()} ${d.getDate()} ${MESI[d.getMonth()].slice(0,3).toLowerCase()}`};
+  const riga=(c,mio)=>`<div class="cambio${mio?' mio':''}">
+      <span class="g">${gg(c.key)}</span>
+      <span class="v">${c.chi?`<span class="chi">${c.chi}</span>`:''}
+        <span class="da">${c.da}</span><span class="fr">→</span><span class="a">${c.a}</span></span>
+    </div>`;
+
+  let html='';
+  if(C.miei.length){
+    html+=`<div class="cambio-tit">I tuoi turni</div>`;
+    html+=C.miei.map(c=>riga(c,true)).join('');
+  }
+  if(C.altrui.length){
+    html+=`<div class="cambio-tit">Il reparto</div>`;
+    html+=C.altrui.map(c=>riga(c,false)).join('');
+  }
+  box.innerHTML=html;
+
+  const n=C.miei.length;
+  info.innerHTML=(n
+      ? `<b>${n} ${n===1?'tuo turno è cambiato':'tuoi turni sono cambiati'}</b>`
+      : `Nessun cambio sui tuoi turni.`)
+    +(C.altrui.length?` · ${C.altrui.length} nel reparto`:'')
+    +(C.passati?`<br>${C.passati} ${C.passati===1?'modifica riguarda un giorno già passato':'modifiche riguardano giorni già passati'}: non ${C.passati===1?'la mostro':'le mostro'}.`:'');
+
+  document.getElementById('cambi-ics').style.display=n?'':'none';
+  closeSheets(); showSheet('sheet-cambi');
+}
+document.getElementById('cambi-close').onclick=closeSheets;
+document.getElementById('cambi-ics').onclick=()=>{
+  const I=icsData();
+  if(!I){toast('Nessun turno da esportare');return}
+  const url=URL.createObjectURL(new Blob([I.testo],{type:'text/calendar;charset=utf-8'}));
+  const a=document.createElement('a');
+  a.href=url; a.download=`turni-${I.da}.ics`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+  closeSheets();
+  toast('Apri il file per aggiornare il calendario');
+};
 
 /* Riquadro in cima al calendario quando la sincronizzazione non riesce.
    Mostrare turni vecchi senza dirlo è peggio che non mostrarli. */
@@ -895,7 +991,7 @@ function mostraStatoSync(){
   const ultima=state.settings.ultimaSync;
   const quando=ultima
     ? (()=>{const g=Math.round((Date.now()-new Date(ultima).getTime())/86400000);
-            return g<1?'oggi':(g===1?'ieri':`${g} days ago`)})()
+            return g<1?'oggi':(g===1?'ieri':`${g} giorni fa`)})()
     : null;
   const testi={
     nonconfigurato:['SINCRONIZZAZIONE NON CONFIGURATA', E.dettaglio],
@@ -937,24 +1033,6 @@ document.getElementById('chiave-ok').onclick=()=>{
   state.settings.chiaveSync=v; save(); closeSheets();
   toast('Collegamento in corso…');
   syncFromCloud();
-};
-
-document.getElementById('cal-prompt-no').onclick = () => {
-  document.getElementById('cal-prompt').classList.remove('on');
-};
-
-document.getElementById('cal-prompt-yes').onclick = () => {
-  document.getElementById('cal-prompt').classList.remove('on');
-  const I = icsData();
-  if(!I) { toast('Nessun turno da sincronizzare.'); return; }
-  
-  const blob = new Blob([I.testo],{type:'text/calendar;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `turni-${I.da}.ics`;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url), 4000);
-  toast('Scarica il file e cliccaci per aggiornare i calendari!');
 };
 
 async function load(){
@@ -1097,7 +1175,12 @@ function render(){
 function renderBachecaOggi(){
   const box=document.getElementById('bac-oggi'); if(!box) return;
   const nomi=Object.keys(state.roster||{});
-  if(!nomi.length){ box.innerHTML=''; return; }
+  if(!nomi.length){
+    /* meglio dire che manca il turnario che lasciare uno spazio bianco */
+    box.className='oggi-box';
+    box.innerHTML='<div class="empty-state">Turnario del reparto non ancora scaricato.</div>';
+    return;
+  }
 
   const oggi=new Date(), key=ymd(oggi);
   const io=state.settings.nome||'';
@@ -1127,7 +1210,9 @@ function renderBachecaOggi(){
   box.className='oggi-box';
   box.innerHTML=`<div class="oggi-tit"><b>Oggi in turno</b>`+
     `<span>${GIORNI[oggi.getDay()]} ${oggi.getDate()} ${MESI[oggi.getMonth()].toLowerCase()}</span></div>`+
-    (qualcuno?righe:'<div class="empty-state">Nessun turno assegnato per oggi.</div>')+
+    (qualcuno?righe:`<div class="empty-state">Il turnario non ha turni per il ${oggi.getDate()} ${MESI[oggi.getMonth()].toLowerCase()}.<br>`+
+      `Ultimo giorno presente: ${(()=>{const t=new Set();nomi.forEach(n=>Object.keys(state.roster[n]).forEach(k=>t.add(k)));
+        const k=[...t].sort();return k.length?k[k.length-1].split('-').reverse().join('/'):'nessuno'})()}</div>`)+
     (assenti.length?`<div class="pay-note" style="margin-top:10px">Assenti: ${assenti.map(n=>n+' ('+typeOf(state.roster[n][key]).label.toLowerCase()+')').join(', ')}</div>`:'');
 }
 
@@ -1150,7 +1235,15 @@ function renderBacheca(){
   let html='';
   let hasShifts=false;
 
-  for(let d=1;d<=days;d++){
+  /* Nel mese corrente parto da oggi: sopra c'è già il riquadro di oggi, e
+     scorrere i giorni passati per arrivare a domani non serve a nessuno.
+     Negli altri mesi mostro tutto, perché lì si va apposta a consultare. */
+  const oggi=new Date();
+  const meseCorrente=(y===oggi.getFullYear()&&m===oggi.getMonth());
+  const primo=meseCorrente?oggi.getDate():1;
+  const saltati=primo-1;
+
+  for(let d=primo;d<=days;d++){
     const key=`${y}-${pad(m+1)}-${pad(d)}`;
     const working=[];
 
@@ -1164,7 +1257,9 @@ function renderBacheca(){
       working.sort((a,b)=>order.indexOf(a.t)-order.indexOf(b.t));
 
       const dt=new Date(key+'T00:00:00');
-      let bHtml=`<div class="bac-day"><div class="bac-day-title">${GIORNI[dt.getDay()]} ${d} ${MESI[m]}</div>`;
+      const eOggi=meseCorrente&&d===oggi.getDate();
+      let bHtml=`<div class="bac-day${eOggi?' oggi':''}"><div class="bac-day-title">`+
+        `${GIORNI[dt.getDay()]} ${d} ${MESI[m]}${eOggi?'<span>oggi</span>':(meseCorrente&&d===oggi.getDate()+1?'<span>domani</span>':'')}</div>`;
 
       working.forEach(w=>{
         const tipo=typeOf(w.t);
@@ -1176,8 +1271,10 @@ function renderBacheca(){
     }
   }
 
-  box.innerHTML=hasShifts ? html : `<div class="empty-state">Nessun collega assegnato in ${MESI[m].toLowerCase()}.</div>`;
-  if(note) note.textContent=`${nomi.length} colleghi nel reparto.`;
+  box.innerHTML=hasShifts ? html
+    : `<div class="empty-state">${meseCorrente?'Nessun turno da oggi alla fine del mese.':'Nessun collega assegnato in '+MESI[m].toLowerCase()+'.'}</div>`;
+  if(note) note.innerHTML=`${nomi.length} colleghi nel reparto.`+
+    (saltati?` <span style="opacity:.7">I ${saltati} giorni già passati non sono elencati.</span>`:'');
 }
 
 function renderDettaglio(y,m){
@@ -1454,7 +1551,7 @@ function fattoreMagg(y,m){
           +h(F.B.fest)*(Number(S.pctFestivo)||0)
           +h(F.B.festNott)*(Number(S.pctFestNott)||0))/100/oreC;
   return {K, ore:h(F.B.nott+F.B.fest+F.B.festNott), completo:F.compilati>=F.days,
-         compilati:F.compilati, days:F.days};
+          compilati:F.compilati, days:F.days};
 }
 function maggRiferimento(){
   const S=state.settings, C=Number(S.bpComp)||0;
@@ -1617,6 +1714,39 @@ function apriImpostazioni(quale){
   g.forEach((x,j)=>x.open=(j===i));
   setTimeout(()=>{try{g[i].scrollIntoView({block:'start',behavior:'smooth'})}catch(e){}},120);
 }
+/* Il numero di versione deve stare a schermo: senza, non c'è modo di sapere
+   se un aggiornamento è arrivato davvero. */
+function statoVersione(){
+  const e=document.getElementById('ver-txt'); if(!e) return;
+  const u=state.settings.ultimaSync;
+  const q=u?(()=>{const g=Math.round((Date.now()-new Date(u).getTime())/86400000);
+    return g<1?'sincronizzato oggi':(g===1?'ieri':`${g} giorni fa`)})():'mai sincronizzato';
+  e.textContent=`Versione ${VERSIONE} · ${q}`;
+}
+document.getElementById('ricarica').onclick=async()=>{
+  const b=document.getElementById('ricarica');
+  b.textContent='Controllo…';
+  let online=null;
+  try{
+    const r=await fetch(location.pathname+'?_ck='+Date.now(),{cache:'no-store'});
+    if(r.ok){
+      const m=(await r.text()).match(/const VERSIONE='(\d+)/);
+      if(m) online=+m[1];
+    }
+  }catch(e){}
+  const mia=+VERSIONE.match(/^\d+/)[0];
+  if(online===null){ b.textContent='Cerca aggiornamenti'; toast('Nessuna rete: riprova più tardi'); return; }
+  if(online<=mia){ b.textContent='Cerca aggiornamenti'; toast(`Hai già l'ultima versione (${mia})`); return; }
+  b.textContent=`Carico la ${online}…`;
+  try{
+    if(typeof caches!=='undefined'){
+      const ks=await caches.keys();
+      await Promise.all(ks.map(k=>caches.delete(k)));
+    }
+  }catch(e){}
+  location.replace(location.pathname+'?v='+online);
+};
+
 function statoChiave(){
   const e=document.getElementById('chiave-stato'); if(!e) return;
   const c=state.settings.chiaveSync||'';
@@ -1658,7 +1788,7 @@ document.getElementById('settings').onclick=()=>{
     document.getElementById('p-'+k+'1').value=pr[0];
     document.getElementById('p-'+k+'2').value=pr[1];
   });
-  statoChiave();
+  statoChiave(); statoVersione();
   showSheet('sheet-set');
 };
 Object.entries(setMap).forEach(([id,[key,kind]])=>{
@@ -1774,7 +1904,7 @@ function toDate(v){
   const d=new Date(s); return isNaN(d)?null:new Date(d.getFullYear(),d.getMonth(),d.getDate());
 }
 function toTime(v){
-  if(eData(v)) return pad(v.getHours())+':'+pad(v.getMinutes());
+  if(eData(v)) return pad(v.getHours())+pad(v.getMinutes());
   if(typeof v==='number'){
     let f=v%1; if(f===0 && v>=1 && v<24) f=v/24;
     const mins=Math.round(f*1440)%1440;
@@ -1823,7 +1953,7 @@ function rowToShift(cells,map){
   if(!st&&type&&DEFAULTS.presets[type]) [st,en]=presetOf(type);
   if(!st||!en) return null;
   if(!type){
-    type=Object.keys(DEFAULTS.presets).find(k=>presetOf(k)[0]===st)|;(toMin(st)<12?'mattina':toMin(st)<20?'pomeriggio':'notte');
+    type=Object.keys(DEFAULTS.presets).find(k=>presetOf(k)[0]===st)||(toMin(st)<12?'mattina':toMin(st)<20?'pomeriggio':'notte');
   }
   const brk=map.brk!=null?Math.max(0,Number(String(cells[map.brk]).replace(',','.'))||0):(typeOf(type).brk??state.settings.defaultBreak??0);
   return {key:ymd(d),shift:{type,start:st,end:en,break:brk,note:map.note!=null?String(cells[map.note]??'').trim():''}};
@@ -1980,7 +2110,7 @@ function leggiFoglioQualsiasi(rows,nome,ignorati){
   const anno=new Date().getFullYear();
   const giro=trasponi(rows);
   const cand=[
-    ['tabella',            leggiFoglio(rows,nome,anno)],
+    ['tabella',           leggiFoglio(rows,nome,anno)],
     ['tabella con date',    leggiMatriceDate(rows)],
     ['tabella ruotata',    leggiFoglio(giro,nome,anno)],
     ['ruotata con date',    leggiMatriceDate(giro)],
@@ -2081,7 +2211,7 @@ function statoImpostazioni(){
   const oggi=new Date(), lordo=lordoDi(oggi.getFullYear(),oggi.getMonth());
   const nSc=(S.scatti||[]).length;
   put('st-retrib', lordo?`${eur(lordo)} · +${S.pctNotturno}/${S.pctFestivo}/${S.pctFestNott}%`+(nSc?` · ${nSc} ${nSc===1?'scatto':'scatti'}`:'')
-                      :'lordo da inserire', lordo?'':'warn-t');
+                        :'lordo da inserire', lordo?'':'warn-t');
 
   const P=profilo(), dubbio=P?profiloDubbio():null;
   const nCed=(S.cedolini||[]).length;
@@ -2221,6 +2351,10 @@ function icsData(){
   if(!chiavi.length) return null;
   const esc=t=>String(t||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
   const stampo=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  
+  // Creiamo una sequenza basata sul timestamp attuale per forzare l'aggiornamento
+  const seq=Math.floor(Date.now() / 1000); 
+  
   const dt=(key,ora)=>key.replace(/-/g,'')+'T'+ora.replace(':','')+'00';
   const righe=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Turni//IT','CALSCALE:GREGORIAN',
                'METHOD:PUBLISH','X-WR-CALNAME:Turni'];
@@ -2228,8 +2362,11 @@ function icsData(){
   chiavi.forEach(key=>{
     const s=state.shifts[key], t=typeOf(s.type);
     const uid=`turno-${key}@turni.app`;
-    righe.push('BEGIN:VEVENT',`UID:${uid}`,`DTSTAMP:${stampo}`,
+    
+    // Aggiunto l'attributo SEQUENCE alla stringa
+    righe.push('BEGIN:VEVENT',`UID:${uid}`,`DTSTAMP:${stampo}`,`SEQUENCE:${seq}`,
                `SUMMARY:${esc(t.label)}${s.note?' · '+esc(s.note):''}`);
+               
     if(isWork(s)&&s.start&&s.end){
       const {gross}=span(s);
       const fine=new Date(new Date(key+'T'+s.start+':00').getTime()+gross*60000);
@@ -2249,6 +2386,7 @@ function icsData(){
   return {testo:righe.join('\r\n')+'\r\n', n:chiavi.length, conOra, interi,
          da:chiavi[0], a:chiavi[chiavi.length-1]};
 }
+
 document.getElementById('ics').onclick=()=>{
   const I=icsData();
   if(!I){toast('Nessun turno da oggi in avanti');return}
@@ -2355,10 +2493,10 @@ function apriPdf(){
     document.getElementById('pdf-prev').innerHTML=
       `<div style="background:#fff;color:#111;padding:12px;border-radius:8px;overflow:auto;font-family:Helvetica,Arial,sans-serif">
          <style>#pdf-prev table{width:100%;border-collapse:collapse;font-size:11px;background:#fff}
-               #pdf-prev th{background:#111;color:#fff!important;-webkit-text-fill-color:#fff;font-weight:700;text-align:center;padding:6px 4px;border:1px solid #111;white-space:nowrap}
-               #pdf-prev td{background:#fff;color:#111!important;-webkit-text-fill-color:#111;text-align:center;padding:5px 4px;border:1px solid #d2d2d2;white-space:nowrap}
-               #pdf-prev tbody tr:nth-child(even) td{background:#f2f2f2}
-               #pdf-prev h1{font-size:15px;margin:0 0 10px;text-align:center;font-weight:700;color:#111!important;-webkit-text-fill-color:#111}</style>${T.html}</div>`;
+                #pdf-prev th{background:#111;color:#fff!important;-webkit-text-fill-color:#fff;font-weight:700;text-align:center;padding:6px 4px;border:1px solid #111;white-space:nowrap}
+                #pdf-prev td{background:#fff;color:#111!important;-webkit-text-fill-color:#111;text-align:center;padding:5px 4px;border:1px solid #d2d2d2;white-space:nowrap}
+                #pdf-prev tbody tr:nth-child(even) td{background:#f2f2f2}
+                #pdf-prev h1{font-size:15px;margin:0 0 10px;text-align:center;font-weight:700;color:#111!important;-webkit-text-fill-color:#111}</style>${T.html}</div>`;
     info.innerHTML=T.riepilogo
       ? T.riepilogo+(T.vuoti?`<span class="issue">${T.vuoti} giorni del mese non hanno un turno assegnato.</span>`:'')
       : `<b>${T.nomi}</b> persone · <b>${T.days-T.vuoti}</b> giorni coperti su ${T.days}`+
@@ -2472,7 +2610,7 @@ function ancoraSu(dati,esclusi,mese){
     const a=c.mese.split('-').map(Number), b=mese.split('-').map(Number);
     return Math.abs((a[0]*12+a[1])-(b[0]*12+b[1]));
   };
-  const scelto=dati.slice().sort((x,y)=>dist(x)-dist(y)|-(x.mese<y.mese?1:-1))[0];
+  const scelto=dati.slice().sort((x,y)=>dist(x)-dist(y)||(x.mese<y.mese?1:-1))[0];
   const b=PR.k, a=scelto.netto-scelto.mag*b;
   if(a<=0) return null;
   return {a,b,n:1,esclusi,ancora:true,scartati:dati.length-1,lontano:dist(scelto),
@@ -2586,7 +2724,7 @@ function renderCedolini(){
       `più <b>${(F.b*100).toFixed(1)}%</b> di ogni euro di maggiorazione.<br>`+
       (F.n>2?`Scarto medio <b>${eur(F.errMedio)}</b>, massimo ${eur(F.errMax)}.`
             :`Con due cedolini la retta passa esatta per entrambi: aggiungine un terzo per avere una verifica.`)+
-      (PR?`<br>El calculo teórico daba ${(PR.k*100).toFixed(1)}%.`:'')+
+      (PR?`<br>Il calcolo teorico dava ${(PR.k*100).toFixed(1)}%.`:'')+
       (guaio?`<span class="issue">Misura non usata: ${guaio}.${
         F.n>2&&peggio?` Il più fuori riga è ${MESI[+peggio.mese.slice(5)-1].toLowerCase()} (${(peggio.scarto>=0?'+':'')+peggio.scarto.toFixed(0)} €).`:''
         } Per ora uso la stima teorica.</span>`
